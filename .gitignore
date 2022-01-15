@@ -341,3 +341,6 @@ hs_err_pid*
 
 # build artifacts
 null/
+.bloop/
+.metals/
+.vscode/
