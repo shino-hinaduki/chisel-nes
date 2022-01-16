@@ -61,7 +61,7 @@ class VirtualCart(isDebugEnable: Bool, initNesFilePath: String) extends Module {
 
   // PpuBus
   // 0x0000_0000 - 0x0000_1fff: CHR ROM
-  // 0x0000_2000 - 0x0000_2eff: NameTable Mirring(CHR ROM)
+  // 0x0000_2000 - 0x0000_2eff: NameTable Mirroring(CHR ROM)
   // 0x0000_2f00 - 0xffff_ffff: Don't care
   io.ppuBus.dataOut := DontCare
   // TODO:
