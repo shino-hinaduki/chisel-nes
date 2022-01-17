@@ -17,7 +17,7 @@ class NesFileSpec extends AnyFreeSpec {
   "Can correctly parse iNES File headers" in {
     val srcData = Array[Byte](
       // header
-      0x4e, 0x45, 0x53, 0x1a, // 0~3 : identify "0x4e, 0x45, 0x53, 0x1a"
+      0x4e, 0x45, 0x53, 0x1a, //   - 0~3   : identify "0x4e, 0x45, 0x53, 0x1a"
       0x2,                    //   - 4     : PRG ROM Bank数
       0x1,                    //   - 5     : CHR ROM Bank数
       0x07, 0x00,             //   - 6,7   : config (mirror=Vertical, Battery-Back RAMあり, trainerあり, Mapper0)
