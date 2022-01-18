@@ -23,6 +23,7 @@ class WorkRam extends Module {
     when(!io.nWriteEnable) {
       // RAMへ書き込み
       ram.write(io.addr, io.dataIn)
+      io.dataOut := DontCare
     }.otherwise {
       // 書き込み無効
       when(!io.nOutputEnable) {

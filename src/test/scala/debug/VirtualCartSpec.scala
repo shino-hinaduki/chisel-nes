@@ -3,8 +3,7 @@
 package debug
 
 import chisel3._
-import chisel3.tester._
-import debug.VirtualCart
+import chiseltest._
 import org.scalatest.freespec.AnyFreeSpec
 
 class NesFileSpec extends AnyFreeSpec {

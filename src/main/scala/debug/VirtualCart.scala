@@ -2,8 +2,6 @@ package debug
 
 import chisel3._
 import chisel3.experimental.ChiselEnum
-import bus.CpuBus
-import bus.PpuBus
 import java.nio.file.Files
 import java.nio.file.Paths
 
