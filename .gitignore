@@ -341,5 +341,6 @@ hs_err_pid*
 
 # build artifacts
 null/
+dst/
 .bloop/
 .metals/
