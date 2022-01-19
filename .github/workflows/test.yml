@@ -26,4 +26,4 @@ jobs:
       - name: mill Test
         run: mill _.test
       - name: Generate Verilog
-        run: sbt 'run --target-dir dst
+        run: sbt 'run --target-dir dst'
