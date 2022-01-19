@@ -1,0 +1,25 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "generate verilog",
+            "type": "shell",
+            "command": "sbt 'run --target-dir dst'",
+            "problemMatcher": []
+        },
+        {
+            "label": "test",
+            "type": "shell",
+            "command": "sbt 'testOnly'",
+            "problemMatcher": []
+        },
+        {
+            "label": "test current file",
+            "type": "shell",
+            "command": "sbt 'testOnly *${fileBasenameNoExtension}'",
+            "problemMatcher": []
+        }
+    ]
+}
