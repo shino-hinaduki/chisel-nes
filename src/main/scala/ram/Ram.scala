@@ -4,6 +4,16 @@ import chisel3._
 
 /** 6116 5V 2K x 8 Asynchronous Static RAM
   * WRAM, VRAMがこれを使用している
+  * 
+  * Truth Table
+  * | Mode    | /CS | /OE | /WE | I/O    |
+  * | Standby | H   | X   | X   | High-Z |
+  * | Read    | L   | L   | H   | Dout   |
+  * | Read    | L   | H   | H   | High-Z |
+  * | Write   | L   | X   | L   | Din    |
+  * 
+  * /WE=LであればWrite Modeになっており、Write優先のロジックになっている
+  * /WE=H, /CS=LであればReadだが、/OE次第でDout, High-Zが決定する
   */
 class Ram extends Module {
   val io = IO(new Bundle {
@@ -19,23 +29,21 @@ class Ram extends Module {
   val ram     = SyncReadMem(ramSize, UInt(8.W))
 
   when(!io.nChipSelect) {
-    // chip選択済み
     when(!io.nWriteEnable) {
-      // RAMへ書き込み
+      // | Write | /CS=L, /OE=X, /WE=L | Din |
       ram.write(io.addr, io.dataIn)
-      io.dataOut := DontCare
+      io.dataOut := io.dataIn
     }.otherwise {
-      // 書き込み無効
       when(!io.nOutputEnable) {
-        // RAMから読み出し
+        // | Read | /CS=L, /OE=L, /WE=H | Dout |
         io.dataOut := ram.read(io.addr)
       }.otherwise {
-        // R/Wいずれも無効
+        // | Read | /CS=L, /OE=H, /WE=H | High-Z |
         io.dataOut := DontCare
       }
     }
   }.otherwise {
-    // Chipが選択されていない
+    // | Standby | /CS=H, /OE=X, /WE=X | High-Z |
     io.dataOut := DontCare
   }
 }
