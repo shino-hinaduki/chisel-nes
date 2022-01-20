@@ -2,10 +2,10 @@ package ram
 
 import chisel3._
 
-/** CPUからアクセス可能なWRAM
- * 0x0000 - 0x07ff WRAM
+/** 6116 5V 2K x 8 Asynchronous Static RAM
+  * WRAM, VRAMがこれを使用している
   */
-class WorkRam extends Module {
+class Ram extends Module {
   val io = IO(new Bundle {
     val addr          = Input(UInt(11.W))
     val dataIn        = Input(UInt(8.W))
