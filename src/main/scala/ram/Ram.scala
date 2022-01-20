@@ -25,7 +25,7 @@ class Ram extends Module {
     val nWriteEnable  = Input(Bool())
   })
 
-  val ramSize = 0x0800;
+  val ramSize = 0x0800; // 2KiB
   val ram     = SyncReadMem(ramSize, UInt(8.W))
 
   when(!io.nChipSelect) {
