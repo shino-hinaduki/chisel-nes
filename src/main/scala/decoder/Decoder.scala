@@ -17,9 +17,8 @@ import chisel3.util.is
   * | L  | H | L | H  | L  | H  | H  |
   * | L  | H | H | L  | H  | H  | H  |
   * 
-  * { B, A }で選んだ数字がYxにデコードされて出てくるイメージ
+  * { B, A }で選んだ数字がY[x]にデコードされて出てくるイメージ
   */
-
 class Decoder extends Module {
   val io = IO(new Bundle {
     // select A
@@ -38,6 +37,19 @@ class Decoder extends Module {
     // /G=H
     io.y := "b1111".U
   }.otherwise {
-    // TODO:
+    switch(input) {
+      is("b00".U) {
+        io.y := "b1110".U
+      }
+      is("b01".U) {
+        io.y := "b1101".U
+      }
+      is("b10".U) {
+        io.y := "b1011".U
+      }
+      is("b11".U) {
+        io.y := "b0111".U
+      }
+    }
   }
 }
