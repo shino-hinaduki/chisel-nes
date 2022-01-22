@@ -46,7 +46,7 @@ object NesFile {
   * - 0 or 8KiB        : INST-ROM    
   * - 16byte           : PROM        
   */
-class NesFile(srcBytes: Array[Byte]) {
+class NesFile(val srcBytes: Array[Byte]) {
   def this(filePath: String) = {
     this(Files.readAllBytes(Paths.get(filePath)))
   }
