@@ -19,14 +19,14 @@ class BusSelector extends Module {
   })
   // LS139 2回路で合成する
   val decoder0 = Module(new Decoder)
-  decoder0.io.b  := io.a15
-  decoder0.io.a  := io.phi2 // 1/12 MCLK, 62.5% duty cycle
-  decoder0.io.nG := false.B // always enabled
+  decoder0.io.b   := io.a15
+  decoder0.io.a   := io.phi2 // 1/12 MCLK, 62.5% duty cycle
+  decoder0.io.nEn := false.B // always enabled
 
   val decoder1 = Module(new Decoder)
-  decoder1.io.b  := io.a14
-  decoder1.io.a  := io.a13
-  decoder1.io.nG := decoder0.io.y(1) // decoder1でPHI2=L, A15=Lのときにのみ有効
+  decoder1.io.b   := io.a14
+  decoder1.io.a   := io.a13
+  decoder1.io.nEn := decoder0.io.y(1) // decoder1でPHI2=L, A15=Lのときにのみ有効
 
   // 出力
   io.nRomSel        := decoder0.io.y(3) // PHI2=H, A15=H, A14=X, A13=X

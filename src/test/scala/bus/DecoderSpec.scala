@@ -8,7 +8,7 @@ class DecoderSpec extends AnyFreeSpec with ChiselScalatestTester {
   "Does it match the truth table" in {
     test(new Decoder) { dut =>
       {
-        case class TestPattern(nG: Bool, b: Bool, a: Bool, expectY: UInt)
+        case class TestPattern(nEn: Bool, b: Bool, a: Bool, expectY: UInt)
         val patterns = Array(
           // disable
           TestPattern(true.B, false.B, false.B, "b1111".U),
@@ -23,7 +23,7 @@ class DecoderSpec extends AnyFreeSpec with ChiselScalatestTester {
         )
         patterns foreach { p =>
           {
-            dut.io.nG.poke(p.nG)
+            dut.io.nEn.poke(p.nEn)
             dut.io.b.poke(p.b)
             dut.io.a.poke(p.a)
             dut.clock.step(1)
