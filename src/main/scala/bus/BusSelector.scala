@@ -13,17 +13,17 @@ class BusSelector extends Module {
     val a14  = Input(Bool())
     val a15  = Input(Bool())
 
-    val nRomSel        = Output(Bool()) // $8000 ~
-    val nDataBusEnable = Output(Bool()) // $2000 ~
     val nRamSel        = Output(Bool()) // $0000 ~
+    val nDataBusEnable = Output(Bool()) // $2000 ~
+    val nRomSel        = Output(Bool()) // $8000 ~
   })
   // LS139 2回路で合成する
-  val decoder0 = new Decoder
+  val decoder0 = Module(new Decoder)
   decoder0.io.b  := io.a15
   decoder0.io.a  := io.phi2 // 1/12 MCLK, 62.5% duty cycle
   decoder0.io.nG := false.B // always enabled
 
-  val decoder1 = new Decoder
+  val decoder1 = Module(new Decoder)
   decoder1.io.b  := io.a14
   decoder1.io.a  := io.a13
   decoder1.io.nG := decoder0.io.y(1) // decoder1でPHI2=L, A15=Lのときにのみ有効
