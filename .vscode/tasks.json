@@ -18,7 +18,7 @@
         {
             "label": "test current file",
             "type": "shell",
-            "command": "sbt 'testOnly *${fileBasenameNoExtension}'",
+            "command": "sbt 'testOnly *${fileBasenameNoExtension}*'",
             "problemMatcher": []
         }
     ]

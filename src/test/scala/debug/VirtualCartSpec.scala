@@ -1,5 +1,3 @@
-// See README.md for license details.
-
 package debug
 
 import chisel3._

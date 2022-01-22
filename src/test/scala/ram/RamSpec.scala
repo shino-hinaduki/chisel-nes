@@ -4,9 +4,9 @@ import chisel3._
 import chiseltest._
 import org.scalatest.freespec.AnyFreeSpec
 
-class WorkRamSpec extends AnyFreeSpec with ChiselScalatestTester {
+class RamSpec extends AnyFreeSpec with ChiselScalatestTester {
   "Read and confirm what you have written" in {
-    test(new WorkRam()) { dut =>
+    test(new Ram()) { dut =>
       // write incremental pattern
       for (i <- 0 until 0x0800) {
         dut.io.addr.poke(i.U)
@@ -30,7 +30,7 @@ class WorkRamSpec extends AnyFreeSpec with ChiselScalatestTester {
   }
 
   "Chip is not selected" in {
-    test(new WorkRam()) { dut =>
+    test(new Ram()) { dut =>
       // write incremental pattern
       for (i <- 0 until 0x0800) {
         dut.io.addr.poke(i.U)
@@ -54,7 +54,7 @@ class WorkRamSpec extends AnyFreeSpec with ChiselScalatestTester {
   }
 
   "Write is disabled" in {
-    test(new WorkRam()) { dut =>
+    test(new Ram()) { dut =>
       // write incremental pattern
       for (i <- 0 until 0x0800) {
         dut.io.addr.poke(i.U)
@@ -78,7 +78,7 @@ class WorkRamSpec extends AnyFreeSpec with ChiselScalatestTester {
   }
 
   "Read is disabled" in {
-    test(new WorkRam()) { dut =>
+    test(new Ram()) { dut =>
       // write incremental pattern
       for (i <- 0 until 0x0800) {
         dut.io.addr.poke(i.U)
@@ -102,7 +102,7 @@ class WorkRamSpec extends AnyFreeSpec with ChiselScalatestTester {
   }
 
   "Writing in stripes" in {
-    test(new WorkRam()) { dut =>
+    test(new Ram()) { dut =>
       // write stripes pattern
       for (i <- 0 until 0x0800) {
         dut.io.addr.poke(i.U)
