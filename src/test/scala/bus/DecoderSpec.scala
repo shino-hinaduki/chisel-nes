@@ -1,4 +1,4 @@
-package decoder
+package bus
 
 import chisel3._
 import chiseltest._

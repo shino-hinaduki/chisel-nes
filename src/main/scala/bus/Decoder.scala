@@ -1,4 +1,4 @@
-package decoder
+package bus
 
 import chisel3._
 import chisel3.util.switch
@@ -7,7 +7,7 @@ import chisel3.util.is
 import chisel3.util.MuxCase
 
 /**
-  * LS139, CPU Busのアドレス線から /RAMSEL, /DBE, /ROMSEL 信号を生成する
+  * LS139
   * 
   * Truth Table
   * | EN | SEL   | OUTPUTS           |
