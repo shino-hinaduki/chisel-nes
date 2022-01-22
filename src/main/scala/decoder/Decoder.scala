@@ -4,6 +4,7 @@ import chisel3._
 import chisel3.util.switch
 import chisel3.util.Cat
 import chisel3.util.is
+import chisel3.util.MuxCase
 
 /**
   * LS139, CPU Busのアドレス線から /RAMSEL, /DBE, /ROMSEL 信号を生成する
@@ -31,25 +32,13 @@ class Decoder extends Module {
     val y = Output(UInt(4.W))
   })
   // select A/Bを数値化
-  val input = Cat(io.b, io.a)
+  val sel = Cat(io.b, io.a)
 
   when(io.nG) {
-    // /G=H
+    // disable
     io.y := "b1111".U
   }.otherwise {
-    switch(input) {
-      is("b00".U) {
-        io.y := "b1110".U
-      }
-      is("b01".U) {
-        io.y := "b1101".U
-      }
-      is("b10".U) {
-        io.y := "b1011".U
-      }
-      is("b11".U) {
-        io.y := "b0111".U
-      }
-    }
+    // enable, a,bで選んだ位置を立てて反転
+    io.y := ~(1.U << sel)
   }
 }
