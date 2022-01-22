@@ -1,10 +1,7 @@
 package bus
 
 import chisel3._
-import chisel3.util.switch
 import chisel3.util.Cat
-import chisel3.util.is
-import chisel3.util.MuxCase
 
 /**
   * LS139 Decoder
