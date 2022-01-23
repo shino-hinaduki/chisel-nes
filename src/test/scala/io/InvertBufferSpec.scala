@@ -4,18 +4,24 @@ import chisel3._
 import chiseltest._
 import org.scalatest.freespec.AnyFreeSpec
 
-class TriStateBufferSpec extends AnyFreeSpec with ChiselScalatestTester {
+class InvertBufferSpec extends AnyFreeSpec with ChiselScalatestTester {
   "Verify that the output can be Hi-Z" in {
-    test(new TriStateBuffer) { dut =>
+    test(new InvertBuffer) { dut =>
       {
         case class TestInput(nEn0: Bool, nEn1: Bool, a: UInt)
         case class TestExpect(oe0: Bool, oe1: Bool, y0: UInt, y1: UInt) // z=trueの場合、値自体は関与しない
 
         val patterns = Array(
-          (TestInput(true.B, true.B, 0x3f.U), TestExpect(false.B, false.B, 0x0.U, 0x0.U)),
-          (TestInput(false.B, true.B, 0x3f.U), TestExpect(true.B, false.B, 0xf.U, 0x0.U)),
-          (TestInput(true.B, false.B, 0x3f.U), TestExpect(false.B, true.B, 0x0.U, 0x3.U)),
-          (TestInput(false.B, false.B, 0x3f.U), TestExpect(true.B, true.B, 0xf.U, 0x3.U))
+          // All 1
+          (TestInput(true.B, true.B, 0x3f.U), TestExpect(false.B, false.B, 0xf.U, 0x3.U)),
+          (TestInput(false.B, true.B, 0x3f.U), TestExpect(true.B, false.B, 0x0.U, 0x3.U)),
+          (TestInput(true.B, false.B, 0x3f.U), TestExpect(false.B, true.B, 0xf.U, 0x0.U)),
+          (TestInput(false.B, false.B, 0x3f.U), TestExpect(true.B, true.B, 0x0.U, 0x0.U)),
+          // All 0
+          (TestInput(true.B, true.B, 0x00.U), TestExpect(false.B, false.B, 0x0.U, 0x0.U)),
+          (TestInput(false.B, true.B, 0x00.U), TestExpect(true.B, false.B, 0xf.U, 0x0.U)),
+          (TestInput(true.B, false.B, 0x00.U), TestExpect(false.B, true.B, 0x0.U, 0x3.U)),
+          (TestInput(false.B, false.B, 0x00.U), TestExpect(true.B, true.B, 0xf.U, 0x3.U))
         )
         patterns foreach {
           case (input, expect) => {
