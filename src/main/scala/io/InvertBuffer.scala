@@ -9,10 +9,10 @@ import common.TriState
   * Truth Table
   * | /OE | A[n] | Y[n] |
   * | H   | X    | Z    |
+  * | L   | L    | H    |
   * | L   | L    | L    |
-  * | L   | H    | H    |
   * 
-  * /OEが無効ならHi-Z, /OEが有効ならAを出力するだけ
+  * /OEが無効ならHi-Z, /OEが有効ならAの反転を出力するだけ
   */
 class InvertBuffer extends Module {
   val io = IO(new Bundle {
