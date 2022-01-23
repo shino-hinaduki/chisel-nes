@@ -24,7 +24,8 @@ class RamSpec extends AnyFreeSpec with ChiselScalatestTester {
         dut.io.nOutputEnable.poke(false.B)
         dut.io.nWriteEnable.poke(true.B)
         dut.clock.step(1)
-        dut.io.dataOut.expect((i & 0xff).U)
+        dut.io.dataOut.data.expect((i & 0xff).U)
+        dut.io.dataOut.oe.expect(true.B)
       }
     }
   }
@@ -48,7 +49,8 @@ class RamSpec extends AnyFreeSpec with ChiselScalatestTester {
         dut.io.nOutputEnable.poke(false.B)
         dut.io.nWriteEnable.poke(true.B)
         dut.clock.step(1)
-        dut.io.dataOut.expect(0x00.U)
+        dut.io.dataOut.data.expect(0x00.U)
+        dut.io.dataOut.oe.expect(true.B)
       }
     }
   }
@@ -72,7 +74,8 @@ class RamSpec extends AnyFreeSpec with ChiselScalatestTester {
         dut.io.nOutputEnable.poke(false.B)
         dut.io.nWriteEnable.poke(true.B)
         dut.clock.step(1)
-        dut.io.dataOut.expect(0x00.U)
+        dut.io.dataOut.data.expect(0x00.U)
+        dut.io.dataOut.oe.expect(true.B)
       }
     }
   }
@@ -96,7 +99,10 @@ class RamSpec extends AnyFreeSpec with ChiselScalatestTester {
         dut.io.nOutputEnable.poke(true.B)
         dut.io.nWriteEnable.poke(true.B)
         dut.clock.step(1)
-        dut.io.dataOut.expect(0x00.U)
+
+        // 期待値は不定
+        // dut.io.dataOut.data.expect(DontCare)
+        dut.io.dataOut.oe.expect(false.B)
       }
     }
   }
@@ -129,7 +135,8 @@ class RamSpec extends AnyFreeSpec with ChiselScalatestTester {
         dut.io.nOutputEnable.poke(false.B)
         dut.io.nWriteEnable.poke(true.B)
         dut.clock.step(1)
-        dut.io.dataOut.expect(if (i % 2 == 1) (i & 0xff).U else (0xff - (i & 0xff)).U)
+        dut.io.dataOut.data.expect(if (i % 2 == 1) (i & 0xff).U else (0xff - (i & 0xff)).U)
+        dut.io.dataOut.oe.expect(true.B)
       }
     }
   }

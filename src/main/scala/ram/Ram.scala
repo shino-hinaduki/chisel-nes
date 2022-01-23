@@ -1,6 +1,7 @@
 package ram
 
 import chisel3._
+import common.TriState
 
 /** 6116 5V 2K x 8 Asynchronous Static RAM
   * WRAM, VRAMがこれを使用している
@@ -19,7 +20,7 @@ class Ram extends Module {
   val io = IO(new Bundle {
     val addr          = Input(UInt(11.W))
     val dataIn        = Input(UInt(8.W))
-    val dataOut       = Output(UInt(8.W))
+    val dataOut       = Output(TriState(UInt(8.W)))
     val nChipSelect   = Input(Bool())
     val nOutputEnable = Input(Bool())
     val nWriteEnable  = Input(Bool())
@@ -32,18 +33,22 @@ class Ram extends Module {
     when(!io.nWriteEnable) {
       // | Write | /CS=L, /OE=X, /WE=L | Din |
       ram.write(io.addr, io.dataIn)
-      io.dataOut := io.dataIn
+      io.dataOut.data := io.dataIn
+      io.dataOut.oe   := true.B
     }.otherwise {
       when(!io.nOutputEnable) {
         // | Read | /CS=L, /OE=L, /WE=H | Dout |
-        io.dataOut := ram.read(io.addr)
+        io.dataOut.data := ram.read(io.addr)
+        io.dataOut.oe   := true.B
       }.otherwise {
         // | Read | /CS=L, /OE=H, /WE=H | High-Z |
-        io.dataOut := DontCare
+        io.dataOut.data := DontCare
+        io.dataOut.oe   := false.B
       }
     }
   }.otherwise {
     // | Standby | /CS=H, /OE=X, /WE=X | High-Z |
-    io.dataOut := DontCare
+    io.dataOut.data := DontCare
+    io.dataOut.oe   := false.B
   }
 }
