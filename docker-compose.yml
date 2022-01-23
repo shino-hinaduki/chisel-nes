@@ -6,5 +6,11 @@ services:
      - ./:/work/
    working_dir: /work
    command: sbt test
+  generate:
+   image: hseeberger/scala-sbt:11.0.2-oraclelinux7_1.4.7_2.12.12
+   volumes:
+     - ./:/work/
+   working_dir: /work
+   command: sbt 'run --target-dir dst'
 
 

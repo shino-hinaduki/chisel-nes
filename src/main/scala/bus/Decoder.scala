@@ -1,13 +1,10 @@
 package bus
 
 import chisel3._
-import chisel3.util.switch
 import chisel3.util.Cat
-import chisel3.util.is
-import chisel3.util.MuxCase
 
 /**
-  * LS139
+  * LS139 Decoder
   * 
   * Truth Table
   * | EN | SEL   | OUTPUTS           |
@@ -27,14 +24,14 @@ class Decoder extends Module {
     // select B
     val b = Input(Bool())
     // Enable /G
-    val nG = Input(Bool())
+    val nEn = Input(Bool())
     // Outputs Y
     val y = Output(UInt(4.W))
   })
   // select A/Bを数値化
   val sel = Cat(io.b, io.a)
 
-  when(io.nG) {
+  when(io.nEn) {
     // disable
     io.y := "b1111".U
   }.otherwise {

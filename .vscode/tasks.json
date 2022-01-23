@@ -10,6 +10,12 @@
             "problemMatcher": []
         },
         {
+            "label": "format",
+            "type": "shell",
+            "command": "sbt 'scalafmt'",
+            "problemMatcher": []
+        },
+        {
             "label": "test",
             "type": "shell",
             "command": "sbt 'testOnly'",
