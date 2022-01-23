@@ -21,7 +21,10 @@ class InvertBufferSpec extends AnyFreeSpec with ChiselScalatestTester {
           (TestInput(true.B, true.B, 0x00.U), TestExpect(false.B, false.B, 0x0.U, 0x0.U)),
           (TestInput(false.B, true.B, 0x00.U), TestExpect(true.B, false.B, 0xf.U, 0x0.U)),
           (TestInput(true.B, false.B, 0x00.U), TestExpect(false.B, true.B, 0x0.U, 0x3.U)),
-          (TestInput(false.B, false.B, 0x00.U), TestExpect(true.B, true.B, 0xf.U, 0x3.U))
+          (TestInput(false.B, false.B, 0x00.U), TestExpect(true.B, true.B, 0xf.U, 0x3.U)),
+          // checker
+          (TestInput(false.B, false.B, 0xaa.U), TestExpect(true.B, true.B, 0x5.U, 0x1.U)),
+          (TestInput(false.B, false.B, 0x55.U), TestExpect(true.B, true.B, 0xa.U, 0x2.U))
         )
         patterns foreach {
           case (input, expect) => {
