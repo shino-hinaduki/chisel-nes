@@ -10,7 +10,7 @@ import common.TriState
   * | /OE | A[n] | Y[n] |
   * | H   | X    | Z    |
   * | L   | L    | H    |
-  * | L   | L    | L    |
+  * | L   | H    | L    |
   * 
   * /OEが無効ならHi-Z, /OEが有効ならAの反転を出力するだけ
   */
@@ -28,7 +28,7 @@ class InvertBuffer extends Module {
   })
   // dataは常に接続しておいて、OEで制御
   io.y0.data := ~(io.a(3, 0))
-  io.y1.data := ~(io.a(4, 3))
+  io.y1.data := ~(io.a(5, 4))
 
   // OEでBus切り替え
   io.y0.oe := !io.nEn0;
