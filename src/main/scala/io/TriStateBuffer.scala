@@ -27,12 +27,8 @@ class TriStateBuffer extends Module {
     val y1 = Output(TriState(UInt(2.W)))
   })
   // dataは常に接続しておいて、OEで制御
-  io.y0.data(0) := io.a(0)
-  io.y0.data(1) := io.a(1)
-  io.y0.data(2) := io.a(2)
-  io.y0.data(3) := io.a(3)
-  io.y1.data(0) := io.a(4)
-  io.y1.data(1) := io.a(5)
+  io.y0.data := io.a(3, 0)
+  io.y1.data := io.a(4, 3)
 
   // OEでBus切り替え
   io.y0.oe := !io.nEn0;
