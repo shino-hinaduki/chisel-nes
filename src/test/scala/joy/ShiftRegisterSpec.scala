@@ -36,16 +36,20 @@ class ShiftRegisterSpec extends AnyFreeSpec with ChiselScalatestTester {
       {
         testDatas foreach { testData =>
           {
-            // 1cycleかけてデータ入力
-            dut.io.pi.poke(testData.U)
-            dut.io.isParallel.poke(true.B)
-            dut.clock.step(1)
+            Array(1, 2, 5, 10) foreach { inputCycles =>
+              {
+                // inputCyclesかけてデータ入力
+                dut.io.pi.poke(testData.U)
+                dut.io.isParallel.poke(true.B)
+                dut.clock.step(inputCycles) // isParallel=trueの限りシフトは発生しないはず
 
-            // 現時点でtestDatas(7)が見えているはずなので今回1cyc+7cycでデータを確認
-            for (i <- 0 until 8) {
-              dut.io.q7.expect((((testData >> (7 - i)) & 0x1) == 0x1).B)
-              dut.io.isParallel.poke(false.B)
-              dut.clock.step(1)
+                // 現時点でtestDatas(7)が見えているはずなので今回1cyc+7cycでデータを確認
+                for (i <- 0 until 8) {
+                  dut.io.q7.expect((((testData >> (7 - i)) & 0x1) == 0x1).B)
+                  dut.io.isParallel.poke(false.B)
+                  dut.clock.step(1)
+                }
+              }
             }
           }
         }
