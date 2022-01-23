@@ -10,7 +10,7 @@ import common.TriState
   * | /OE | A[n] | Y[n] |
   * | H   | X    | Z    |
   * | L   | L    | H    |
-  * | L   | L    | L    |
+  * | L   | H    | L    |
   * 
   * /OEが無効ならHi-Z, /OEが有効ならAの反転を出力するだけ
   */
