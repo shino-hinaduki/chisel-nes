@@ -1,6 +1,7 @@
 package io
 
 import chisel3._
+import common.TriState
 
 /**
   * HC368 3-state inverter
@@ -22,27 +23,18 @@ class TriStateBuffer extends Module {
     // 入力
     val a = Input(UInt(6.W))
     // 出力
-    val y = Output(UInt(6.W))
+    val y0 = Output(TriState(UInt(4.W)))
+    val y1 = Output(TriState(UInt(2.W)))
   })
-  // 0-3
-  when(io.nEn0) {
-    io.y(0) := io.a(0)
-    io.y(1) := io.a(1)
-    io.y(2) := io.a(2)
-    io.y(3) := io.a(3)
-  }.otherwise {
-    io.y(0) := DontCare
-    io.y(1) := DontCare
-    io.y(2) := DontCare
-    io.y(3) := DontCare
-  }
+  // dataは常に接続しておいて、OEで制御
+  io.y0.data(0) := io.a(0)
+  io.y0.data(1) := io.a(1)
+  io.y0.data(2) := io.a(2)
+  io.y0.data(3) := io.a(3)
+  io.y1.data(0) := io.a(4)
+  io.y1.data(1) := io.a(5)
 
-  // 4-5
-  when(io.nEn0) {
-    io.y(4) := io.a(4)
-    io.y(5) := io.a(5)
-  }.otherwise {
-    io.y(4) := DontCare
-    io.y(5) := DontCare
-  }
+  // OEでBus切り替え
+  io.y0.oe := !io.nEn0;
+  io.y1.oe := !io.nEn1;
 }
