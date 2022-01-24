@@ -21,8 +21,8 @@ import chisel3.util.Cat
   * 
   * P/ /S pinで動作が決まっている。
   *  * Serialにすると、clkごとにシフトする。Q0に次はいる値はSIの現在地
-  *  * ParallelにするとQ0~Q4はP0~P4の値をラッチする
-  * 用途としてはParallelでまとめて値を取り込んで、Serialに切り替えシフトしつつQ8あたりで順番に受ける感じ
+  *  * ParallelにするとQ0~Q7はPI0~PI7の値をラッチする
+  * 用途としてはParallelでまとめて値を取り込んで、Serialに切り替えシフトしつつQ7あたりで順番に受ける感じ
   * 
   */
 class ShiftRegister extends Module {
