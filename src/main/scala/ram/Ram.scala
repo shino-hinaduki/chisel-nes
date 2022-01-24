@@ -33,8 +33,9 @@ class Ram extends Module {
     when(!io.nWriteEnable) {
       // | Write | /CS=L, /OE=X, /WE=L | Din |
       ram.write(io.addr, io.dataIn)
-      io.dataOut.data := io.dataIn
-      io.dataOut.oe   := true.B
+      // dataIn側でDriveされているはずなので、OEをおろしておく
+      io.dataOut.data := DontCare
+      io.dataOut.oe   := false.B
     }.otherwise {
       when(!io.nOutputEnable) {
         // | Read | /CS=L, /OE=L, /WE=H | Dout |
