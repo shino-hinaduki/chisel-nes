@@ -20,7 +20,7 @@ class DFlipFlop extends Module {
   })
 
   // FFの実体
-  val reg = Reg(UInt(8.W))
+  val reg = RegInit(UInt(8.W), 0.U)
   io.q := reg
 
   when(io.nEn) {

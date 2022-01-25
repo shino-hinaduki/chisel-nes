@@ -22,8 +22,8 @@ class InstructionFetch(isDebug: Boolean) extends Module {
   })
 
   // nEnが有効なときに命令を取得する
-  val instReg  = Reg(UInt(8.W))
-  val validReg = Reg(Bool())
+  val instReg  = RegInit(UInt(8.W), 0.U)
+  val validReg = RegInit(Bool(), false.B)
   io.dataOut := instReg
   io.valid   := validReg
   when(io.nEn) {
@@ -38,7 +38,7 @@ class InstructionFetch(isDebug: Boolean) extends Module {
 
   // デバッグ用にアドレスも取得する
   if (isDebug) {
-    val debugAddrReg = Reg(UInt(16.W))
+    val debugAddrReg = RegInit(UInt(16.W), 0.U)
     io.debugAddrOut.get := debugAddrReg
     when(io.nEn) {
       // disable

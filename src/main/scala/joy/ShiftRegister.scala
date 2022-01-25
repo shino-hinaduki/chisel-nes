@@ -36,7 +36,7 @@ class ShiftRegister extends Module {
   })
 
   // 保持しているデータの実体
-  val shiftReg = Reg(UInt(8.W))
+  val shiftReg = RegInit(UInt(8.W), 0.U)
   when(io.isParallel) {
     // パラレル入力を取り込み
     shiftReg := io.pi
