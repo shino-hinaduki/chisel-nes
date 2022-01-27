@@ -1,4 +1,4 @@
-package cpu
+package cpu.register
 
 import chisel3._
 
