@@ -6,6 +6,9 @@ import chisel3.experimental.ChiselEnum
 /** AddressingModeの定義
   */
 object Addressing extends ChiselEnum {
+  // invalid
+  val Invalid = Value
+  // other
   val Implied     = Value
   val Accumulator = Value
   val Immediate   = Value

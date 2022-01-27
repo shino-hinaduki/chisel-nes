@@ -6,6 +6,8 @@ import chisel3.experimental.ChiselEnum
 /** 命令の定義
   */
 object Instruction extends ChiselEnum {
+  // invalid
+  val Invalid = Value
   // binary op
   val ADC, SBC, AND, EOR, ORA = Value
   // shift/rotate
