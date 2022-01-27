@@ -3,49 +3,37 @@ package cpu
 import chisel3._
 
 /** DataBusからの命令取得と、その内容をInstruction Registerに保持する役割を持つ
- *  @param isDebug デバッグ用pinを残すならtrue
   */
-class InstructionFetch(isDebug: Boolean) extends Module {
+class InstructionFetch extends Module {
   val io = IO(new Bundle {
-    // デバッグ用、Fetchしたときのaddr/dataの値を保持
-    val debugAddrIn  = if (isDebug) Some(Input(UInt(16.W))) else None
-    val debugAddrOut = if (isDebug) Some(Output(UInt(16.W))) else None
-
+    // DataBusと直結、入力
+    val addrIn = Input(UInt(16.W))
+    val dataIn = Input(UInt(8.W))
+    // Fetchしたときのaddr/dataの値を保持
+    val addrOut = Output(UInt(16.W))
+    val dataOut = Output(UInt(8.W))
     // Fetchを有効にする場合はtrue、trueの間は毎cycle取得する
     val nEn = Input(Bool())
-    // DataBusと直結
-    val dataIn = Input(UInt(8.W))
-    // IRの出力
-    val dataOut = Output(UInt(8.W))
-    // IRに有効な値が入っていればtrue
+    // IRに有効な値が入っていればtrue, nEn設定後の次cycleから有効
     val valid = Output(Bool())
   })
 
   // nEnが有効なときに命令を取得する
-  val instReg  = RegInit(UInt(8.W), 0.U)
+  val addrReg  = RegInit(UInt(16.W), 0.U)
+  val dataReg  = RegInit(UInt(8.W), 0.U)
   val validReg = RegInit(Bool(), false.B)
-  io.dataOut := instReg
+  io.addrOut := addrReg
+  io.dataOut := dataReg
   io.valid   := validReg
   when(io.nEn) {
     // disable
-    instReg  := instReg
+    addrReg  := addrReg
+    dataReg  := dataReg
     validReg := false.B
   }.otherwise {
     // enable
-    instReg  := io.dataIn
+    addrReg  := io.addrIn
+    dataReg  := io.dataIn
     validReg := true.B
-  }
-
-  // デバッグ用にアドレスも取得する
-  if (isDebug) {
-    val debugAddrReg = RegInit(UInt(16.W), 0.U)
-    io.debugAddrOut.get := debugAddrReg
-    when(io.nEn) {
-      // disable
-      debugAddrReg := debugAddrReg
-    }.otherwise {
-      // enable
-      debugAddrReg := io.debugAddrIn.get
-    }
   }
 }
