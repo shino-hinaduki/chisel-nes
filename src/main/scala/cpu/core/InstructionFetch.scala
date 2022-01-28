@@ -46,8 +46,8 @@ class InstructionFetch extends Module {
 
   // decode stage
   // IF,ID,OFは並列化できないため、次サイクルで(Impliedなどを除いて)OFが実行できるようにDecodeまで済ませる
-  val instReg       = RegInit(Instruction(), Instruction.NOP)
-  val addressingReg = RegInit(Addressing(), Addressing.Implied)
+  val instReg       = RegInit(Instruction(), Instruction.not)
+  val addressingReg = RegInit(Addressing(), Addressing.implied)
   when(io.nEn) {
     // disable
     instReg       := instReg
@@ -55,8 +55,8 @@ class InstructionFetch extends Module {
   }.otherwise {
     // enable
     // io.dataInから直接デコードする
-    val inst       = MuxLookup(io.dataIn, Instruction.NOP, InstructionDecode.lookupTable.map(x => x._1 -> x._2._1))
-    val addressing = MuxLookup(io.dataIn, Addressing.Implied, InstructionDecode.lookupTable.map(x => x._1 -> x._2._2))
+    val inst       = MuxLookup(io.dataIn, Instruction.not, InstructionDecode.lookupTable.map(x => x._1 -> x._2._1))
+    val addressing = MuxLookup(io.dataIn, Addressing.implied, InstructionDecode.lookupTable.map(x => x._1 -> x._2._2))
     instReg       := inst
     addressingReg := addressing
   }

@@ -6,30 +6,30 @@ import chisel3.experimental.ChiselEnum
 /** 命令の定義
   */
 object Instruction extends ChiselEnum {
-  // invalid
-  val Invalid = Value
+  // invalid(HALTさせる)
+  val invalid = Value
   // binary op
-  val ADC, SBC, AND, EOR, ORA = Value
+  val adc, sbc, and, eor, ora = Value
   // shift/rotate
-  val ASL, LSR, ROL, ROR = Value
+  val asl, lsr, rol, ror = Value
   // inc/dec
-  val INC, INX, INY, DEC, DEX, DEY = Value
+  val inc, inx, iny, dec, dex, dey = Value
   // load/store
-  val LDA, LDX, LDY, STA, STX, STY = Value
+  val lda, ldx, ldy, sta, stx, sty = Value
   // set/clear
-  val SEC, SED, SEI, CLC, CLD, CLI, CLV = Value
+  val sec, sed, sei, clc, cld, cli, clv = Value
   // compare
-  val CMP, CPX, CPY = Value
+  val cmp, cpx, cpy = Value
   // jump return
-  val JMP, JSR, RTI, RTS = Value
+  val jmp, jsr, rti, rts = Value
   // branch
-  val BCC, BCS, BEQ, BMI, BNE, BPL, BVC, BVS = Value
+  val bcc, bcs, beq, bmi, bne, bpl, bvc, bvs = Value
   // push/pop
-  val PHA, PHP, PLA, PLP = Value
+  val pha, php, pla, plp = Value
   // transfer
-  val TAX, TAY, TSX, TXA, TXS, TYA = Value
+  val tax, tay, tsx, txa, txs, tya = Value
   // other
-  val BRK, BIT, NOP = Value
+  val brk, bit, not = Value
   // unofficial1
-  val ALR, ANC, ARR, AXS, LAX, SAX, DCP, ISC, RLA, RRA, SLO, SRE, SKB, IGN = Value
+  val alr, anc, arr, axs, lax, sax, dcp, isc, rla, rra, slo, sre, skb, ign = Value
 }
