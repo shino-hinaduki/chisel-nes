@@ -27,17 +27,17 @@ import chisel3.util.Cat
   */
 class ShiftRegister extends Module {
   val io = IO(new Bundle {
-    val pi         = Input(UInt(8.W))
-    val si         = Input(Bool())
-    val isParallel = Input(Bool())
-    val q5         = Output(Bool())
-    val q6         = Output(Bool())
-    val q7         = Output(Bool())
+    val pi      = Input(UInt(8.W))
+    val si      = Input(Bool())
+    val nSerial = Input(Bool())
+    val q5      = Output(Bool())
+    val q6      = Output(Bool())
+    val q7      = Output(Bool())
   })
 
   // 保持しているデータの実体
   val shiftReg = RegInit(UInt(8.W), 0.U)
-  when(io.isParallel) {
+  when(io.nSerial) {
     // パラレル入力を取り込み
     shiftReg := io.pi
   }.otherwise {

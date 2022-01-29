@@ -1,4 +1,4 @@
-package cpu.core.fetch
+package cpu.fetch
 
 import chisel3._
 import cpu.types.Addressing

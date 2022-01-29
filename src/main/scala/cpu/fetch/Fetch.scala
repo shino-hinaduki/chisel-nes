@@ -1,4 +1,4 @@
-package cpu.core.fetch
+package cpu.fetch
 
 import chisel3._
 import cpu.types.Addressing
@@ -7,7 +7,7 @@ import chisel3.util.MuxLookup
 
 /** DataBusからの命令取得と、その内容をInstruction Registerに保持する役割を持つ
   */
-class InstructionFetch extends Module {
+class Fetch extends Module {
   val io = IO(new Bundle {
     // DataBusと直結、入力
     val addrIn = Input(UInt(16.W))
@@ -16,7 +16,7 @@ class InstructionFetch extends Module {
     val nEn = Input(Bool())
 
     // IRに有効な値が入っていればtrue, nEn設定後の次cycleから有効
-    val valid = Output(Bool())
+    val nValid = Output(Bool())
     // Fetchしたときのaddr/dataの値を保持
     val addrOut = Output(UInt(16.W))
     val dataOut = Output(UInt(8.W))
@@ -26,22 +26,22 @@ class InstructionFetch extends Module {
   })
 
   // nEnが有効なときに命令と命令のおいてあるアドレスを取得する
-  val addrReg  = RegInit(UInt(16.W), 0.U)
-  val dataReg  = RegInit(UInt(8.W), 0.U)
-  val validReg = RegInit(Bool(), false.B)
+  val addrReg   = RegInit(UInt(16.W), 0.U)
+  val dataReg   = RegInit(UInt(8.W), 0.U)
+  val nValidReg = RegInit(Bool(), false.B)
   io.addrOut := addrReg
   io.dataOut := dataReg
-  io.valid   := validReg
+  io.nValid  := nValidReg
   when(io.nEn) {
     // disable
-    addrReg  := addrReg
-    dataReg  := dataReg
-    validReg := false.B
+    addrReg   := addrReg
+    dataReg   := dataReg
+    nValidReg := true.B
   }.otherwise {
     // enable
-    addrReg  := io.addrIn
-    dataReg  := io.dataIn
-    validReg := true.B
+    addrReg   := io.addrIn
+    dataReg   := io.dataIn
+    nValidReg := false.B
   }
 
   // decode stage
