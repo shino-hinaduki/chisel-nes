@@ -70,20 +70,22 @@ class BusArbiter(n: Int) extends Module {
   }
 
   // slavePortsのindexが小さいほど優先度が高く要求を通す
-  io.slavePorts.zipWithIndex.find(_._1.req == true.B).headOption match {
-    case Some((p: BusSlavePort, index: Int)) => {
-      // 要求を外部に通す
-      addrReg        := p.addr
-      writeEnableReg := p.writeEnable
-      dataOutReg     := p.dataIn            // Readの場合はWriteEnable=falseなので特に参照されない
-      validReg       := (1 << index).U(n.W) // BusMaster側が読み取る
+  when(Cat(io.slavePorts.map(_.req)).orR) {
+    for (index <- (0 until n).reverse) {
+      val p = io.slavePorts(index)
+      when(p.req) {
+        // 要求を外部に通す
+        addrReg        := p.addr
+        writeEnableReg := p.writeEnable
+        dataOutReg     := p.dataIn            // Readの場合はWriteEnable=falseなので特に参照されない
+        validReg       := (1 << index).U(n.W) // BusMaster側が読み取る
+      }
     }
-    case _ => {
-      // addr, dataOutは不問、WriteEnableは立てず開放しておく
-      addrReg        := DontCare
-      writeEnableReg := false.B
-      dataOutReg     := DontCare
-      validReg       := 0.U
-    }
+  }.otherwise {
+    // addr, dataOutは不問、WriteEnableは立てず開放しておく
+    addrReg        := DontCare
+    writeEnableReg := false.B
+    dataOutReg     := DontCare
+    validReg       := 0.U
   }
 }
