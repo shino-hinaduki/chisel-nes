@@ -1,4 +1,4 @@
-package cpu.core
+package cpu.core.fetch
 
 import chisel3._
 import cpu.types.Addressing
@@ -55,8 +55,8 @@ class InstructionFetch extends Module {
   }.otherwise {
     // enable
     // io.dataInから直接デコードする
-    val inst       = MuxLookup(io.dataIn, Instruction.not, InstructionDecode.lookupTable.map(x => x._1 -> x._2._1))
-    val addressing = MuxLookup(io.dataIn, Addressing.implied, InstructionDecode.lookupTable.map(x => x._1 -> x._2._2))
+    val inst       = MuxLookup(io.dataIn, Instruction.not, Decode.lookupTable.map(x => x._1 -> x._2._1))
+    val addressing = MuxLookup(io.dataIn, Addressing.implied, Decode.lookupTable.map(x => x._1 -> x._2._2))
     instReg       := inst
     addressingReg := addressing
   }
