@@ -168,7 +168,7 @@ class BusArbiterSpec extends AnyFreeSpec with ChiselScalatestTester {
     }
   }
 
-  "Verify that you can write from port0 and read from port1" in {
+  "Check for writing from port 0 and reading from port 1" in {
     test(new BusArbiter(2)) { dut =>
       {
         // 2port使う
@@ -200,4 +200,85 @@ class BusArbiterSpec extends AnyFreeSpec with ChiselScalatestTester {
       }
     }
   }
+
+  "Check for multiple writing from port 0 and multiple reading from port 1" in {
+    test(new BusArbiter(2)) { dut =>
+      {
+        // 2port使う
+        val writePort = dut.io.slavePorts(0)
+        val readPort  = dut.io.slavePorts(1)
+
+        // 全release
+        setupIdleState(dut)
+
+        // def外部の外付けメモリ
+        val testMem = Array.fill(addressRange) { 0x00.U }
+
+        // Write
+        for (i <- 0 until addressRange) {
+          val addr = i.U
+          val data = (i & 0xff).U
+          reqWrite(writePort, addr, data)
+          dut.clock.step(1)
+          simExtMem(dut, testMem)
+          release(writePort)
+        }
+
+        // Read
+        for (i <- 0 until addressRange) {
+          val addr = (addressRange - i - 1).U // 逆順
+          val data = ((addressRange - i - 1) & 0xff).U
+          reqRead(readPort, addr)
+          dut.clock.step(1)
+          simExtMem(dut, testMem)
+          expectReadResp(readPort, data)
+          release(readPort)
+        }
+      }
+    }
+  }
+
+  "Check if writing from port 0 and reading from port 1 are alternately performed" in {
+    test(new BusArbiter(2)) { dut =>
+      {
+        // 2port使う
+        val writePort = dut.io.slavePorts(0)
+        val readPort  = dut.io.slavePorts(1)
+
+        // 全release
+        setupIdleState(dut)
+
+        // def外部の外付けメモリ
+        val testMem = Array.fill(addressRange) { 0x00.U }
+
+        // Write
+        for (i <- 0 until addressRange) {
+          val addr = i.U
+          val data = (i & 0xff).U
+
+          // 同時に要求を出して、優先度の低いport1があとから読み出すことを確認する
+          // |T| port0      | port1     |
+          // |0| release    | release   |
+          // |1| Write Req  | Read Req  |
+          // |2| Write Done |    ||     |
+          // |3| release    | Read Done | (T=1 に戻る)
+
+          // T1
+          reqWrite(writePort, addr, data)
+          reqRead(readPort, addr)
+          dut.clock.step(1)
+          simExtMem(dut, testMem)
+          expectNoResp(readPort) // port0=Write優先で処理されていない
+
+          // T2
+          release(writePort)
+          dut.clock.step(1)
+          simExtMem(dut, testMem)
+          expectNoResp(writePort)
+          expectReadResp(readPort, data) // port1=Read応答が帰ってくる
+        }
+      }
+    }
+  }
+  // TODO: 調停されるテストケースの追加
 }
