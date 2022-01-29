@@ -33,13 +33,13 @@ class BusArbiter(n: Int) extends Module {
   assert(n > 0) // 最低1portは必要
   val io = IO(new Bundle {
     // CPU内部のBus Masterと接続する
-    val slavePorts = 0 until n map (_ => new BusSlavePort())
+    val slavePorts = Vec(n, new BusSlavePort())
     // アドレス出力、Master固定
     val extAddr = Output(UInt(16.W))
     // データ入力, nWriteEnable=true時に参照
     val extDataIn = Input(UInt(8.W))
     // データ出力, nWriteEnable=false時に有効。OEも同じ値に設定
-    val extDataOut = TriState(UInt(8.W))
+    val extDataOut = Output(TriState(UInt(8.W)))
     // Writeが有効ならtrue、Readが有効ならfalse
     val writeEnable = Output(Bool())
     // (debug用)アクセス要求中BusMasterのステータス
@@ -57,7 +57,7 @@ class BusArbiter(n: Int) extends Module {
   io.extAddr     := addrReg
   io.writeEnable := writeEnableReg
   io.debugReq    := Cat(io.slavePorts.map(_.req)) // MSB: slavePorts[n] ~ LSB: slavePorts[0]
-  io.debugValid  := validReg                      // MSB: slavePorts[n] ~ LSB: slavePorts[0]
+  io.debugValid  := validReg                      // for debug
   // BusMasterデータ出力→内部でReg受けして外部素子にデータ入力
   io.extDataOut.data := dataOutReg
   io.extDataOut.oe   := writeEnableReg
@@ -70,19 +70,20 @@ class BusArbiter(n: Int) extends Module {
   }
 
   // slavePortsのindexが小さいほど優先度が高く要求を通す
-  val reqPort = io.slavePorts.zipWithIndex.find(_._1.req == true.B).headOption
-  when(reqPort.isDefined.B) {
-    // reqPortの要求を外部に通す
-    val (p, index) = reqPort.get
-    addrReg        := p.addr
-    writeEnableReg := p.writeEnable
-    dataOutReg     := p.dataIn            // Readの場合はWriteEnable=falseなので特に参照されない
-    validReg       := (1 << index).U(n.W) // BusMaster側が読み取る
-  }.otherwise {
-    // addr, dataOutは不問、WriteEnableは立てず開放しておく
-    addrReg        := DontCare
-    writeEnableReg := false.B
-    dataOutReg     := DontCare
-    validReg       := 0.U
+  io.slavePorts.zipWithIndex.find(_._1.req == true.B).headOption match {
+    case Some((p: BusSlavePort, index: Int)) => {
+      // 要求を外部に通す
+      addrReg        := p.addr
+      writeEnableReg := p.writeEnable
+      dataOutReg     := p.dataIn            // Readの場合はWriteEnable=falseなので特に参照されない
+      validReg       := (1 << index).U(n.W) // BusMaster側が読み取る
+    }
+    case _ => {
+      // addr, dataOutは不問、WriteEnableは立てず開放しておく
+      addrReg        := DontCare
+      writeEnableReg := false.B
+      dataOutReg     := DontCare
+      validReg       := 0.U
+    }
   }
 }
