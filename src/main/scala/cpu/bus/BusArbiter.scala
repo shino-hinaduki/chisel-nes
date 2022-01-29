@@ -29,16 +29,16 @@ class BusSlavePort extends Bundle {
  *  自アクセスが有効であるかは、nReqをアサート後、次サイクル以後のnValidで判断する
  *  @param n 生成するポート数。1以上に設定する必要がある
  */
-class BusArbiter(n: Int) extends Module {
+class BusArbiter(val n: Int) extends Module {
   assert(n > 0) // 最低1portは必要
   val io = IO(new Bundle {
     // CPU内部のBus Masterと接続する
     val slavePorts = Vec(n, new BusSlavePort())
     // アドレス出力、Master固定
     val extAddr = Output(UInt(16.W))
-    // データ入力, nWriteEnable=true時に参照
+    // 外部からのデータ入力
     val extDataIn = Input(UInt(8.W))
-    // データ出力, nWriteEnable=false時に有効。OEも同じ値に設定
+    // 外部へのデータ出力
     val extDataOut = Output(TriState(UInt(8.W)))
     // Writeが有効ならtrue、Readが有効ならfalse
     val writeEnable = Output(Bool())
@@ -71,7 +71,7 @@ class BusArbiter(n: Int) extends Module {
 
   // slavePortsのindexが小さいほど優先度が高く要求を通す
   when(Cat(io.slavePorts.map(_.req)).orR) {
-    for (index <- (0 until n).reverse) {
+    for (index <- (0 until n).reverse) { // chiselの生成物を見る限り、最後に代入したものが採用される模様
       val p = io.slavePorts(index)
       when(p.req) {
         // 要求を外部に通す
