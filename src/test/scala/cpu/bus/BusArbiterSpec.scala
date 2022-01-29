@@ -56,7 +56,7 @@ class BusArbiterSpec extends AnyFreeSpec with ChiselScalatestTester {
   def expectExtWrite(arbiter: BusArbiter, addr: UInt, data: UInt) = {
     arbiter.io.extAddr.expect(addr)
     arbiter.io.extDataOut.oe.expect(true.B)
-    arbiter.io.extDataOut.data(data)
+    arbiter.io.extDataOut.data.expect(data)
   }
   // 外部Busへのアクセスがないことを確認する
   def expectExtRelease(arbiter: BusArbiter) = {
@@ -97,6 +97,43 @@ class BusArbiterSpec extends AnyFreeSpec with ChiselScalatestTester {
           setExtDataIn(dut, 0x56.U)
 
           expectReadResp(p, 0x56.U)
+          // Nop -> No resp
+          release(p)
+          dut.clock.step(1)
+          expectExtRelease(dut)
+          expectNoResp(p)
+        }
+
+      }
+    }
+  }
+
+  "Verify that they can be accessed and write individually" in {
+    test(new BusArbiter(defaultBusMasterNum)) { dut =>
+      {
+        // 全release
+        for (i <- 0 until dut.n) {
+          release(dut.io.slavePorts(i))
+        }
+        dut.clock.step(1)
+        for (i <- 0 until dut.n) {
+          expectExtRelease(dut)
+          expectNoResp(dut.io.slavePorts(i))
+        }
+
+        // 各portごとにWrite確認
+        for (i <- 0 until dut.n) {
+          val p = dut.io.slavePorts(i)
+          // Write(addr:0xabcd) -> 0xef
+          reqWrite(p, 0xabcd.U, 0xef.U)
+          dut.clock.step(1)
+          expectExtWrite(dut, 0xabcd.U, 0xef.U)
+
+          // Write(addr:0x1234) -> 0x56
+          reqWrite(p, 0x1234.U, 0x56.U)
+          dut.clock.step(1)
+          expectExtWrite(dut, 0x1234.U, 0x56.U)
+
           // Nop -> No resp
           release(p)
           dut.clock.step(1)
