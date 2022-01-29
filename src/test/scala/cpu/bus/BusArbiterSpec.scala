@@ -76,8 +76,32 @@ class BusArbiterSpec extends AnyFreeSpec with ChiselScalatestTester {
     }
   }
 
+  /* test用外付けメモリの挙動 */
+  // arbiterの現在の状態をもとにextMemをRead/Writeする。戻り値はReadした場合にその値が入る(extDataInには設定済)
+  def simExtMem(arbiter: BusArbiter, extMem: Array[UInt]): Option[UInt] = {
+    val addr        = arbiter.io.extAddr.peek()
+    val writeEnable = arbiter.io.writeEnable.peek()
+
+    if (writeEnable.litToBoolean) {
+      // Write
+      arbiter.io.extDataOut.oe.expect(true.B) // Dataは有効でTriStateにはなっていないはず
+      val data = arbiter.io.extDataOut.data.peek()
+      extMem(addr.litValue.toInt) = data
+
+      // 読み出しデータはなし
+      None
+    } else {
+      // Read
+      val data = extMem(addr.litValue.toInt)
+      setExtDataIn(arbiter, data)
+
+      // 読みだしたデータを返しておく
+      Some(data)
+    }
+  }
   // 特に差し支えなければ dut.n を見たほうが良い
   val defaultBusMasterNum = 4
+  val addressRange        = 0x10000; // 16bit
 
   "Verify that they can be accessed and read individually" in {
     test(new BusArbiter(defaultBusMasterNum)) { dut =>
@@ -139,6 +163,39 @@ class BusArbiterSpec extends AnyFreeSpec with ChiselScalatestTester {
           expectExtRelease(dut)
           expectNoResp(p)
         }
+
+      }
+    }
+  }
+
+  "Verify that you can write from port0 and read from port1" in {
+    test(new BusArbiter(2)) { dut =>
+      {
+        // 2port使う
+        val writePort = dut.io.slavePorts(0)
+        val readPort  = dut.io.slavePorts(1)
+
+        // 全release
+        setupIdleState(dut)
+
+        // def外部の外付けメモリ
+        val testMem = Array.fill(addressRange) { 0x00.U }
+
+        val addr = 0xabcd.U;
+        val data = 0xef.U;
+
+        // Write
+        reqWrite(writePort, addr, data)
+        dut.clock.step(1)
+        simExtMem(dut, testMem)
+        release(writePort)
+
+        // Read
+        reqRead(readPort, addr)
+        dut.clock.step(1)
+        simExtMem(dut, testMem)
+        expectReadResp(readPort, data)
+        release(readPort)
 
       }
     }
