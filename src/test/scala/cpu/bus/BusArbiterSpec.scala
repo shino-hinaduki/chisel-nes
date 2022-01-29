@@ -63,6 +63,19 @@ class BusArbiterSpec extends AnyFreeSpec with ChiselScalatestTester {
     arbiter.io.extDataOut.oe.expect(false.B)
   }
 
+  /* test setup関連 */
+  // 何も要求がない状態にセットアップする, 1cycle使用する
+  def setupIdleState(arbiter: BusArbiter) = {
+    for (i <- 0 until arbiter.n) {
+      release(arbiter.io.slavePorts(i))
+    }
+    arbiter.clock.step(1)
+    for (i <- 0 until arbiter.n) {
+      expectExtRelease(arbiter)
+      expectNoResp(arbiter.io.slavePorts(i))
+    }
+  }
+
   // 特に差し支えなければ dut.n を見たほうが良い
   val defaultBusMasterNum = 4
 
@@ -70,14 +83,7 @@ class BusArbiterSpec extends AnyFreeSpec with ChiselScalatestTester {
     test(new BusArbiter(defaultBusMasterNum)) { dut =>
       {
         // 全release
-        for (i <- 0 until dut.n) {
-          release(dut.io.slavePorts(i))
-        }
-        dut.clock.step(1)
-        for (i <- 0 until dut.n) {
-          expectExtRelease(dut)
-          expectNoResp(dut.io.slavePorts(i))
-        }
+        setupIdleState(dut)
 
         // 各portごとにRead確認
         for (i <- 0 until dut.n) {
@@ -112,14 +118,7 @@ class BusArbiterSpec extends AnyFreeSpec with ChiselScalatestTester {
     test(new BusArbiter(defaultBusMasterNum)) { dut =>
       {
         // 全release
-        for (i <- 0 until dut.n) {
-          release(dut.io.slavePorts(i))
-        }
-        dut.clock.step(1)
-        for (i <- 0 until dut.n) {
-          expectExtRelease(dut)
-          expectNoResp(dut.io.slavePorts(i))
-        }
+        setupIdleState(dut)
 
         // 各portごとにWrite確認
         for (i <- 0 until dut.n) {
