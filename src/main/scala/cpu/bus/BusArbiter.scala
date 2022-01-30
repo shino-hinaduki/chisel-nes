@@ -26,7 +26,7 @@ class BusSlavePort extends Bundle {
 
 /** Address Bus/Data Busの調停を行う
  *  execute > interrupt > fetchの優先度で調停する想定
- *  自アクセスが有効であるかは、nReqをアサート後、次サイクル以後のnValidで判断する
+ *  自アクセスが有効であるかは、reqをアサート後、次サイクル以後のvalidで判断する
  *  @param n 生成するポート数。1以上に設定する必要がある
  */
 class BusArbiter(val n: Int) extends Module {

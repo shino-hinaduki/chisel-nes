@@ -6,7 +6,7 @@ import chisel3.experimental.ChiselEnum
 /** 命令の定義
   */
 object Instruction extends ChiselEnum {
-  // invalid(HALTさせる)
+  // invalid(実行しようとした場合HALTさせる)
   val invalid = Value
   // binary op
   val adc, sbc, and, eor, ora = Value
