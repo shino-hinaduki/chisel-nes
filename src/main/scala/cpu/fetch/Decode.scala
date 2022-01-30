@@ -8,8 +8,12 @@ import cpu.types.Instruction
  *  命令が可変長で8bit BusでOFで複数回Readが必要なことから IF->ID->OFはpipeline化しない。
  */
 object Decode {
+  // opcode -> Instructionの対応を取得する
+  def lookUpTableForInstruction(): Seq[(UInt, Instruction.Type)] = Decode.lookupTable.map { case (opcode, (instruction, addressing)) => opcode -> instruction }
+  // opcode -> Addressingの対応を取得する
+  def lookUpTableForAddressing(): Seq[(UInt, Addressing.Type)] = Decode.lookupTable.map { case (opcode, (instruction, addressing)) => opcode -> addressing }
   // Opcodeと命令/アドレッシングモードの対応
-  val lookupTable: Seq[(UInt, (Instruction.Type, Addressing.Type))] = Seq(
+  def lookupTable: Seq[(UInt, (Instruction.Type, Addressing.Type))] = Seq(
     // binary
     0x69.U -> (Instruction.adc, Addressing.immediate),
     0x65.U -> (Instruction.adc, Addressing.zeroPage),

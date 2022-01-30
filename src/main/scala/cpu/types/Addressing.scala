@@ -6,7 +6,7 @@ import chisel3.experimental.ChiselEnum
 /** AddressingModeの定義
   */
 object Addressing extends ChiselEnum {
-  // 無効な値
+  // invalid(実行しようとした場合HALTさせる)
   val invalid = Value
   // 何もしない
   val implied = Value
