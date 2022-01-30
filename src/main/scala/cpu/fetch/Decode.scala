@@ -185,7 +185,7 @@ object Decode {
     0x00.U -> (Instruction.brk, Addressing.implied),
     0x24.U -> (Instruction.bit, Addressing.zeroPage),
     0x2c.U -> (Instruction.bit, Addressing.absolute),
-    0xea.U -> (Instruction.not, Addressing.implied),
+    0xea.U -> (Instruction.nop, Addressing.implied),
 
     // undocumented
     0x4b.U -> (Instruction.alr, Addressing.immediate),
@@ -268,11 +268,11 @@ object Decode {
 
     // undocumented
     0xeb.U -> (Instruction.sbc, Addressing.immediate),
-    0x1a.U -> (Instruction.not, Addressing.implied),
-    0x3a.U -> (Instruction.not, Addressing.implied),
-    0x5a.U -> (Instruction.not, Addressing.implied),
-    0x7a.U -> (Instruction.not, Addressing.implied),
-    0xda.U -> (Instruction.not, Addressing.implied),
-    0xfa.U -> (Instruction.not, Addressing.implied)
+    0x1a.U -> (Instruction.nop, Addressing.implied),
+    0x3a.U -> (Instruction.nop, Addressing.implied),
+    0x5a.U -> (Instruction.nop, Addressing.implied),
+    0x7a.U -> (Instruction.nop, Addressing.implied),
+    0xda.U -> (Instruction.nop, Addressing.implied),
+    0xfa.U -> (Instruction.nop, Addressing.implied)
   )
 }

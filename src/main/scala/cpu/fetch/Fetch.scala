@@ -2,9 +2,10 @@ package cpu.fetch
 
 import chisel3._
 import chisel3.experimental.ChiselEnum
+import chisel3.util.MuxLookup
+
 import cpu.types.Addressing
 import cpu.types.Instruction
-import chisel3.util.MuxLookup
 import cpu.bus.BusSlavePort
 
 /** IFがPrefetchし(てDecodeし)た命令を提供する, 使う側はFlippedして使う
@@ -13,7 +14,7 @@ class FetchControlSlave extends Bundle {
   // Fetchが有効であればtrue, validになったあとreqをおろしても最後に取得した値を保持する
   val req = Input(Bool())
   // ProgramCounterの値をそのまま見せる
-  val pc = Input(UInt(8.W))
+  val pc = Input(UInt(16.W))
   // Fetchした結果を破棄する場合はtrue, reqよりも優先される。 branch系命令でEX側から制御される想定
   val discardByEx = Input(Bool())
   // Fetchした結果を破棄する場合はtrue, reqよりも優先される。 割り込み時に使用する想定

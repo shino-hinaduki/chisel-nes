@@ -29,7 +29,7 @@ object Instruction extends ChiselEnum {
   // transfer
   val tax, tay, tsx, txa, txs, tya = Value
   // other
-  val brk, bit, not = Value
+  val brk, bit, nop = Value
   // unofficial1
   val alr, anc, arr, axs, lax, sax, dcp, isc, rla, rra, slo, sre, skb, ign = Value
 }

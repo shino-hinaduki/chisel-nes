@@ -10,7 +10,7 @@ class CpuRegister extends Module {
     val x  = UInt(8.W)
     val y  = UInt(8.W)
     val pc = UInt(16.W)
-    val sp = UInt(16.W)
+    val sp = UInt(8.W)
     val p  = new ProcessorStatus
   })
 }
