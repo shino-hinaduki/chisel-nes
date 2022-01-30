@@ -280,5 +280,73 @@ class BusArbiterSpec extends AnyFreeSpec with ChiselScalatestTester {
       }
     }
   }
-  // TODO: 調停されるテストケースの追加
+
+  "Confirmed that other ports are occupied and waiting" in {
+    test(new BusArbiter(2)) { dut =>
+      {
+        // 2port使う
+        val port0 = dut.io.slavePorts(0)
+        val port1 = dut.io.slavePorts(1)
+
+        // 全release
+        setupIdleState(dut)
+
+        // def外部の外付けメモリ
+        val testMem = Array.fill(addressRange) { 0x00.U }
+
+        // 同時に要求を出して、優先度の低いport1があとから読み出すことを確認する
+        // |T| port0      | port1          |
+        // |0| release    | release        |
+        // |1| Write Req  | Write Req      |
+        // |2| Read Req   |    ||          |
+        // |3| Write Req  |    ||          |
+        // |4| Read Req   | Cancel(release)|
+        // |5| release    | release        |
+        // |6| Read Req   | release        |
+        // |7| release    | release        |
+
+        // T1
+        reqWrite(port0, 0xffff.U, 0xaa.U)
+        reqWrite(port1, 0xffff.U, 0xee.U) // このWriteは実行されない
+        dut.clock.step(1)
+        simExtMem(dut, testMem)
+        expectNoResp(port1) // port0優先で処理されていない
+
+        // T2
+        reqRead(port0, 0xffff.U)
+        dut.clock.step(1)
+        simExtMem(dut, testMem)
+        expectReadResp(port0, 0xaa.U)
+        expectNoResp(port1) // port0優先で処理されていない
+
+        // T3
+        reqWrite(port0, 0x0000.U, 0xbb.U)
+        dut.clock.step(1)
+        simExtMem(dut, testMem)
+        expectNoResp(port1) // port0優先で処理されていない
+
+        // T4
+        reqRead(port0, 0x0000.U)
+        dut.clock.step(1)
+        simExtMem(dut, testMem)
+        expectReadResp(port0, 0xbb.U)
+        expectNoResp(port1) // port0優先で処理されていない
+
+        // T5
+        release(port0)
+        release(port1) // Write Req Cancel
+        dut.clock.step(1)
+        simExtMem(dut, testMem)
+        expectNoResp(port0)
+        expectNoResp(port1)
+
+        // T6
+        reqRead(port0, 0xffff.U)
+        dut.clock.step(1)
+        simExtMem(dut, testMem)
+        expectReadResp(port0, 0xaa.U) // port1のWriteが処理されていないことを確認
+        expectNoResp(port1)
+      }
+    }
+  }
 }
