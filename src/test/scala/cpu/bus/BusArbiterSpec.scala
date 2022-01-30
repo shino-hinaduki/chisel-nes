@@ -349,4 +349,90 @@ class BusArbiterSpec extends AnyFreeSpec with ChiselScalatestTester {
       }
     }
   }
+
+  "Confirmed that it can be accessed from three ports simultaneously" in {
+    test(new BusArbiter(3)) { dut =>
+      {
+        // 3port使う
+        val port0 = dut.io.slavePorts(0)
+        val port1 = dut.io.slavePorts(1)
+        val port2 = dut.io.slavePorts(2)
+
+        // 全release
+        setupIdleState(dut)
+
+        // def外部の外付けメモリ
+        val testMem = Array.fill(addressRange) { 0x00.U }
+
+        // 同時に要求を出して、優先度の低いport1があとから読み出すことを確認する
+        // |T| port0      | port1      | port2      |
+        // |0| release    | release    | release    |
+        // |1| Write Req  | Write Req  | Write Req  |
+        // |2| Write Done | ||         | ||         |
+        // |3| release    | Write Done | ||         |
+        // |4| release    | ||         | Write Done |
+        // |5| Read Req   | Read Req   | Read Req   |
+        // |6| Read Done  | ||         | ||         |
+        // |7| release    | Read Done  | ||         |
+        // |8| release    | ||         | Read  Done |
+
+        // T1
+        reqWrite(port0, 0x0001.U, 0xaa.U)
+        reqWrite(port1, 0x0002.U, 0xbb.U)
+        reqWrite(port2, 0x0003.U, 0xcc.U)
+        dut.clock.step(1)
+        simExtMem(dut, testMem)
+        expectNoResp(port1) // port0優先で処理されない
+        expectNoResp(port2) // port0優先で処理されない
+
+        // T2
+        release(port0)
+        dut.clock.step(1)
+        simExtMem(dut, testMem)
+        expectNoResp(port0)
+        expectNoResp(port2) // port1優先で処理されない
+
+        // T3
+        release(port1)
+        dut.clock.step(1)
+        simExtMem(dut, testMem)
+        expectNoResp(port0)
+        expectNoResp(port1)
+
+        // T4
+        release(port2)
+        dut.clock.step(1)
+        simExtMem(dut, testMem)
+        expectNoResp(port0)
+        expectNoResp(port1)
+        expectNoResp(port2)
+
+        // T5
+        reqRead(port0, 0x0003.U)
+        reqRead(port1, 0x0001.U)
+        reqRead(port2, 0x0002.U)
+        dut.clock.step(1)
+        simExtMem(dut, testMem)
+        expectReadResp(port0, 0xcc.U)
+        expectNoResp(port1) // port0優先で処理されない
+        expectNoResp(port2) // port0優先で処理されない
+
+        // T6
+        release(port0)
+        dut.clock.step(1)
+        simExtMem(dut, testMem)
+        expectNoResp(port0)
+        expectReadResp(port1, 0xaa.U)
+        expectNoResp(port2) // port1優先で処理されない
+
+        // T7
+        release(port1)
+        dut.clock.step(1)
+        simExtMem(dut, testMem)
+        expectNoResp(port0)
+        expectNoResp(port1)
+        expectReadResp(port2, 0xbb.U)
+      }
+    }
+  }
 }
