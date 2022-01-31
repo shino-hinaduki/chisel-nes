@@ -7,11 +7,13 @@ import chisel3.util.MuxLookup
 import cpu.types.Addressing
 import cpu.types.Instruction
 import cpu.bus.BusSlavePort
+import chisel3.util.switch
+import chisel3.util.is
 
 /** IFがPrefetchし(てDecodeし)た命令を提供する, 使う側はFlippedして使う
   */
 class FetchControlSlave extends Bundle {
-  // Fetchが有効であればtrue, validになったあとreqをおろしても最後に取得した値を保持する
+  // 立ち上がり変化で要求する, discardbyXXXがtrueならそちらを優先する
   val req = Input(Bool())
   // ProgramCounterの値をそのまま見せる
   val pc = Input(UInt(16.W))
@@ -35,7 +37,7 @@ class FetchControlSlave extends Bundle {
 
 // Fetch状況を示します
 object FetchStatus extends ChiselEnum {
-  val idle, read, reset = Value
+  val idle, read = Value
 
 }
 
@@ -43,6 +45,8 @@ object FetchStatus extends ChiselEnum {
   */
 class Fetch extends Module {
   val io = IO(new Bundle {
+    // 現在のステータス確認用
+    val status = Output(FetchStatus())
     // Addr/DataBusのArbiterと接続
     val busMaster = Flipped(new BusSlavePort())
     // EX,INTからFetch制御する用に公開するI/F
@@ -53,12 +57,17 @@ class Fetch extends Module {
   val statusReg = RegInit(FetchStatus(), FetchStatus.idle)
   // Read関連
   val readReqAddrReg = RegInit(UInt(16.W), 0.U)
+  // EX,INTからの開始トリガはposedgeを起点にする
+  val prevReqReg = RegInit(Bool(), false.B)
   // EX,INTに見せる関連
   val validReg        = RegInit(Bool(), false.B)
   val readDoneAddrReg = RegInit(UInt(16.W), 0.U)
   val readDataReg     = RegInit(UInt(8.W), 0.U) // Decodeする前の生データ
   val instructionReg  = RegInit(Instruction(), Instruction.invalid)
   val addressingReg   = RegInit(Addressing(), Addressing.invalid)
+
+  // internal
+  io.status := statusReg
 
   // BusMaster -> BusArbiterSlavePort
   io.busMaster.addr        := readReqAddrReg
@@ -73,46 +82,69 @@ class Fetch extends Module {
   io.control.instruction := instructionReg
   io.control.addressing  := addressingReg
 
-  // control入力で処理を分岐する
-  when(io.control.discardByEx | io.control.discardByInt) {
-    // reset: レジスタをクリア
-    statusReg       := FetchStatus.idle
-    readReqAddrReg  := DontCare
-    validReg        := false.B
-    readDoneAddrReg := 0.U
-    readDataReg     := 0.U
-    instructionReg  := Instruction.invalid
-    addressingReg   := Addressing.invalid
-  }.elsewhen(io.control.req) {
-    // read
-    statusReg := FetchStatus.read
-    // すでに要求済で帰ってきていたら結果を保持
-    when(io.busMaster.valid) {
-      // Read完了
-      validReg        := true.B
-      readDoneAddrReg := readReqAddrReg // 前回要求していたアドレスで、現在のPCではない
-      readDataReg     := io.busMaster.dataOut
-      instructionReg  := MuxLookup(io.busMaster.dataOut, Instruction.invalid, Decode.lookUpTableForInstruction())
-      addressingReg   := MuxLookup(io.busMaster.dataOut, Addressing.invalid, Decode.lookUpTableForAddressing())
-    }.otherwise {
-      // Read未完了
-      validReg        := false.B // 他の要素はケア不要
-      readDoneAddrReg := DontCare
-      readDataReg     := DontCare
-      instructionReg  := Instruction.invalid
-      addressingReg   := Addressing.invalid
-    }
+  // Req立ち上がり検出用
+  val onRequest = (!prevReqReg) | io.control.req // 今回の立ち上がりで判断させる
+  prevReqReg := io.control.req
 
-    // 次の要求先も出しておく(statusReg=readで要求自体はアサートされる)
-    readReqAddrReg := io.control.pc
-  }.otherwise {
-    // idle: 現状維持
-    statusReg       := FetchStatus.idle
-    readReqAddrReg  := readReqAddrReg
-    validReg        := validReg
-    readDoneAddrReg := readDoneAddrReg
-    readDataReg     := readDataReg
-    instructionReg  := instructionReg
-    addressingReg   := addressingReg
+  switch(statusReg) {
+    is(FetchStatus.idle) {
+      // 出力レジスタクリア or 現状維持
+      when(io.control.discardByEx | io.control.discardByInt) {
+        validReg        := false.B
+        readDoneAddrReg := 0.U
+        readDataReg     := 0.U
+        instructionReg  := Instruction.invalid
+        addressingReg   := Addressing.invalid
+      }.otherwise {
+        validReg        := validReg
+        readDoneAddrReg := readDoneAddrReg
+        readDataReg     := readDataReg
+        instructionReg  := instructionReg
+        addressingReg   := addressingReg
+      }
+
+      // idle->read遷移。discardとは並行して処理可能
+      when(onRequest) {
+        statusReg      := FetchStatus.read // status=readでRead要求を出す
+        readReqAddrReg := io.control.pc
+      }.otherwise {
+        statusReg      := FetchStatus.idle
+        readReqAddrReg := readReqAddrReg
+      }
+    }
+    is(FetchStatus.read) {
+      when(io.control.discardByEx | io.control.discardByInt) {
+        // Read要求は現状維持
+        statusReg      := FetchStatus.read
+        readReqAddrReg := readReqAddrReg
+
+        validReg        := false.B
+        readDoneAddrReg := 0.U
+        readDataReg     := 0.U
+        instructionReg  := Instruction.invalid
+        addressingReg   := Addressing.invalid
+      }.elsewhen(io.busMaster.valid) {
+        // read結果をレジスタに格納して、idle遷移
+        statusReg      := FetchStatus.idle
+        readReqAddrReg := 0.U
+
+        validReg        := true.B
+        readDoneAddrReg := readReqAddrReg // 前回要求していたアドレスで、現在のPCではない
+        readDataReg     := io.busMaster.dataOut
+        instructionReg  := MuxLookup(io.busMaster.dataOut, Instruction.invalid, Decode.lookUpTableForInstruction())
+        addressingReg   := MuxLookup(io.busMaster.dataOut, Addressing.invalid, Decode.lookUpTableForAddressing())
+      }.otherwise {
+        // Read未完了, 現状維持
+        statusReg      := FetchStatus.read
+        readReqAddrReg := readReqAddrReg
+
+        validReg        := validReg
+        readDoneAddrReg := readDoneAddrReg
+        readDataReg     := readDataReg
+        instructionReg  := instructionReg
+        addressingReg   := addressingReg
+      }
+    }
   }
+
 }
