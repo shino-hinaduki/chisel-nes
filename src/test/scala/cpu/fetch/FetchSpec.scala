@@ -27,35 +27,27 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
 
   /* EXからの設定 */
   // PCの現在値を指定した上で、Fetchを有効化します
-  def setEnableReq(f: Fetch, pc: UInt) = {
+  def setRequest(f: Fetch, pc: UInt) = {
     f.io.control.req.poke(true.B)
     f.io.control.pc.poke(pc)
-    f.io.control.discardByEx.poke(false.B)
-    f.io.control.discardByInt.poke(false.B)
+    f.io.control.discard.poke(false.B)
+  }
+
+  // setRequestを呼び出したあと、clock cycleを跨いだあとに呼び出します。
+  def setAfterRequest(f: Fetch, pc: UInt) = {
+    f.io.control.req.poke(false.B) // posedgeで検出なので落としておく
   }
 
   // PCの現在値付きを指定した上で、Fetchを有効化します
   def setDisableReq(f: Fetch) = {
     f.io.control.req.poke(false.B)
     f.io.control.pc.poke(0xffff.U) // Don't care
-    f.io.control.discardByEx.poke(false.B)
-    f.io.control.discardByInt.poke(false.B)
+    f.io.control.discard.poke(false.B)
   }
 
-  // EX要因でのFetchデータ破棄を実行します
-  def setDiscardByEx(f: Fetch) = {
-    f.io.control.req.poke(false.B) // Don't care
-    f.io.control.pc.poke(0xffff.U) // Don't care
-    f.io.control.discardByEx.poke(true.B)
-    f.io.control.discardByInt.poke(false.B)
-  }
-
-  // EX要因でのFetchデータ破棄を実行します
-  def setDiscardByInt(f: Fetch) = {
-    f.io.control.req.poke(true.B)  // Don't care だが、EXに無関係に通知されたと想定する
-    f.io.control.pc.poke(0xffff.U) // Don't care
-    f.io.control.discardByEx.poke(false.B)
-    f.io.control.discardByInt.poke(true.B)
+  // Fetchデータ破棄を実行します
+  def setDiscard(f: Fetch) = {
+    f.io.control.discard.poke(true.B)
   }
 
   /* EXへ出力したデータの期待値確認 */
@@ -66,6 +58,11 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
     f.io.control.data.expect(data)
     f.io.control.instruction.expect(instruction)
     f.io.control.addressing.expect(addressing)
+  }
+
+  // Read中であることを確認します
+  def expectBusy(f: Fetch) = {
+    f.io.control.busy.expect(true.B)
   }
 
   // Fetchされたデータがないことを確認

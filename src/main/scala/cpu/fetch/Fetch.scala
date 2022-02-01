@@ -13,15 +13,15 @@ import chisel3.util.is
 /** IFがPrefetchし(てDecodeし)た命令を提供する, 使う側はFlippedして使う
   */
 class FetchControlSlave extends Bundle {
-  // 立ち上がり変化で要求する, discardbyXXXがtrueならそちらを優先する
+  // 立ち上がり変化で要求する
   val req = Input(Bool())
   // ProgramCounterの値をそのまま見せる
   val pc = Input(UInt(16.W))
-  // Fetchした結果を破棄する場合はtrue, reqよりも優先される。 branch系命令でEX側から制御される想定
-  val discardByEx = Input(Bool())
-  // Fetchした結果を破棄する場合はtrue, reqよりも優先される。 割り込み時に使用する想定
-  val discardByInt = Input(Bool())
+  // Fetchした結果を破棄する場合はtrue
+  val discard = Input(Bool())
 
+  // read処理中であればtrue
+  val busy = Output(Bool())
   // 有効なデータであればtrue
   val valid = Output(Bool())
   // 命令が配置されていたアドレス
@@ -76,6 +76,7 @@ class Fetch extends Module {
   io.busMaster.dataIn      := DontCare                          // Writeすることはない
 
   // IF -> EX,INTに見せる関連はレジスタそのまま公開する
+  io.control.busy        := (statusReg != FetchStatus.idle).B
   io.control.valid       := validReg
   io.control.addr        := readDoneAddrReg
   io.control.data        := readDataReg
@@ -83,13 +84,13 @@ class Fetch extends Module {
   io.control.addressing  := addressingReg
 
   // Req立ち上がり検出用
-  val onRequest = (!prevReqReg) | io.control.req // 今回の立ち上がりで判断させる
+  val onRequest = (!prevReqReg) & io.control.req // 今回の立ち上がりで判断させる
   prevReqReg := io.control.req
 
   switch(statusReg) {
     is(FetchStatus.idle) {
       // 出力レジスタクリア or 現状維持
-      when(io.control.discardByEx | io.control.discardByInt) {
+      when(io.control.discard) {
         validReg        := false.B
         readDoneAddrReg := 0.U
         readDataReg     := 0.U
@@ -113,8 +114,8 @@ class Fetch extends Module {
       }
     }
     is(FetchStatus.read) {
-      when(io.control.discardByEx | io.control.discardByInt) {
-        // Read要求は現状維持
+      when(io.control.discard) {
+        // Read要求は現状維持, Read結果は回収しない
         statusReg      := FetchStatus.read
         readReqAddrReg := readReqAddrReg
 
