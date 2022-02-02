@@ -22,7 +22,8 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
     0xea.U, // NOP Implied
     0xea.U, // NOP Implied
     0xea.U, // NOP Implied
-    0xea.U  // NOP Implied
+    0xea.U, // NOP Implied
+    0x00.U  // BRK Implied
   );
 
   /* EXからの設定 */
@@ -34,7 +35,7 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
   }
 
   // setRequestを呼び出したあと、clock cycleを跨いだあとに呼び出します。
-  def setAfterRequest(f: Fetch, pc: UInt) = {
+  def setAfterRequest(f: Fetch) = {
     f.io.control.req.poke(false.B) // posedgeで検出なので落としておく
   }
 
@@ -99,26 +100,27 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
     }
   }
 
-  // "Single fetch verification" in {
-  //   test(new Fetch) { dut =>
-  //     {
-  //       // 初期化
-  //       setDisableReq(dut)
-  //       dut.clock.step(1)
-  //       expectInvalidFetchData(dut)
+  "Single fetch verification" in {
+    test(new Fetch) { dut =>
+      {
+        // 初期化
+        setDisableReq(dut)
+        dut.clock.step(1)
+        expectInvalidFetchData(dut)
 
-  //       // 最低限のパターン
-  //       setEnableReq(dut, 0x0000.U)
-  //       dut.clock.step(1) // 1cycで現在の内容をRegに控えてArbiterに要求
-  //       simExtMem(dut, testMem, false)
-  //       expectInvalidFetchData(dut)
+        // 最低限のパターン
+        setRequest(dut, 0x0000.U)
+        dut.clock.step(1) // 1cycで現在の内容をRegに控えてArbiterに要求
+        simExtMem(dut, testMem, false)
+        expectInvalidFetchData(dut)
+        setAfterRequest(dut)
 
-  //       dut.clock.step(1) // 2cyc目で応答が来る
-  //       simExtMem(dut, testMem, false)
-  //       expectValidFetchData(dut, 0x0000.U, 0xea.U, Instruction.nop, Addressing.implied)
-  //     }
-  //   }
-  // }
+        dut.clock.step(1) // 2cyc目で応答が来る
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0000.U, 0xea.U, Instruction.nop, Addressing.implied)
+      }
+    }
+  }
 
   // "Sequential fetch verification" in {
   //   test(new Fetch) { dut =>
