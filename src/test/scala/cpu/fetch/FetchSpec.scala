@@ -113,8 +113,8 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
         dut.clock.step(1) // 1cycで現在の内容をRegに控えてArbiterに要求
         simExtMem(dut, testMem, false)
         expectInvalidFetchData(dut)
-        setAfterRequest(dut)
 
+        setAfterRequest(dut)
         dut.clock.step(1) // 2cyc目で応答が来る
         simExtMem(dut, testMem, false)
         expectValidFetchData(dut, 0x0000.U, 0xea.U, Instruction.nop, Addressing.implied)
@@ -122,38 +122,40 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
     }
   }
 
-  // "Sequential fetch verification" in {
-  //   test(new Fetch) { dut =>
-  //     {
-  //       // 初期化
-  //       setDisableReq(dut)
-  //       dut.clock.step(1)
-  //       expectInvalidFetchData(dut)
+  "Sequential fetch verification" in {
+    test(new Fetch) { dut =>
+      {
+        // 初期化
+        setDisableReq(dut)
+        dut.clock.step(1)
+        expectInvalidFetchData(dut)
 
-  //       // 1要求目のRead中に2要求目を出してあって、順繰り処理するパターン
+        // 1要求目のRead中に2要求目を出してあって、順繰り処理するパターン
 
-  //       // T0: PC=0x0000でFetch有効化
-  //       setEnableReq(dut, 0x0000.U)
-  //       dut.clock.step(1)
-  //       simExtMem(dut, testMem, false)
-  //       expectInvalidFetchData(dut)
+        // T0: PC=0x0000でFetch有効化
+        setRequest(dut, 0x0000.U)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, false)
+        expectInvalidFetchData(dut)
 
-  //       // T1: T0のFetchが終わっていないので待機
-  //       dut.clock.step(1)
-  //       expectValidFetchData(dut, 0x0000.U, 0xea.U, Instruction.nop, Addressing.implied)
+        // T1: T0のFetchが終わっていないので待機
+        setAfterRequest(dut)
+        dut.clock.step(1)
+        expectValidFetchData(dut, 0x0000.U, 0xea.U, Instruction.nop, Addressing.implied)
 
-  //       // T2: 0x0000がEXで処理を始めたので、次をPrefetch要求
-  //       setEnableReq(dut, 0x0001.U)
-  //       dut.clock.step(1)
-  //       simExtMem(dut, testMem, false)
-  //       // クリアしていないので、前回の結果はそのまま残っている
-  //       expectValidFetchData(dut, 0x0000.U, 0xea.U, Instruction.nop, Addressing.implied)
+        // T2: 0x0000がEXで処理を始めたので、次をPrefetch要求
+        setRequest(dut, 0x0001.U)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, false)
+        // クリアしていないので、前回の結果はそのまま残っている
+        expectValidFetchData(dut, 0x0000.U, 0xea.U, Instruction.nop, Addressing.implied)
 
-  //       // T3: T2のFetchが終わっていないので待機
-  //       dut.clock.step(1)
-  //       expectValidFetchData(dut, 0x0001.U, 0xe8.U, Instruction.inx, Addressing.implied)
-  //     }
-  //   }
-  // }
+        // T3: T2のFetchが終わっていないので待機
+        setAfterRequest(dut)
+        dut.clock.step(1)
+        expectValidFetchData(dut, 0x0001.U, 0xe8.U, Instruction.inx, Addressing.implied)
+      }
+    }
+  }
 
 }
