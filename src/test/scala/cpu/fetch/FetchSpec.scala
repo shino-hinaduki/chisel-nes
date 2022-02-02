@@ -51,6 +51,11 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
     f.io.control.discard.poke(true.B)
   }
 
+  // Fetchデータ破棄を解除します
+  def clearDiscard(f: Fetch) = {
+    f.io.control.discard.poke(false.B)
+  }
+
   /* EXへ出力したデータの期待値確認 */
   // 正しい値がFetchされていることを確認
   def expectValidFetchData(f: Fetch, addr: UInt, data: UInt, instruction: Instruction.Type, addressing: Addressing.Type) = {
@@ -192,7 +197,26 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
         simExtMem(dut, testMem, false)
         expectValidFetchData(dut, 0x0007.U, 0x4c.U, Instruction.jmp, Addressing.absolute)
         expectIdle(dut)
+
+        dut.clock.step(10) // その後時間経過してもIdleのままで結果だけが保持される
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0007.U, 0x4c.U, Instruction.jmp, Addressing.absolute)
+        expectIdle(dut)
+
+        setDiscard(dut)
+        dut.clock.step(1) // その後時間経過してもIdleのままで結果だけが保持される
+        simExtMem(dut, testMem, false)
+        expectInvalidFetchData(dut)
+        expectIdle(dut)
+
+        clearDiscard(dut)
+        dut.clock.step(10) // その後時間経過してもIdleのままで結果もクリアされたまま
+        simExtMem(dut, testMem, false)
+        expectInvalidFetchData(dut)
+        expectIdle(dut)
       }
     }
   }
+
+  // TODO: discardとreqStrobeを重ねたパターン
 }
