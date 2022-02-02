@@ -29,19 +29,19 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
   /* EXからの設定 */
   // PCの現在値を指定した上で、Fetchを有効化します
   def setRequest(f: Fetch, pc: UInt) = {
-    f.io.control.req.poke(true.B)
+    f.io.control.reqStrobe.poke(true.B)
     f.io.control.pc.poke(pc)
     f.io.control.discard.poke(false.B)
   }
 
   // setRequestを呼び出したあと、clock cycleを跨いだあとに呼び出します。
   def setAfterRequest(f: Fetch) = {
-    f.io.control.req.poke(false.B) // posedgeで検出なので落としておく
+    f.io.control.reqStrobe.poke(false.B) // posedgeで検出なので落としておく
   }
 
   // PCの現在値付きを指定した上で、Fetchを有効化します
   def setDisableReq(f: Fetch) = {
-    f.io.control.req.poke(false.B)
+    f.io.control.reqStrobe.poke(false.B)
     f.io.control.pc.poke(0xffff.U) // Don't care
     f.io.control.discard.poke(false.B)
   }

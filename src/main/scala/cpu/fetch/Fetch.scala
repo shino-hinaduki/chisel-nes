@@ -14,7 +14,7 @@ import chisel3.util.is
   */
 class FetchControlSlave extends Bundle {
   // 立ち上がり変化で要求する
-  val req = Input(Bool())
+  val reqStrobe = Input(Bool())
   // ProgramCounterの値をそのまま見せる
   val pc = Input(UInt(16.W))
   // Fetchした結果を破棄する場合はtrue
@@ -58,7 +58,7 @@ class Fetch extends Module {
   // Read関連
   val readReqAddrReg = RegInit(UInt(16.W), 0.U)
   // EX,INTからの開始トリガはposedgeを起点にする
-  val prevReqReg = RegInit(Bool(), false.B)
+  val prevReqStrobeReg = RegInit(Bool(), false.B)
   // EX,INTに見せる関連
   val validReg        = RegInit(Bool(), false.B)
   val readDoneAddrReg = RegInit(UInt(16.W), 0.U)
@@ -84,8 +84,8 @@ class Fetch extends Module {
   io.control.addressing  := addressingReg
 
   // Req立ち上がり検出用
-  val onRequest = (!prevReqReg) & io.control.req // 今回の立ち上がりで判断させる
-  prevReqReg := io.control.req
+  val onRequest = (!prevReqStrobeReg) & io.control.reqStrobe // 今回の立ち上がりで判断させる
+  prevReqStrobeReg := io.control.reqStrobe
 
   switch(statusReg) {
     is(FetchStatus.idle) {
