@@ -71,12 +71,12 @@ class Fetch extends Module {
 
   // BusMaster -> BusArbiterSlavePort
   io.busMaster.addr        := readReqAddrReg
-  io.busMaster.req         := (statusReg == FetchStatus.read).B // status=Readであれば処理し続ける
-  io.busMaster.writeEnable := false.B                           // Read Only
-  io.busMaster.dataIn      := DontCare                          // Writeすることはない
+  io.busMaster.req         := statusReg === FetchStatus.read // status=Readであれば処理し続ける
+  io.busMaster.writeEnable := false.B                        // Read Only
+  io.busMaster.dataIn      := DontCare                       // Writeすることはない
 
   // IF -> EX,INTに見せる関連はレジスタそのまま公開する
-  io.control.busy        := (statusReg != FetchStatus.idle).B
+  io.control.busy        := statusReg === FetchStatus.read
   io.control.valid       := validReg
   io.control.addr        := readDoneAddrReg
   io.control.data        := readDataReg

@@ -9,21 +9,22 @@ import cpu.types.Addressing
 class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
   // バスアクセス確認用の単純なパターン
   val testMem = Seq(
-    0xea.U, // NOP Implied
-    0xe8.U, // INX Implied
-    0xc8.U, // INY Implied
-    0xa9.U, // LDA Immediate
-    0x00.U, // (op0)
-    0xca.U, // DEX Implied
-    0x88.U, // DEY Implied
-    0x4c.U, // JMP Absolute
-    0x00.U, // (op0)
-    0x00.U, // (op1)
-    0xea.U, // NOP Implied
-    0xea.U, // NOP Implied
-    0xea.U, // NOP Implied
-    0xea.U, // NOP Implied
-    0x00.U  // BRK Implied
+    0xea.U, // 0x0000 : NOP Implied
+    0xe8.U, // 0x0001 : INX Implied
+    0xc8.U, // 0x0002 : INY Implied
+    0xa9.U, // 0x0003 : LDA Immediate
+    0x00.U, // 0x0004 : (op0)
+    0xca.U, // 0x0005 : DEX Implied
+    0x88.U, // 0x0006 : DEY Implied
+    0x4c.U, // 0x0007 : JMP Absolute
+    0x00.U, // 0x0008 : (op0)
+    0x00.U, // 0x0009 : (op1)
+    0xea.U, // 0x000a : NOP Implied
+    0xea.U, // 0x000b : NOP Implied
+    0xea.U, // 0x000c : NOP Implied
+    0xea.U, // 0x000d : NOP Implied
+    0xea.U, // 0x000e : NOP Implied
+    0x00.U  // 0x000f : BRK Implied
   );
 
   /* EXからの設定 */
@@ -38,8 +39,7 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
   def setAfterRequest(f: Fetch) = {
     f.io.control.reqStrobe.poke(false.B) // posedgeで検出なので落としておく
   }
-
-  // PCの現在値付きを指定した上で、Fetchを有効化します
+  // 要求がない状態に初期化します
   def setDisableReq(f: Fetch) = {
     f.io.control.reqStrobe.poke(false.B)
     f.io.control.pc.poke(0xffff.U) // Don't care
@@ -64,6 +64,11 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
   // Read中であることを確認します
   def expectBusy(f: Fetch) = {
     f.io.control.busy.expect(true.B)
+  }
+
+  // Read中ではないことを確認します
+  def expectIdle(f: Fetch) = {
+    f.io.control.busy.expect(false.B)
   }
 
   // Fetchされたデータがないことを確認
@@ -107,17 +112,20 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
         setDisableReq(dut)
         dut.clock.step(1)
         expectInvalidFetchData(dut)
+        expectIdle(dut)
 
         // 最低限のパターン
         setRequest(dut, 0x0000.U)
         dut.clock.step(1) // 1cycで現在の内容をRegに控えてArbiterに要求
         simExtMem(dut, testMem, false)
         expectInvalidFetchData(dut)
+        expectBusy(dut)
 
         setAfterRequest(dut)
         dut.clock.step(1) // 2cyc目で応答が来る
         simExtMem(dut, testMem, false)
         expectValidFetchData(dut, 0x0000.U, 0xea.U, Instruction.nop, Addressing.implied)
+        expectIdle(dut)
       }
     }
   }
@@ -129,6 +137,7 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
         setDisableReq(dut)
         dut.clock.step(1)
         expectInvalidFetchData(dut)
+        expectIdle(dut)
 
         // 1要求目のRead中に2要求目を出してあって、順繰り処理するパターン
 
@@ -137,11 +146,13 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
         dut.clock.step(1)
         simExtMem(dut, testMem, false)
         expectInvalidFetchData(dut)
+        expectBusy(dut)
 
         // T1: T0のFetchが終わっていないので待機
         setAfterRequest(dut)
         dut.clock.step(1)
         expectValidFetchData(dut, 0x0000.U, 0xea.U, Instruction.nop, Addressing.implied)
+        expectIdle(dut)
 
         // T2: 0x0000がEXで処理を始めたので、次をPrefetch要求
         setRequest(dut, 0x0001.U)
@@ -149,13 +160,39 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
         simExtMem(dut, testMem, false)
         // クリアしていないので、前回の結果はそのまま残っている
         expectValidFetchData(dut, 0x0000.U, 0xea.U, Instruction.nop, Addressing.implied)
+        expectBusy(dut)
 
         // T3: T2のFetchが終わっていないので待機
         setAfterRequest(dut)
         dut.clock.step(1)
         expectValidFetchData(dut, 0x0001.U, 0xe8.U, Instruction.inx, Addressing.implied)
+        expectIdle(dut)
       }
     }
   }
 
+  "Verify data retention and destruction" in {
+    test(new Fetch) { dut =>
+      {
+        // 初期化
+        setDisableReq(dut)
+        dut.clock.step(1)
+        expectInvalidFetchData(dut)
+        expectIdle(dut)
+
+        // 最低限のパターン
+        setRequest(dut, 0x0007.U)
+        dut.clock.step(1) // 1cycで現在の内容をRegに控えてArbiterに要求
+        simExtMem(dut, testMem, false)
+        expectInvalidFetchData(dut)
+        expectBusy(dut)
+
+        setAfterRequest(dut)
+        dut.clock.step(1) // 2cyc目で応答が来る
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0007.U, 0x4c.U, Instruction.jmp, Addressing.absolute)
+        expectIdle(dut)
+      }
+    }
+  }
 }
