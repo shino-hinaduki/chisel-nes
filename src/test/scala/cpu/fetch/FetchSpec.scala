@@ -131,6 +131,11 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
         simExtMem(dut, testMem, false)
         expectValidFetchData(dut, 0x0000.U, 0xea.U, Instruction.nop, Addressing.implied)
         expectIdle(dut)
+
+        dut.clock.step(10) // その後はIdleのまま
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0000.U, 0xea.U, Instruction.nop, Addressing.implied)
+        expectIdle(dut)
       }
     }
   }
@@ -218,5 +223,104 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
     }
   }
 
-  // TODO: discardとreqStrobeを重ねたパターン
+  "Request a fetch and destroy at the same time" in {
+    test(new Fetch) { dut =>
+      {
+        // 初期化
+        setDisableReq(dut)
+        dut.clock.step(1)
+        expectInvalidFetchData(dut)
+        expectIdle(dut)
+
+        // 適当な命令を読ませる
+        setRequest(dut, 0x0007.U)
+        dut.clock.step(1) // 1cycで現在の内容をRegに控えてArbiterに要求
+        simExtMem(dut, testMem, false)
+        expectInvalidFetchData(dut)
+        expectBusy(dut)
+
+        setAfterRequest(dut)
+        dut.clock.step(1) // 2cyc目で応答が来る
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0007.U, 0x4c.U, Instruction.jmp, Addressing.absolute)
+        expectIdle(dut)
+
+        // データが出力された事前状態の完成
+        dut.clock.step(3)
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0007.U, 0x4c.U, Instruction.jmp, Addressing.absolute)
+        expectIdle(dut)
+
+        // 適当な命令を読ませつつ、データ破棄要求する
+        setRequest(dut, 0x0000.U)
+        setDiscard(dut)
+        dut.clock.step(1) // 1cycで現在の内容をRegに控えてArbiterに要求
+        simExtMem(dut, testMem, false)
+        expectInvalidFetchData(dut) // データ破棄を確認
+        expectBusy(dut)             // Readは継続
+
+        setAfterRequest(dut)
+        clearDiscard(dut)
+        dut.clock.step(1) // 2cyc目で応答が来る
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0000.U, 0xea.U, Instruction.nop, Addressing.implied)
+        expectIdle(dut)
+
+      }
+    }
+  }
+
+  "Request Fetch and Discard at the same time, leaving the Discard request untouched" in {
+    test(new Fetch) { dut =>
+      {
+        // 初期化
+        setDisableReq(dut)
+        dut.clock.step(1)
+        expectInvalidFetchData(dut)
+        expectIdle(dut)
+
+        // 適当な命令を読ませる
+        setRequest(dut, 0x0007.U)
+        dut.clock.step(1) // 1cycで現在の内容をRegに控えてArbiterに要求
+        simExtMem(dut, testMem, false)
+        expectInvalidFetchData(dut)
+        expectBusy(dut)
+
+        setAfterRequest(dut)
+        dut.clock.step(1) // 2cyc目で応答が来る
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0007.U, 0x4c.U, Instruction.jmp, Addressing.absolute)
+        expectIdle(dut)
+
+        // データが出力された事前状態の完成
+        dut.clock.step(3)
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0007.U, 0x4c.U, Instruction.jmp, Addressing.absolute)
+        expectIdle(dut)
+
+        // 適当な命令を読ませつつ、データ破棄要求する
+        setRequest(dut, 0x0000.U)
+        setDiscard(dut)
+        dut.clock.step(1) // 1cycで現在の内容をRegに控えてArbiterに要求
+        simExtMem(dut, testMem, false)
+        expectInvalidFetchData(dut) // データ破棄を確認
+        expectBusy(dut)             // Readは継続
+
+        // データ破棄要求を保持する
+        dut.clock.step(10)
+        simExtMem(dut, testMem, false)
+        expectInvalidFetchData(dut) // データ破棄を確認
+        expectBusy(dut)             // Readは継続
+
+        // データ破棄を解除すると、次cycで結果が入る
+        setAfterRequest(dut)
+        clearDiscard(dut)
+        dut.clock.step(1) // 2cyc目で応答が来る
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0000.U, 0xea.U, Instruction.nop, Addressing.implied)
+        expectIdle(dut)
+
+      }
+    }
+  }
 }
