@@ -20,7 +20,7 @@ class FetchControlSlave extends Bundle {
   // Fetchした結果を破棄する場合はtrue
   val discard = Input(Bool())
 
-  // read処理中であればtrue
+  // read処理中であればtrue, この状態ではreqStrobeを受け付けない
   val busy = Output(Bool())
   // 有効なデータであればtrue
   val valid = Output(Bool())

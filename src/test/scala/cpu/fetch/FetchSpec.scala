@@ -323,4 +323,188 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
       }
     }
   }
+
+  "Bus is busy and read response is delayed" in {
+    test(new Fetch) { dut =>
+      {
+        // 初期化
+        setDisableReq(dut)
+        dut.clock.step(1)
+        expectInvalidFetchData(dut)
+        expectIdle(dut)
+
+        // 適当な命令を読ませる
+        setRequest(dut, 0x0007.U)
+        dut.clock.step(1) // 1cycで現在の内容をRegに控えてArbiterに要求
+        simExtMem(dut, testMem, busy = true)
+        expectInvalidFetchData(dut)
+        expectBusy(dut)
+
+        // Busyなので応答が来ない
+        setAfterRequest(dut)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, busy = true)
+        expectInvalidFetchData(dut)
+        expectBusy(dut)
+
+        dut.clock.step(10)
+        simExtMem(dut, testMem, busy = true)
+        expectInvalidFetchData(dut)
+        expectBusy(dut)
+
+        // Busyではなくなると応答が来る
+        dut.clock.step(1)
+        simExtMem(dut, testMem, busy = false) // read結果がdataoutに乗る
+        expectInvalidFetchData(dut)
+        expectBusy(dut)
+
+        dut.clock.step(1) // dataoutの結果を取得、及びデコード
+        simExtMem(dut, testMem, busy = false)
+        expectValidFetchData(dut, 0x0007.U, 0x4c.U, Instruction.jmp, Addressing.absolute)
+        expectIdle(dut)
+      }
+    }
+  }
+
+  "Request during request" in {
+    test(new Fetch) { dut =>
+      {
+        // 初期化
+        setDisableReq(dut)
+        dut.clock.step(1)
+        expectInvalidFetchData(dut)
+        expectIdle(dut)
+
+        // 適当な命令を読ませる
+        setRequest(dut, 0x0007.U)
+        dut.clock.step(1) // 1cycで現在の内容をRegに控えてArbiterに要求
+        simExtMem(dut, testMem, busy = true)
+        expectInvalidFetchData(dut)
+        expectBusy(dut)
+
+        // Busyなので応答が来ない
+        setAfterRequest(dut)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, busy = true)
+        expectInvalidFetchData(dut)
+        expectBusy(dut)
+
+        // この要求は受け付けないことが期待
+        setRequest(dut, 0x0000.U)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, busy = true)
+        expectInvalidFetchData(dut)
+        expectBusy(dut)
+
+        // Busyなので応答が来ない
+        setAfterRequest(dut)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, busy = true)
+        expectInvalidFetchData(dut)
+        expectBusy(dut)
+
+        // Busyではなくなると応答が来る
+        dut.clock.step(1)
+        simExtMem(dut, testMem, busy = false) // read結果がdataoutに乗る
+        expectInvalidFetchData(dut)
+        expectBusy(dut)
+
+        dut.clock.step(1) // dataoutの結果を取得、及びデコード
+        simExtMem(dut, testMem, busy = false)
+        expectValidFetchData(dut, 0x0007.U, 0x4c.U, Instruction.jmp, Addressing.absolute)
+        expectIdle(dut)
+      }
+    }
+  }
+
+  "Request data destruction during read" in {
+    test(new Fetch) { dut =>
+      {
+        // 初期化
+        setDisableReq(dut)
+        dut.clock.step(1)
+        expectInvalidFetchData(dut)
+        expectIdle(dut)
+
+        // 適当な命令を読ませる
+        setRequest(dut, 0x0007.U)
+        dut.clock.step(1) // 1cycで現在の内容をRegに控えてArbiterに要求
+        simExtMem(dut, testMem, false)
+        expectInvalidFetchData(dut)
+        expectBusy(dut)
+
+        setAfterRequest(dut)
+        dut.clock.step(1) // 2cyc目で応答が来る
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0007.U, 0x4c.U, Instruction.jmp, Addressing.absolute)
+        expectIdle(dut)
+
+        // データが出力された事前状態の完成
+        dut.clock.step(3)
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0007.U, 0x4c.U, Instruction.jmp, Addressing.absolute)
+        expectIdle(dut)
+
+        // 適当な命令を読ませる
+        setRequest(dut, 0x0000.U)
+        dut.clock.step(1) // 1cycで現在の内容をRegに控えてArbiterに要求
+        simExtMem(dut, testMem, busy = true)
+        expectValidFetchData(dut, 0x0007.U, 0x4c.U, Instruction.jmp, Addressing.absolute) // まだ前のデータが生きている
+        expectBusy(dut)                                                                   // Readは継続
+
+        // Read結果は来ないが前回の結果を保持
+        setAfterRequest(dut)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, busy = true)
+        expectValidFetchData(dut, 0x0007.U, 0x4c.U, Instruction.jmp, Addressing.absolute) // まだ前のデータが生きている
+        expectBusy(dut)                                                                   // Readは継続
+
+        // Read結果は来ないが前回の結果を破棄
+        setDiscard(dut)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, busy = true)
+        expectInvalidFetchData(dut)
+        expectBusy(dut) // Readは継続
+
+        // データは破棄したが、応答は来ないまま
+        clearDiscard(dut)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, busy = true)
+        expectInvalidFetchData(dut)
+        expectBusy(dut) // Readは継続
+
+        // まだ来ない
+        dut.clock.step(10)
+        simExtMem(dut, testMem, busy = true)
+        expectInvalidFetchData(dut)
+        expectBusy(dut) // Readは継続
+
+        // この途中で要求しても何も起きない
+        setRequest(dut, 0x000f.U)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, busy = true)
+        expectInvalidFetchData(dut)
+        expectBusy(dut) // Readは継続
+
+        // 要求解除
+        setAfterRequest(dut)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, busy = true)
+        expectInvalidFetchData(dut)
+        expectBusy(dut) // Readは継続
+
+        // Readが通る
+        dut.clock.step(1)
+        simExtMem(dut, testMem, busy = false) // dataoutされる
+        expectInvalidFetchData(dut)
+        expectBusy(dut) // Readは継続
+
+        // Read結果が来る, 途中に要求した0xfではないことを確認
+        dut.clock.step(1) // dataoutした内容をCopy、またDecode
+        simExtMem(dut, testMem, busy = false)
+        expectValidFetchData(dut, 0x0000.U, 0xea.U, Instruction.nop, Addressing.implied)
+        expectIdle(dut)
+      }
+    }
+  }
 }
