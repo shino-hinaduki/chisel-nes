@@ -507,4 +507,151 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
       }
     }
   }
+
+  "Run through the whole process" in {
+    test(new Fetch) { dut =>
+      {
+        // 初期化
+        setDisableReq(dut)
+        dut.clock.step(1)
+        expectInvalidFetchData(dut)
+        expectIdle(dut)
+
+        // 0x0 NOP
+        setRequest(dut, 0x0000.U)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, false)
+        expectInvalidFetchData(dut)
+        expectBusy(dut)
+
+        setAfterRequest(dut)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0000.U, 0xea.U, Instruction.nop, Addressing.implied)
+        expectIdle(dut)
+
+        // 0x1 INX
+        setRequest(dut, 0x0001.U)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0000.U, 0xea.U, Instruction.nop, Addressing.implied)
+        expectBusy(dut)
+
+        setAfterRequest(dut)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0001.U, 0xe8.U, Instruction.inx, Addressing.implied)
+        expectIdle(dut)
+
+        // 0x2 INY
+        setRequest(dut, 0x0002.U)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0001.U, 0xe8.U, Instruction.inx, Addressing.implied)
+        expectBusy(dut)
+
+        setAfterRequest(dut)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0002.U, 0xc8.U, Instruction.iny, Addressing.implied)
+        expectIdle(dut)
+
+        // 0x3 LDA Immediate
+        setRequest(dut, 0x0003.U)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0002.U, 0xc8.U, Instruction.iny, Addressing.implied)
+        expectBusy(dut)
+
+        setAfterRequest(dut)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0003.U, 0xa9.U, Instruction.lda, Addressing.immediate)
+        expectIdle(dut)
+
+        // ImmediateのOperand Fetch
+        dut.clock.step(1)
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0003.U, 0xa9.U, Instruction.lda, Addressing.immediate)
+        expectIdle(dut)
+
+        // 0x5 DEX Implied
+        setRequest(dut, 0x0005.U)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0003.U, 0xa9.U, Instruction.lda, Addressing.immediate)
+        expectBusy(dut)
+
+        setAfterRequest(dut)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0005.U, 0xca.U, Instruction.dex, Addressing.implied)
+        expectIdle(dut)
+
+        // 0x6 DEY Implied
+        setRequest(dut, 0x0006.U)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0005.U, 0xca.U, Instruction.dex, Addressing.implied)
+        expectBusy(dut)
+
+        setAfterRequest(dut)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0006.U, 0x88.U, Instruction.dey, Addressing.implied)
+        expectIdle(dut)
+
+        // 0x7 JMP Absolute
+        setRequest(dut, 0x0007.U)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0006.U, 0x88.U, Instruction.dey, Addressing.implied)
+        expectBusy(dut)
+
+        setAfterRequest(dut)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0007.U, 0x4c.U, Instruction.jmp, Addressing.absolute)
+        expectIdle(dut)
+
+        // JMPのOperand fetch0
+        dut.clock.step(1)
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0007.U, 0x4c.U, Instruction.jmp, Addressing.absolute)
+        expectIdle(dut)
+
+        // JMPのOperand fetch1とかぶせて 0xa NOPをFetch要求した場合
+        // (実際にこの使い方にするかは未確定)
+        setRequest(dut, 0x000a.U)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, busy = true) // Operand fetch1が優先される
+        expectValidFetchData(dut, 0x0007.U, 0x4c.U, Instruction.jmp, Addressing.absolute)
+        expectBusy(dut)
+
+        setAfterRequest(dut)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, false) // ここでNOPの結果がdataout
+        expectValidFetchData(dut, 0x0007.U, 0x4c.U, Instruction.jmp, Addressing.absolute)
+        expectBusy(dut)
+
+        dut.clock.step(1)
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x000a.U, 0xea.U, Instruction.nop, Addressing.implied)
+        expectIdle(dut)
+
+        // 0x0 NOPに戻る
+        setRequest(dut, 0x0000.U)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x000a.U, 0xea.U, Instruction.nop, Addressing.implied)
+        expectBusy(dut)
+
+        setAfterRequest(dut)
+        dut.clock.step(1)
+        simExtMem(dut, testMem, false)
+        expectValidFetchData(dut, 0x0000.U, 0xea.U, Instruction.nop, Addressing.implied)
+        expectIdle(dut)
+      }
+    }
+  }
 }
