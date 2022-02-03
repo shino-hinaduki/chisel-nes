@@ -8,8 +8,12 @@ import cpu.types.Instruction
  *  命令が可変長で8bit BusでOFで複数回Readが必要なことから IF->ID->OFはpipeline化しない。
  */
 object Decode {
+  // opcode -> Instructionの対応を取得する
+  def lookUpTableForInstruction(): Seq[(UInt, Instruction.Type)] = Decode.lookupTable.map { case (opcode, (instruction, addressing)) => opcode -> instruction }
+  // opcode -> Addressingの対応を取得する
+  def lookUpTableForAddressing(): Seq[(UInt, Addressing.Type)] = Decode.lookupTable.map { case (opcode, (instruction, addressing)) => opcode -> addressing }
   // Opcodeと命令/アドレッシングモードの対応
-  val lookupTable: Seq[(UInt, (Instruction.Type, Addressing.Type))] = Seq(
+  def lookupTable: Seq[(UInt, (Instruction.Type, Addressing.Type))] = Seq(
     // binary
     0x69.U -> (Instruction.adc, Addressing.immediate),
     0x65.U -> (Instruction.adc, Addressing.zeroPage),
@@ -181,7 +185,7 @@ object Decode {
     0x00.U -> (Instruction.brk, Addressing.implied),
     0x24.U -> (Instruction.bit, Addressing.zeroPage),
     0x2c.U -> (Instruction.bit, Addressing.absolute),
-    0xea.U -> (Instruction.not, Addressing.implied),
+    0xea.U -> (Instruction.nop, Addressing.implied),
 
     // undocumented
     0x4b.U -> (Instruction.alr, Addressing.immediate),
@@ -264,11 +268,11 @@ object Decode {
 
     // undocumented
     0xeb.U -> (Instruction.sbc, Addressing.immediate),
-    0x1a.U -> (Instruction.not, Addressing.implied),
-    0x3a.U -> (Instruction.not, Addressing.implied),
-    0x5a.U -> (Instruction.not, Addressing.implied),
-    0x7a.U -> (Instruction.not, Addressing.implied),
-    0xda.U -> (Instruction.not, Addressing.implied),
-    0xfa.U -> (Instruction.not, Addressing.implied)
+    0x1a.U -> (Instruction.nop, Addressing.implied),
+    0x3a.U -> (Instruction.nop, Addressing.implied),
+    0x5a.U -> (Instruction.nop, Addressing.implied),
+    0x7a.U -> (Instruction.nop, Addressing.implied),
+    0xda.U -> (Instruction.nop, Addressing.implied),
+    0xfa.U -> (Instruction.nop, Addressing.implied)
   )
 }

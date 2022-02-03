@@ -1,63 +1,151 @@
 package cpu.fetch
 
 import chisel3._
-import cpu.types.Addressing
-import cpu.types.Instruction
+import chisel3.experimental.ChiselEnum
 import chisel3.util.MuxLookup
 
-/** DataBusからの命令取得と、その内容をInstruction Registerに保持する役割を持つ
+import cpu.types.Addressing
+import cpu.types.Instruction
+import cpu.bus.BusSlavePort
+import chisel3.util.switch
+import chisel3.util.is
+
+/** IFがPrefetchし(てDecodeし)た命令を提供する, 使う側はFlippedして使う
+  */
+class FetchControlSlave extends Bundle {
+  // 立ち上がり変化で要求する
+  val reqStrobe = Input(Bool())
+  // ProgramCounterの値をそのまま見せる
+  val pc = Input(UInt(16.W))
+  // Fetchした結果を破棄する場合はtrue
+  val discard = Input(Bool())
+
+  // read処理中であればtrue, この状態ではreqStrobeを受け付けない
+  val busy = Output(Bool())
+  // 有効なデータであればtrue
+  val valid = Output(Bool())
+  // 命令が配置されていたアドレス
+  val addr = Output(UInt(16.W))
+  // 命令の生データ
+  val data = Output(UInt(8.W))
+  // Decodeした命令
+  val instruction = Output(Instruction())
+  // Decodeした命令のアドレッシング方式
+  val addressing = Output(Addressing())
+
+}
+
+// Fetch状況を示します
+object FetchStatus extends ChiselEnum {
+  val idle, read = Value
+
+}
+
+/** DataBusからの命令取得と、その内容をデコードしてRegisterに保持する役割を持つ
   */
 class Fetch extends Module {
   val io = IO(new Bundle {
-    // DataBusと直結、入力
-    val addrIn = Input(UInt(16.W))
-    val dataIn = Input(UInt(8.W))
-    // Fetchを有効にする場合はtrue、trueの間は毎cycle取得する
-    val nEn = Input(Bool())
-
-    // IRに有効な値が入っていればtrue, nEn設定後の次cycleから有効
-    val nValid = Output(Bool())
-    // Fetchしたときのaddr/dataの値を保持
-    val addrOut = Output(UInt(16.W))
-    val dataOut = Output(UInt(8.W))
-    // 次cycleで使用するInstruction, Addressing Mode
-    val inst       = Output(Instruction())
-    val addressing = Output(Addressing())
+    // 現在のステータス確認用
+    val status = Output(FetchStatus())
+    // Addr/DataBusのArbiterと接続
+    val busMaster = Flipped(new BusSlavePort())
+    // EX,INTからFetch制御する用に公開するI/F
+    val control = new FetchControlSlave()
   })
 
-  // nEnが有効なときに命令と命令のおいてあるアドレスを取得する
-  val addrReg   = RegInit(UInt(16.W), 0.U)
-  val dataReg   = RegInit(UInt(8.W), 0.U)
-  val nValidReg = RegInit(Bool(), false.B)
-  io.addrOut := addrReg
-  io.dataOut := dataReg
-  io.nValid  := nValidReg
-  when(io.nEn) {
-    // disable
-    addrReg   := addrReg
-    dataReg   := dataReg
-    nValidReg := true.B
-  }.otherwise {
-    // enable
-    addrReg   := io.addrIn
-    dataReg   := io.dataIn
-    nValidReg := false.B
+  // internal
+  val statusReg = RegInit(FetchStatus(), FetchStatus.idle)
+  // Read関連
+  val readReqAddrReg = RegInit(UInt(16.W), 0.U)
+  // EX,INTからの開始トリガはposedgeを起点にする
+  val prevReqStrobeReg = RegInit(Bool(), false.B)
+  // EX,INTに見せる関連
+  val validReg        = RegInit(Bool(), false.B)
+  val readDoneAddrReg = RegInit(UInt(16.W), 0.U)
+  val readDataReg     = RegInit(UInt(8.W), 0.U) // Decodeする前の生データ
+  val instructionReg  = RegInit(Instruction(), Instruction.invalid)
+  val addressingReg   = RegInit(Addressing(), Addressing.invalid)
+
+  // internal
+  io.status := statusReg
+
+  // BusMaster -> BusArbiterSlavePort
+  io.busMaster.addr        := readReqAddrReg
+  io.busMaster.req         := statusReg === FetchStatus.read // status=Readであれば処理し続ける
+  io.busMaster.writeEnable := false.B                        // Read Only
+  io.busMaster.dataIn      := DontCare                       // Writeすることはない
+
+  // IF -> EX,INTに見せる関連はレジスタそのまま公開する
+  io.control.busy        := statusReg === FetchStatus.read
+  io.control.valid       := validReg
+  io.control.addr        := readDoneAddrReg
+  io.control.data        := readDataReg
+  io.control.instruction := instructionReg
+  io.control.addressing  := addressingReg
+
+  // Req立ち上がり検出用
+  val onRequest = (!prevReqStrobeReg) & io.control.reqStrobe // 今回の立ち上がりで判断させる
+  prevReqStrobeReg := io.control.reqStrobe
+
+  switch(statusReg) {
+    is(FetchStatus.idle) {
+      // 出力レジスタクリア or 現状維持
+      when(io.control.discard) {
+        validReg        := false.B
+        readDoneAddrReg := 0.U
+        readDataReg     := 0.U
+        instructionReg  := Instruction.invalid
+        addressingReg   := Addressing.invalid
+      }.otherwise {
+        validReg        := validReg
+        readDoneAddrReg := readDoneAddrReg
+        readDataReg     := readDataReg
+        instructionReg  := instructionReg
+        addressingReg   := addressingReg
+      }
+
+      // idle->read遷移。discardとは並行して処理可能
+      when(onRequest) {
+        statusReg      := FetchStatus.read // status=readでRead要求を出す
+        readReqAddrReg := io.control.pc
+      }.otherwise {
+        statusReg      := FetchStatus.idle
+        readReqAddrReg := readReqAddrReg
+      }
+    }
+    is(FetchStatus.read) {
+      when(io.control.discard) {
+        // Read要求は現状維持, Read結果は回収しない
+        statusReg      := FetchStatus.read
+        readReqAddrReg := readReqAddrReg
+
+        validReg        := false.B
+        readDoneAddrReg := 0.U
+        readDataReg     := 0.U
+        instructionReg  := Instruction.invalid
+        addressingReg   := Addressing.invalid
+      }.elsewhen(io.busMaster.valid) {
+        // read結果をレジスタに格納して、idle遷移
+        statusReg      := FetchStatus.idle
+        readReqAddrReg := 0.U
+
+        validReg        := true.B
+        readDoneAddrReg := readReqAddrReg // 前回要求していたアドレスで、現在のPCではない
+        readDataReg     := io.busMaster.dataOut
+        instructionReg  := MuxLookup(io.busMaster.dataOut, Instruction.invalid, Decode.lookUpTableForInstruction())
+        addressingReg   := MuxLookup(io.busMaster.dataOut, Addressing.invalid, Decode.lookUpTableForAddressing())
+      }.otherwise {
+        // Read未完了, 現状維持
+        statusReg      := FetchStatus.read
+        readReqAddrReg := readReqAddrReg
+
+        validReg        := validReg
+        readDoneAddrReg := readDoneAddrReg
+        readDataReg     := readDataReg
+        instructionReg  := instructionReg
+        addressingReg   := addressingReg
+      }
+    }
   }
 
-  // decode stage
-  // IF,ID,OFは並列化できないため、次サイクルで(Impliedなどを除いて)OFが実行できるようにDecodeまで済ませる
-  val instReg       = RegInit(Instruction(), Instruction.not)
-  val addressingReg = RegInit(Addressing(), Addressing.implied)
-  when(io.nEn) {
-    // disable
-    instReg       := instReg
-    addressingReg := addressingReg
-  }.otherwise {
-    // enable
-    // io.dataInから直接デコードする
-    val inst       = MuxLookup(io.dataIn, Instruction.not, Decode.lookupTable.map(x => x._1 -> x._2._1))
-    val addressing = MuxLookup(io.dataIn, Addressing.implied, Decode.lookupTable.map(x => x._1 -> x._2._2))
-    instReg       := inst
-    addressingReg := addressing
-  }
 }
