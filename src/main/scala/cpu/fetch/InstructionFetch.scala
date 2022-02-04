@@ -104,8 +104,8 @@ class InstructionFetch extends Module {
         validReg        := true.B
         readDoneAddrReg := readReqAddrReg // 前回要求していたアドレスで、現在のPCではない
         readDataReg     := io.busMaster.dataOut
-        instructionReg  := MuxLookup(io.busMaster.dataOut, Instruction.invalid, Decode.lookUpTableForInstruction())
-        addressingReg   := MuxLookup(io.busMaster.dataOut, Addressing.invalid, Decode.lookUpTableForAddressing())
+        instructionReg  := MuxLookup(io.busMaster.dataOut, Instruction.invalid, InstructionDecode.lookUpTableForInstruction())
+        addressingReg   := MuxLookup(io.busMaster.dataOut, Addressing.invalid, InstructionDecode.lookUpTableForAddressing())
       }.otherwise {
         // Read未完了, 現状維持
         statusReg      := InstructionFetchStatus.read
