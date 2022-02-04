@@ -10,36 +10,8 @@ import cpu.bus.BusSlavePort
 import chisel3.util.switch
 import chisel3.util.is
 
-/** IFがPrefetchし(てDecodeし)た命令を提供する, 使う側はFlippedして使う
-  */
-class FetchControlSlave extends Bundle {
-  // 立ち上がり変化で要求する
-  val reqStrobe = Input(Bool())
-  // ProgramCounterの値をそのまま見せる
-  val pc = Input(UInt(16.W))
-  // Fetchした結果を破棄する場合はtrue
-  val discard = Input(Bool())
-
-  // read処理中であればtrue, この状態ではreqStrobeを受け付けない
-  val busy = Output(Bool())
-  // 有効なデータであればtrue
-  val valid = Output(Bool())
-  // 命令が配置されていたアドレス
-  val addr = Output(UInt(16.W))
-  // 命令の生データ
-  val data = Output(UInt(8.W))
-  // Decodeした命令
-  val instruction = Output(Instruction())
-  // Decodeした命令のアドレッシング方式
-  val addressing = Output(Addressing())
-
-}
-
-// Fetch状況を示します
-object InstructionFetchStatus extends ChiselEnum {
-  val idle, read = Value
-
-}
+import cpu.types.InstructionFetchControl
+import cpu.types.InstructionFetchStatus
 
 /** DataBusからの命令取得と、その内容をデコードしてRegisterに保持する役割を持つ
   */
@@ -50,7 +22,7 @@ class InstructionFetch extends Module {
     // Addr/DataBusのArbiterと接続
     val busMaster = Flipped(new BusSlavePort())
     // EX,INTからFetch制御する用に公開するI/F
-    val control = new FetchControlSlave()
+    val control = new InstructionFetchControl()
   })
 
   // internal
