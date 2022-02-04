@@ -7,11 +7,11 @@ import cpu.types.Instruction
 /** IFで取得した命令をDecodeしてOFへのOperand取得依頼、ALUで実行する命令の決定を行う...が
  *  命令が可変長で8bit BusでOFで複数回Readが必要なことから IF->ID->OFはpipeline化しない。
  */
-object Decode {
+object InstructionDecode {
   // opcode -> Instructionの対応を取得する
-  def lookUpTableForInstruction(): Seq[(UInt, Instruction.Type)] = Decode.lookupTable.map { case (opcode, (instruction, addressing)) => opcode -> instruction }
+  def lookUpTableForInstruction(): Seq[(UInt, Instruction.Type)] = InstructionDecode.lookupTable.map { case (opcode, (instruction, addressing)) => opcode -> instruction }
   // opcode -> Addressingの対応を取得する
-  def lookUpTableForAddressing(): Seq[(UInt, Addressing.Type)] = Decode.lookupTable.map { case (opcode, (instruction, addressing)) => opcode -> addressing }
+  def lookUpTableForAddressing(): Seq[(UInt, Addressing.Type)] = InstructionDecode.lookupTable.map { case (opcode, (instruction, addressing)) => opcode -> addressing }
   // Opcodeと命令/アドレッシングモードの対応
   def lookupTable: Seq[(UInt, (Instruction.Type, Addressing.Type))] = Seq(
     // binary
@@ -191,7 +191,7 @@ object Decode {
     0x4b.U -> (Instruction.alr, Addressing.immediate),
     0x0b.U -> (Instruction.anc, Addressing.immediate),
     0x6b.U -> (Instruction.arr, Addressing.immediate),
-    0xcb.U -> (Instruction.axs, Addressing.immediate),
+    0xcb.U -> (Instruction.sbx, Addressing.immediate),
     0xa3.U -> (Instruction.lax, Addressing.indexedIndirectX),
     0xa7.U -> (Instruction.lax, Addressing.zeroPage),
     0xaf.U -> (Instruction.lax, Addressing.absolute),
@@ -216,6 +216,33 @@ object Decode {
     0xf7.U -> (Instruction.isc, Addressing.indexedZeroPageX),
     0xfb.U -> (Instruction.isc, Addressing.indexedAbsoluteY),
     0xff.U -> (Instruction.isc, Addressing.indexedAbsoluteX),
+    0x80.U -> (Instruction.nop, Addressing.immediate),
+    0x82.U -> (Instruction.nop, Addressing.immediate),
+    0x89.U -> (Instruction.nop, Addressing.immediate),
+    0xc2.U -> (Instruction.nop, Addressing.immediate),
+    0xe2.U -> (Instruction.nop, Addressing.immediate),
+    0x04.U -> (Instruction.nop, Addressing.zeroPage),
+    0x44.U -> (Instruction.nop, Addressing.zeroPage),
+    0x64.U -> (Instruction.nop, Addressing.zeroPage),
+    0x14.U -> (Instruction.nop, Addressing.indexedZeroPageX),
+    0x34.U -> (Instruction.nop, Addressing.indexedZeroPageX),
+    0x54.U -> (Instruction.nop, Addressing.indexedZeroPageX),
+    0x74.U -> (Instruction.nop, Addressing.indexedZeroPageX),
+    0xd4.U -> (Instruction.nop, Addressing.indexedZeroPageX),
+    0xf4.U -> (Instruction.nop, Addressing.indexedZeroPageX),
+    0x0c.U -> (Instruction.nop, Addressing.absolute),
+    0x1c.U -> (Instruction.nop, Addressing.indexedAbsoluteX),
+    0x3c.U -> (Instruction.nop, Addressing.indexedAbsoluteX),
+    0x5c.U -> (Instruction.nop, Addressing.indexedAbsoluteX),
+    0x7c.U -> (Instruction.nop, Addressing.indexedAbsoluteX),
+    0xdc.U -> (Instruction.nop, Addressing.indexedAbsoluteX),
+    0xfc.U -> (Instruction.nop, Addressing.indexedAbsoluteX),
+    0x1a.U -> (Instruction.nop, Addressing.implied),
+    0x3a.U -> (Instruction.nop, Addressing.implied),
+    0x5a.U -> (Instruction.nop, Addressing.implied),
+    0x7a.U -> (Instruction.nop, Addressing.implied),
+    0xda.U -> (Instruction.nop, Addressing.implied),
+    0xfa.U -> (Instruction.nop, Addressing.implied),
     0x23.U -> (Instruction.rla, Addressing.indexedIndirectX),
     0x27.U -> (Instruction.rla, Addressing.zeroPage),
     0x2f.U -> (Instruction.rla, Addressing.absolute),
@@ -244,35 +271,20 @@ object Decode {
     0x57.U -> (Instruction.sre, Addressing.indexedZeroPageX),
     0x5b.U -> (Instruction.sre, Addressing.indexedAbsoluteY),
     0x5f.U -> (Instruction.sre, Addressing.indexedAbsoluteX),
-    0x80.U -> (Instruction.skb, Addressing.immediate),
-    0x82.U -> (Instruction.skb, Addressing.immediate),
-    0x89.U -> (Instruction.skb, Addressing.immediate),
-    0xc2.U -> (Instruction.skb, Addressing.immediate),
-    0xe2.U -> (Instruction.skb, Addressing.immediate),
-    0x0c.U -> (Instruction.ign, Addressing.absolute),
-    0x1c.U -> (Instruction.ign, Addressing.indexedAbsoluteX),
-    0x3c.U -> (Instruction.ign, Addressing.indexedAbsoluteX),
-    0x5c.U -> (Instruction.ign, Addressing.indexedAbsoluteX),
-    0x7c.U -> (Instruction.ign, Addressing.indexedAbsoluteX),
-    0xdc.U -> (Instruction.ign, Addressing.indexedAbsoluteX),
-    0xfc.U -> (Instruction.ign, Addressing.indexedAbsoluteX),
-    0x04.U -> (Instruction.ign, Addressing.zeroPage),
-    0x44.U -> (Instruction.ign, Addressing.zeroPage),
-    0x64.U -> (Instruction.ign, Addressing.zeroPage),
-    0x14.U -> (Instruction.ign, Addressing.indexedZeroPageX),
-    0x34.U -> (Instruction.ign, Addressing.indexedZeroPageX),
-    0x54.U -> (Instruction.ign, Addressing.indexedZeroPageX),
-    0x74.U -> (Instruction.ign, Addressing.indexedZeroPageX),
-    0xd4.U -> (Instruction.ign, Addressing.indexedZeroPageX),
-    0xf4.U -> (Instruction.ign, Addressing.indexedZeroPageX),
+    0xeb.U -> (Instruction.usbc, Addressing.immediate),
 
-    // undocumented
-    0xeb.U -> (Instruction.sbc, Addressing.immediate),
-    0x1a.U -> (Instruction.nop, Addressing.implied),
-    0x3a.U -> (Instruction.nop, Addressing.implied),
-    0x5a.U -> (Instruction.nop, Addressing.implied),
-    0x7a.U -> (Instruction.nop, Addressing.implied),
-    0xda.U -> (Instruction.nop, Addressing.implied),
-    0xfa.U -> (Instruction.nop, Addressing.implied)
+    // illegal
+    0x02.U -> (Instruction.jam, Addressing.invalid),
+    0x12.U -> (Instruction.jam, Addressing.invalid),
+    0x22.U -> (Instruction.jam, Addressing.invalid),
+    0x32.U -> (Instruction.jam, Addressing.invalid),
+    0x42.U -> (Instruction.jam, Addressing.invalid),
+    0x52.U -> (Instruction.jam, Addressing.invalid),
+    0x62.U -> (Instruction.jam, Addressing.invalid),
+    0x72.U -> (Instruction.jam, Addressing.invalid),
+    0x92.U -> (Instruction.jam, Addressing.invalid),
+    0xb2.U -> (Instruction.jam, Addressing.invalid),
+    0xd2.U -> (Instruction.jam, Addressing.invalid),
+    0xf2.U -> (Instruction.jam, Addressing.invalid)
   )
 }
