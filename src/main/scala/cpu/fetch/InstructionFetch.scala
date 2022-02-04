@@ -36,17 +36,17 @@ class FetchControlSlave extends Bundle {
 }
 
 // Fetch状況を示します
-object FetchStatus extends ChiselEnum {
+object InstructionFetchStatus extends ChiselEnum {
   val idle, read = Value
 
 }
 
 /** DataBusからの命令取得と、その内容をデコードしてRegisterに保持する役割を持つ
   */
-class Fetch extends Module {
+class InstructionFetch extends Module {
   val io = IO(new Bundle {
     // 現在のステータス確認用
-    val status = Output(FetchStatus())
+    val status = Output(InstructionFetchStatus())
     // Addr/DataBusのArbiterと接続
     val busMaster = Flipped(new BusSlavePort())
     // EX,INTからFetch制御する用に公開するI/F
@@ -54,7 +54,7 @@ class Fetch extends Module {
   })
 
   // internal
-  val statusReg = RegInit(FetchStatus(), FetchStatus.idle)
+  val statusReg = RegInit(InstructionFetchStatus(), InstructionFetchStatus.idle)
   // Read関連
   val readReqAddrReg = RegInit(UInt(16.W), 0.U)
   // EX,INTからの開始トリガはposedgeを起点にする
@@ -71,12 +71,12 @@ class Fetch extends Module {
 
   // BusMaster -> BusArbiterSlavePort
   io.busMaster.addr        := readReqAddrReg
-  io.busMaster.req         := statusReg === FetchStatus.read // status=Readであれば処理し続ける
-  io.busMaster.writeEnable := false.B                        // Read Only
-  io.busMaster.dataIn      := DontCare                       // Writeすることはない
+  io.busMaster.req         := statusReg === InstructionFetchStatus.read // status=Readであれば処理し続ける
+  io.busMaster.writeEnable := false.B                                   // Read Only
+  io.busMaster.dataIn      := DontCare                                  // Writeすることはない
 
   // IF -> EX,INTに見せる関連はレジスタそのまま公開する
-  io.control.busy        := statusReg === FetchStatus.read
+  io.control.busy        := statusReg === InstructionFetchStatus.read
   io.control.valid       := validReg
   io.control.addr        := readDoneAddrReg
   io.control.data        := readDataReg
@@ -88,7 +88,7 @@ class Fetch extends Module {
   prevReqStrobeReg := io.control.reqStrobe
 
   switch(statusReg) {
-    is(FetchStatus.idle) {
+    is(InstructionFetchStatus.idle) {
       // 出力レジスタクリア or 現状維持
       when(io.control.discard) {
         validReg        := false.B
@@ -106,17 +106,17 @@ class Fetch extends Module {
 
       // idle->read遷移。discardとは並行して処理可能
       when(onRequest) {
-        statusReg      := FetchStatus.read // status=readでRead要求を出す
+        statusReg      := InstructionFetchStatus.read // status=readでRead要求を出す
         readReqAddrReg := io.control.pc
       }.otherwise {
-        statusReg      := FetchStatus.idle
+        statusReg      := InstructionFetchStatus.idle
         readReqAddrReg := readReqAddrReg
       }
     }
-    is(FetchStatus.read) {
+    is(InstructionFetchStatus.read) {
       when(io.control.discard) {
         // Read要求は現状維持, Read結果は回収しない
-        statusReg      := FetchStatus.read
+        statusReg      := InstructionFetchStatus.read
         readReqAddrReg := readReqAddrReg
 
         validReg        := false.B
@@ -126,7 +126,7 @@ class Fetch extends Module {
         addressingReg   := Addressing.invalid
       }.elsewhen(io.busMaster.valid) {
         // read結果をレジスタに格納して、idle遷移
-        statusReg      := FetchStatus.idle
+        statusReg      := InstructionFetchStatus.idle
         readReqAddrReg := 0.U
 
         validReg        := true.B
@@ -136,7 +136,7 @@ class Fetch extends Module {
         addressingReg   := MuxLookup(io.busMaster.dataOut, Addressing.invalid, Decode.lookUpTableForAddressing())
       }.otherwise {
         // Read未完了, 現状維持
-        statusReg      := FetchStatus.read
+        statusReg      := InstructionFetchStatus.read
         readReqAddrReg := readReqAddrReg
 
         validReg        := validReg

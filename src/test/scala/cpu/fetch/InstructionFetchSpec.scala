@@ -6,7 +6,7 @@ import org.scalatest.freespec.AnyFreeSpec
 import cpu.types.Instruction
 import cpu.types.Addressing
 
-class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
+class InstructionFetchSpec extends AnyFreeSpec with ChiselScalatestTester {
   // バスアクセス確認用の単純なパターン
   val testMem = Seq(
     0xea.U, // 0x0000 : NOP Implied
@@ -29,36 +29,36 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
 
   /* EXからの設定 */
   // PCの現在値を指定した上で、Fetchを有効化します
-  def setRequest(f: Fetch, pc: UInt) = {
+  def setRequest(f: InstructionFetch, pc: UInt) = {
     f.io.control.reqStrobe.poke(true.B)
     f.io.control.pc.poke(pc)
     f.io.control.discard.poke(false.B)
   }
 
   // setRequestを呼び出したあと、clock cycleを跨いだあとに呼び出します。
-  def setAfterRequest(f: Fetch) = {
+  def setAfterRequest(f: InstructionFetch) = {
     f.io.control.reqStrobe.poke(false.B) // posedgeで検出なので落としておく
   }
   // 要求がない状態に初期化します
-  def setDisableReq(f: Fetch) = {
+  def setDisableReq(f: InstructionFetch) = {
     f.io.control.reqStrobe.poke(false.B)
     f.io.control.pc.poke(0xffff.U) // Don't care
     f.io.control.discard.poke(false.B)
   }
 
   // Fetchデータ破棄を実行します
-  def setDiscard(f: Fetch) = {
+  def setDiscard(f: InstructionFetch) = {
     f.io.control.discard.poke(true.B)
   }
 
   // Fetchデータ破棄を解除します
-  def clearDiscard(f: Fetch) = {
+  def clearDiscard(f: InstructionFetch) = {
     f.io.control.discard.poke(false.B)
   }
 
   /* EXへ出力したデータの期待値確認 */
   // 正しい値がFetchされていることを確認
-  def expectValidFetchData(f: Fetch, addr: UInt, data: UInt, instruction: Instruction.Type, addressing: Addressing.Type) = {
+  def expectValidFetchData(f: InstructionFetch, addr: UInt, data: UInt, instruction: Instruction.Type, addressing: Addressing.Type) = {
     f.io.control.valid.expect(true.B) // 有効なはず
     f.io.control.addr.expect(addr)
     f.io.control.data.expect(data)
@@ -67,24 +67,24 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
   }
 
   // Read中であることを確認します
-  def expectBusy(f: Fetch) = {
+  def expectBusy(f: InstructionFetch) = {
     f.io.control.busy.expect(true.B)
   }
 
   // Read中ではないことを確認します
-  def expectIdle(f: Fetch) = {
+  def expectIdle(f: InstructionFetch) = {
     f.io.control.busy.expect(false.B)
   }
 
   // Fetchされたデータがないことを確認
-  def expectInvalidFetchData(f: Fetch) = {
+  def expectInvalidFetchData(f: InstructionFetch) = {
     f.io.control.valid.expect(false.B) // 無効。ほかは不問
   }
 
   /* EXへ出力したデータの期待値確認 */
   // 現在の状態をもとにextMemをReadする。戻り値はReadした値が入る(dataOutには設定済)
   // busy=trueの場合、今回のReadは保留される
-  def simExtMem(f: Fetch, extMem: Seq[UInt], busy: Boolean): Option[UInt] = {
+  def simExtMem(f: InstructionFetch, extMem: Seq[UInt], busy: Boolean): Option[UInt] = {
     val req = f.io.busMaster.req.peek()
     if (busy) {
       // Busyもしくは要求が来ていない場合は、有効な値は返さない
@@ -111,7 +111,7 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
   }
 
   "Single fetch verification" in {
-    test(new Fetch) { dut =>
+    test(new InstructionFetch) { dut =>
       {
         // 初期化
         setDisableReq(dut)
@@ -141,7 +141,7 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
   }
 
   "Sequential fetch verification" in {
-    test(new Fetch) { dut =>
+    test(new InstructionFetch) { dut =>
       {
         // 初期化
         setDisableReq(dut)
@@ -182,7 +182,7 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
   }
 
   "Verify data retention and destruction" in {
-    test(new Fetch) { dut =>
+    test(new InstructionFetch) { dut =>
       {
         // 初期化
         setDisableReq(dut)
@@ -224,7 +224,7 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
   }
 
   "Request a fetch and destroy at the same time" in {
-    test(new Fetch) { dut =>
+    test(new InstructionFetch) { dut =>
       {
         // 初期化
         setDisableReq(dut)
@@ -271,7 +271,7 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
   }
 
   "Request Fetch and Discard at the same time, leaving the Discard request untouched" in {
-    test(new Fetch) { dut =>
+    test(new InstructionFetch) { dut =>
       {
         // 初期化
         setDisableReq(dut)
@@ -325,7 +325,7 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
   }
 
   "Bus is busy and read response is delayed" in {
-    test(new Fetch) { dut =>
+    test(new InstructionFetch) { dut =>
       {
         // 初期化
         setDisableReq(dut)
@@ -367,7 +367,7 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
   }
 
   "Request during request" in {
-    test(new Fetch) { dut =>
+    test(new InstructionFetch) { dut =>
       {
         // 初期化
         setDisableReq(dut)
@@ -418,7 +418,7 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
   }
 
   "Request data destruction during read" in {
-    test(new Fetch) { dut =>
+    test(new InstructionFetch) { dut =>
       {
         // 初期化
         setDisableReq(dut)
@@ -509,7 +509,7 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
   }
 
   "Run through the whole process" in {
-    test(new Fetch) { dut =>
+    test(new InstructionFetch) { dut =>
       {
         // 初期化
         setDisableReq(dut)
@@ -656,7 +656,7 @@ class FetchSpec extends AnyFreeSpec with ChiselScalatestTester {
   }
 
   "Request read and discard at the same time to run the entire route." in {
-    test(new Fetch) { dut =>
+    test(new InstructionFetch) { dut =>
       {
         // 初期化
         setDisableReq(dut)
