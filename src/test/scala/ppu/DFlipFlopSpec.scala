@@ -5,11 +5,11 @@ import chiseltest._
 import org.scalatest.freespec.AnyFreeSpec
 
 class DFlipFlopSpec extends AnyFreeSpec with ChiselScalatestTester {
-  "Let the input data be retained" in {
-    test(new DFlipFlop) { dut =>
-      {
-        val patterns = Array(0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef)
-        patterns foreach { pattern =>
+  val patterns = Array(0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef)
+  patterns foreach { pattern =>
+    {
+      f"Let the input data be retained [$pattern%02x]" in {
+        test(new DFlipFlop) { dut =>
           {
             // データ入力
             dut.io.d.poke(pattern.U)

@@ -7,10 +7,10 @@ import org.scalatest.freespec.AnyFreeSpec
 class ShiftRegisterSpec extends AnyFreeSpec with ChiselScalatestTester {
   val testDatas = Array(0x00, 0xff, 0xaa, 0x55, 0xa5, 0x5a, 0xab, 0xcd, 0xef)
 
-  "Serial input test" in {
-    test(new ShiftRegister) { dut =>
-      {
-        testDatas foreach { testData =>
+  testDatas foreach { testData =>
+    {
+      f"Serial input test [$testData%02x]" in {
+        test(new ShiftRegister) { dut =>
           {
             // 8cycleかけてデータ入力
             for (i <- 0 until 8) {
@@ -28,13 +28,8 @@ class ShiftRegisterSpec extends AnyFreeSpec with ChiselScalatestTester {
           }
         }
       }
-    }
-  }
-
-  "Parallel input test" in {
-    test(new ShiftRegister) { dut =>
-      {
-        testDatas foreach { testData =>
+      f"Parallel input test [$testData%02x]" in {
+        test(new ShiftRegister) { dut =>
           {
             Array(1, 2, 5, 10) foreach { inputCycles =>
               {
