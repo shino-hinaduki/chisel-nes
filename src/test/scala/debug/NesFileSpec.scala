@@ -1,5 +1,3 @@
-// See README.md for license details.
-
 package debug
 
 import org.scalatest.freespec.AnyFreeSpec
