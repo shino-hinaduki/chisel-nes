@@ -154,12 +154,37 @@ module DE0_CV_golden_top (
 );
 
 
+
 /*****************************************************************/
-// test
+// virtualjtag test
+
+wire [23:0] vjtag_ir_in; // vjtag0.ir_in
+wire vjtag_state_uir;    // Hのときにvjtag_ir_inを取り込む
+virtual_jtag vjtag0 (
+//	  .tdi                (<connected-to-tdi>),                // jtag.tdi
+//	  .tdo                (<connected-to-tdo>),                //     .tdo
+	  .ir_in              (vjtag_ir_in),                       //     .ir_in
+//	  .ir_out             (<connected-to-ir_out>),             //     .ir_out
+//	  .virtual_state_cdr  (<connected-to-virtual_state_cdr>),  //     .virtual_state_cdr
+//	  .virtual_state_sdr  (<connected-to-virtual_state_sdr>),  //     .virtual_state_sdr
+//   .virtual_state_e1dr (<connected-to-virtual_state_e1dr>), //     .virtual_state_e1dr
+//	  .virtual_state_pdr  (<connected-to-virtual_state_pdr>),  //     .virtual_state_pdr
+//	  .virtual_state_e2dr (<connected-to-virtual_state_e2dr>), //     .virtual_state_e2dr
+//	  .virtual_state_udr  (<connected-to-virtual_state_udr>),  //     .virtual_state_udr
+//	  .virtual_state_cir  (<connected-to-virtual_state_cir>),  //     .virtual_state_cir
+	  .virtual_state_uir  (vjtag_state_uir),                   //     .virtual_state_uir
+//	  .tck                (<connected-to-tck>)                 //  tck.clk
+ );
+
+/*****************************************************************/
+// counter test
+
 reg [63:0] counter;
 always @(posedge CLOCK_50) begin
 	if (!RESET_N) begin
 		counter <= 64'd0;
+	end else if (vjtag_state_uir) begin
+		counter <= { 24'd0, vjtag_ir_in, 16'd0 };
 	end else begin
 		counter <= counter + 64'd1;
 	end
