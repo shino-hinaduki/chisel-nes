@@ -28,28 +28,4 @@ object SevenSegmentLed {
   )
   // 全消灯
   val offPattern = "0b0000000".asUInt(7.W)
-
-  /** 1桁の16進数の数値を点灯パターンに変換します
-    * @param num 表示する数値
-    * @param isActiveLow 負論理ならtrue
-    * @return
-    */
-  def decode(num: UInt, isActiveLow: Boolean = false): UInt =
-    if (isActiveLow) ~MuxLookup(num, offPattern, lookupTable)
-    else MuxLookup(num, offPattern, lookupTable)
-
-  /** 複数桁の16進数の数値を点灯パターンに変換します
-    * @param num 表示する数値
-    * @param ledNum 7segの個数。1個あたり4bit
-    * @param isActiveLow 負論理ならtrue
-    * @return
-    */
-  def decodeNDigits(num: UInt, ledNum: Int, isActiveLow: Boolean = false): Seq[UInt] =
-    (0 until ledNum).map(i => {
-      val widthPerDigit = 4
-      val lower         = i * widthPerDigit
-      val upper         = ((i + 1) * widthPerDigit) - 1 // bitposなので-1
-      val digit         = num(upper, lower)
-      decode(digit, isActiveLow)
-    })
 }
