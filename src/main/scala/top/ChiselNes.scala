@@ -32,13 +32,6 @@ class ChiselNes extends Module {
   io.extPort.GPIO_0_out.oe     := false.B
   io.extPort.GPIO_1_out.data   := 0.U
   io.extPort.GPIO_1_out.oe     := false.B
-  io.extPort.HEX0              := 0.U
-  io.extPort.HEX1              := 0.U
-  io.extPort.HEX2              := 0.U
-  io.extPort.HEX3              := 0.U
-  io.extPort.HEX4              := 0.U
-  io.extPort.HEX5              := 0.U
-  io.extPort.LEDR              := 0.U
   io.extPort.PS2_CLK_out.data  := false.B
   io.extPort.PS2_CLK_out.oe    := false.B
   io.extPort.PS2_CLK2_out.data := false.B
@@ -59,17 +52,18 @@ class ChiselNes extends Module {
   io.extPort.VGA_VS            := false.B
 
   // ボードテスト回路
-  // withClockAndReset(io.extPort.CLOCK_50, !io.extPort.RESET_N) {
-  //   val counter = RegInit(UInt(64.W), 0.U)
-  //   counter         := counter + 1.U
-  //   io.extPort.LEDR := (1.U(10.W) << counter(23, 20))
-  //   io.extPort.HEX0 := ~MuxLookup(counter(19, 16), SevenSegmentLed.offPattern, SevenSegmentLed.lookupTable)
-  //   io.extPort.HEX1 := ~MuxLookup(counter(23, 20), SevenSegmentLed.offPattern, SevenSegmentLed.lookupTable)
-  //   io.extPort.HEX2 := ~MuxLookup(counter(27, 24), SevenSegmentLed.offPattern, SevenSegmentLed.lookupTable)
-  //   io.extPort.HEX3 := ~MuxLookup(counter(31, 28), SevenSegmentLed.offPattern, SevenSegmentLed.lookupTable)
-  //   io.extPort.HEX4 := ~MuxLookup(counter(35, 32), SevenSegmentLed.offPattern, SevenSegmentLed.lookupTable)
-  //   io.extPort.HEX5 := ~MuxLookup(counter(39, 36), SevenSegmentLed.offPattern, SevenSegmentLed.lookupTable)
-  // }
+  withClockAndReset(io.extPort.CLOCK_50, !io.extPort.RESET_N) {
+    val counter = RegInit(UInt(64.W), 0.U)
+    counter         := counter + 1.U
+    io.extPort.LEDR := (1.U(10.W) << counter(23, 20))
+    val digits = SevenSegmentLed.decodeNDigits(counter >> 16.U, 6, isActiveLow = true)
+    io.extPort.HEX0 := digits(0)
+    io.extPort.HEX1 := digits(1)
+    io.extPort.HEX2 := digits(2)
+    io.extPort.HEX3 := digits(3)
+    io.extPort.HEX4 := digits(4)
+    io.extPort.HEX5 := digits(5)
+  }
 
   // TODO: エミュレータ自体のImpl
   // TODO: エミュレータと外部コンポーネントの接続

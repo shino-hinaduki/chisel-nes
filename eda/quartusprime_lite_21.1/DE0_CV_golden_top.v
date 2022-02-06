@@ -157,13 +157,12 @@ module DE0_CV_golden_top (
 
 /*****************************************************************/
 // virtualjtag test
-
-wire [23:0] vjtag_ir_in; // vjtag0.ir_in
-wire vjtag_state_uir;    // Hのときにvjtag_ir_inを取り込む
-virtual_jtag vjtag0 (
+//wire [23:0] vjtag_ir_in; // vjtag0.ir_in
+//wire vjtag_state_uir;    // Hのときにvjtag_ir_inを取り込む
+//virtual_jtag vjtag0 (
 //	  .tdi                (<connected-to-tdi>),                // jtag.tdi
 //	  .tdo                (<connected-to-tdo>),                //     .tdo
-	  .ir_in              (vjtag_ir_in),                       //     .ir_in
+//	  .ir_in              (vjtag_ir_in),                       //     .ir_in
 //	  .ir_out             (<connected-to-ir_out>),             //     .ir_out
 //	  .virtual_state_cdr  (<connected-to-virtual_state_cdr>),  //     .virtual_state_cdr
 //	  .virtual_state_sdr  (<connected-to-virtual_state_sdr>),  //     .virtual_state_sdr
@@ -172,57 +171,72 @@ virtual_jtag vjtag0 (
 //	  .virtual_state_e2dr (<connected-to-virtual_state_e2dr>), //     .virtual_state_e2dr
 //	  .virtual_state_udr  (<connected-to-virtual_state_udr>),  //     .virtual_state_udr
 //	  .virtual_state_cir  (<connected-to-virtual_state_cir>),  //     .virtual_state_cir
-	  .virtual_state_uir  (vjtag_state_uir),                   //     .virtual_state_uir
+//	  .virtual_state_uir  (vjtag_state_uir),                   //     .virtual_state_uir
 //	  .tck                (<connected-to-tck>)                 //  tck.clk
- );
+// );
 
-/*****************************************************************/
-// counter test
-
-reg [63:0] counter;
-always @(posedge CLOCK_50) begin
-	if (!RESET_N) begin
-		counter <= 64'd0;
-	end else if (vjtag_state_uir) begin
-		counter <= { 24'd0, vjtag_ir_in, 16'd0 };
-	end else begin
-		counter <= counter + 64'd1;
-	end
-end
-
-// 流れる感じのなにか
-assign LEDR = (10'd1 << counter[23:20]);
-
-// 7segの出力を作る。回路上は負論理
-function [6:0] decode_for_7seg;
-	input [3:0] num;
-	case (num)                  // gfedcba
-		4'h0: decode_for_7seg = ~7'b0111111;
-		4'h1: decode_for_7seg = ~7'b0000110;
-		4'h2: decode_for_7seg = ~7'b1011011;
-		4'h3: decode_for_7seg = ~7'b1001111;
-		4'h4: decode_for_7seg = ~7'b1100110;
-		4'h5: decode_for_7seg = ~7'b1101101;
-		4'h6: decode_for_7seg = ~7'b1111101;
-		4'h7: decode_for_7seg = ~7'b0100111;
-		4'h8: decode_for_7seg = ~7'b1111111;
-		4'h9: decode_for_7seg = ~7'b1101111;
-		4'ha: decode_for_7seg = ~7'b1110111;
-		4'hb: decode_for_7seg = ~7'b1111100;
-		4'hc: decode_for_7seg = ~7'b0111001;
-		4'hd: decode_for_7seg = ~7'b1011110;
-		4'he: decode_for_7seg = ~7'b1111001;
-		4'hf: decode_for_7seg = ~7'b1110001;
-	endcase
-endfunction
-
-assign HEX0 = decode_for_7seg(counter[19:16]);
-assign HEX1 = decode_for_7seg(counter[23:20]);
-assign HEX2 = decode_for_7seg(counter[27:24]);
-assign HEX3 = decode_for_7seg(counter[31:28]);
-assign HEX4 = decode_for_7seg(counter[35:32]);
-assign HEX5 = decode_for_7seg(counter[39:36]);
-
+// TODO: inout兼用ピンが未定義のwireのまま
+ChiselNes chiselNes0(
+//  .clock(clock),
+//  .reset(reset),
+  .io_extPort_CLOCK_50(CLOCK_50),
+  .io_extPort_CLOCK2_50(CLOCK2_50),
+  .io_extPort_CLOCK3_50(CLOCK3_50),
+  .io_extPort_CLOCK4_50(CLOCK4_50),
+  .io_extPort_DRAM_ADDR(DRAM_ADDR),
+  .io_extPort_DRAM_BA(DRAM_BA),
+  .io_extPort_DRAM_CAS_N(DRAM_CAS_N),
+  .io_extPort_DRAM_CKE(DRAM_CKE),
+  .io_extPort_DRAM_CLK(DRAM_CLK),
+  .io_extPort_DRAM_CS_N(DRAM_CS_N),
+  .io_extPort_DRAM_DQ_in(DRAM_DQ_in),
+  .io_extPort_DRAM_DQ_out_data(DRAM_DQ_out_data),
+  .io_extPort_DRAM_DQ_out_oe(DRAM_DQ_out_oe),
+  .io_extPort_DRAM_LDQM(DRAM_LDQM),
+  .io_extPort_DRAM_RAS_N(DRAM_RAS_N),
+  .io_extPort_DRAM_UDQM(DRAM_UDQM),
+  .io_extPort_DRAM_WE_N(DRAM_WE_N),
+  .io_extPort_GPIO_0_in(GPIO_0_in),
+  .io_extPort_GPIO_0_out_data(GPIO_0_out_data),
+  .io_extPort_GPIO_0_out_oe(GPIO_0_out_oe),
+  .io_extPort_GPIO_1_in(GPIO_1_in),
+  .io_extPort_GPIO_1_out_data(GPIO_1_out_data),
+  .io_extPort_GPIO_1_out_oe(GPIO_1_out_oe),
+  .io_extPort_HEX0(HEX0),
+  .io_extPort_HEX1(HEX1),
+  .io_extPort_HEX2(HEX2),
+  .io_extPort_HEX3(HEX3),
+  .io_extPort_HEX4(HEX4),
+  .io_extPort_HEX5(HEX5),
+  .io_extPort_KEY(KEY),
+  .io_extPort_LEDR(LEDR),
+  .io_extPort_PS2_CLK_in(PS2_CLK_in),
+  .io_extPort_PS2_CLK_out_data(PS2_CLK_out_data),
+  .io_extPort_PS2_CLK_out_oe(PS2_CLK_out_oe),
+  .io_extPort_PS2_CLK2_in(PS2_CLK2_in),
+  .io_extPort_PS2_CLK2_out_data(PS2_CLK2_out_data),
+  .io_extPort_PS2_CLK2_out_oe(PS2_CLK2_out_oe),
+  .io_extPort_PS2_DAT_in(PS2_DAT_in),
+  .io_extPort_PS2_DAT_out_data(PS2_DAT_out_data),
+  .io_extPort_PS2_DAT_out_oe(PS2_DAT_out_oe),
+  .io_extPort_PS2_DAT2_in(PS2_DAT2_in),
+  .io_extPort_PS2_DAT2_out_data(PS2_DAT2_out_data),
+  .io_extPort_PS2_DAT2_out_oe(PS2_DAT2_out_oe),
+  .io_extPort_RESET_N(RESET_N),
+  .io_extPort_SD_CLK(SD_CLK),
+  .io_extPort_SD_CMD_in(SD_CMD_in),
+  .io_extPort_SD_CMD_out_data(SD_CMD_out_data),
+  .io_extPort_SD_CMD_out_oe(SD_CMD_out_oe),
+  .io_extPort_SD_DATA_in(SD_DATA_in),
+  .io_extPort_SD_DATA_out_data(SD_DATA_out_data),
+  .io_extPort_SD_DATA_out_oe(SD_DATA_out_oe),
+  .io_extPort_SW(SW),
+  .io_extPort_VGA_B(VGA_B),
+  .io_extPort_VGA_G(VGA_G),
+  .io_extPort_VGA_HS(VGA_HS),
+  .io_extPort_VGA_R(VGA_R),
+  .io_extPort_VGA_VS(VGA_VS)
+);
 
 endmodule 
 
