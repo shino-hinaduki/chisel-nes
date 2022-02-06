@@ -9,11 +9,11 @@ import cpu.types.Instruction
  */
 object InstructionDecode {
   // opcode -> Instructionの対応を取得する
-  def lookUpTableForInstruction(): Seq[(UInt, Instruction.Type)] = InstructionDecode.lookupTable.map { case (opcode, (instruction, addressing)) => opcode -> instruction }
+  def lookUpTableForInstruction(): Seq[(UInt, Instruction.Type)] = InstructionDecode.lookUpTable.map { case (opcode, (instruction, addressing)) => opcode -> instruction }
   // opcode -> Addressingの対応を取得する
-  def lookUpTableForAddressing(): Seq[(UInt, Addressing.Type)] = InstructionDecode.lookupTable.map { case (opcode, (instruction, addressing)) => opcode -> addressing }
+  def lookUpTableForAddressing(): Seq[(UInt, Addressing.Type)] = InstructionDecode.lookUpTable.map { case (opcode, (instruction, addressing)) => opcode -> addressing }
   // Opcodeと命令/アドレッシングモードの対応
-  def lookupTable: Seq[(UInt, (Instruction.Type, Addressing.Type))] = Seq(
+  def lookUpTable: Seq[(UInt, (Instruction.Type, Addressing.Type))] = Seq(
     // binary
     0x69.U -> (Instruction.adc, Addressing.immediate),
     0x65.U -> (Instruction.adc, Addressing.zeroPage),
