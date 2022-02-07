@@ -6,7 +6,7 @@ import chisel3.util.MuxLookup
 
 import cpu.types.Addressing
 import cpu.types.Instruction
-import cpu.bus.BusSlavePort
+import bus.BusSlavePort
 import chisel3.util.switch
 import chisel3.util.is
 

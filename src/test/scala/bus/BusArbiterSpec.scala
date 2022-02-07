@@ -1,4 +1,4 @@
-package cpu.bus
+package bus
 
 import chisel3._
 import chiseltest._

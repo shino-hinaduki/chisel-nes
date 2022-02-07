@@ -1,10 +1,9 @@
-package cpu.bus
-
-import chisel3.Bundle
+package bus
 
 import chisel3._
-import common.TriState
 import chisel3.util.Cat
+
+import common.TriState
 
 /** Arbiterの受け側, Master側はFlipped()で定義する
   */
