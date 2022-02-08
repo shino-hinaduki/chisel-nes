@@ -6,7 +6,7 @@ import chisel3.experimental.ChiselEnum
 /** IFがPrefetchし(てDecodeし)た命令を提供する, 使う側はFlippedして使う
   */
 class InstructionFetchControl extends Bundle {
-  // 立ち上がり変化で要求する
+  // 立ち上がり変化で要求する, busyが解除されるまで入力データ保持が必要
   val reqStrobe = Input(Bool())
   // ProgramCounterの値をそのまま見せる
   val pc = Input(UInt(16.W))
@@ -31,5 +31,4 @@ class InstructionFetchControl extends Bundle {
  */
 object InstructionFetchStatus extends ChiselEnum {
   val idle, read = Value
-
 }
