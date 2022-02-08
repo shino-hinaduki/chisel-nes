@@ -98,13 +98,28 @@ class OperandFetch extends Module {
       // idle->read開始
       when(onRequest) {
         switch(io.control.addressing) {
+          // 初期値に戻す, validRegも立てない
+          is(Addressing.invalid) {
+            statusReg := OperandFetchStatus.idle // 完了
+
+            validReg         := false.B
+            dstAddrReg       := 0.U
+            readDataReg      := 0.U
+            dstAddrValidReg  := false.B
+            readDataValidReg := false.B
+
+            reqReadReg       := false.B
+            readReqAddrReg   := 0.U
+            currentReadCount := 0.U
+            totalReadCount   := 0.U
+          }
           // 処理不要
           is(Addressing.implied) {
             statusReg := OperandFetchStatus.idle // 完了
 
             validReg         := true.B
-            dstAddrReg       := DontCare
-            readDataReg      := DontCare
+            dstAddrReg       := 0.U
+            readDataReg      := 0.U
             dstAddrValidReg  := false.B
             readDataValidReg := false.B
 
