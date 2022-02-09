@@ -8,30 +8,30 @@ import chisel3.experimental.ChiselEnum
 object Addressing extends ChiselEnum {
   // invalid(実行しようとした場合HALTさせる)
   val invalid = Value
-  // 何もしない
+  // [impl] 何もしない
   val implied = Value
-  // Aレジスタ参照
+  // [A | A] Aレジスタ参照
   val accumulator = Value
-  // dataをFetch。この値をそのまま使う(ここに書き戻す処理がある命令は存在しない)
+  // [# | #$12] dataをFetch。この値をそのまま使う(ここに書き戻す処理がある命令は存在しない)
   val immediate = Value
-  // lower, upperをFetch。({upper, lower})が実効アドレス
+  // [abs | $1234] lower, upperをFetch。({upper, lower})が実効アドレス
   val absolute = Value
-  // lowerをFetch。({0x00, lower})が実効アドレス
+  // [zpg | $12] lowerをFetch。({0x00, lower})が実効アドレス
   val zeroPage = Value
-  // lowerをFetch。({0x00, lower} + (uint8)X)が実効アドレス
+  // [zpg,X | $12,X] lowerをFetch。({0x00, lower} + (uint8)X)が実効アドレス
   val indexedZeroPageX = Value
-  // lowerをFetch。({0x00, lower} + (uint8)Y)が実効アドレス
+  // [zpg,Y | $12,Y] lowerをFetch。({0x00, lower} + (uint8)Y)が実効アドレス
   val indexedZeroPageY = Value
-  // lower, upperをFetch。({upper, lower} + (uint16)X)が実効アドレス
+  // [abs,X | $1234,X] lower, upperをFetch。({upper, lower} + (uint16)X)が実効アドレス
   val indexedAbsoluteX = Value
-  // lower, upperをFetch。({upper, lower} + (uint16)Y)が実効アドレス
+  // [abs,Y | $1234,Y] lower, upperをFetch。({upper, lower} + (uint16)Y)が実効アドレス
   val indexedAbsoluteY = Value
-  // offsetをFetch。 (PC + (int8)offset)が実効アドレス
+  // [rel, $12] offsetをFetch。 (PC + (int8)offset)が実効アドレス
   val relative = Value
-  // lower, upperをFetch。addr={upper, lower}を計算。{*(addr+1), *addr}が実効アドレス
+  // [ind | ($1234)] lower, upperをFetch。addr={upper, lower}を計算。{*(addr+1), *addr}が実効アドレス
   val indirectAbsolute = Value
-  // lowerをFetch。addr=({0x00, lower} + (uint8)X)を計算。 {*(addr+1), *addr}が実効アドレス
+  // [X,ind | ($44,X)] lowerをFetch。addr=({0x00, lower} + (uint8)X)を計算。 {*(addr+1), *addr}が実効アドレス
   val indexedIndirectX = Value
-  // lowerをFetch。addr={0x00, lower}を計算。{*(addr+1), *addr} + (uint16)Yが実効アドレス
+  // [ind,Y | ($12),Y] lowerをFetch。addr={0x00, lower}を計算。{*(addr+1), *addr} + (uint16)Yが実効アドレス
   val indirectIndexedY = Value
 }

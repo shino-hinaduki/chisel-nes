@@ -59,18 +59,20 @@ class OperandFetch extends Module {
   })
 
   // 内部
-  val statusReg        = RegInit(OperandFetchStatus(), OperandFetchStatus.idle)
-  val currentReadCount = RegInit(UInt(3.W), 0.U) // 最大でIndirectIndexedでデータを読み出すケースで4回
-  val totalReadCount   = RegInit(UInt(3.W), 0.U) // 最大でIndirectIndexedでデータを読み出すケースで4回
+  val statusReg           = RegInit(OperandFetchStatus(), OperandFetchStatus.idle)
+  val currentReadCountReg = RegInit(UInt(3.W), 0.U) // 最大でIndirectIndexedでデータを読み出すケースで2+2+1回
+  val totalReadCountReg   = RegInit(UInt(3.W), 0.U) // 最大でIndirectIndexedでデータを読み出すケースで2+2+1回
   // 制御入力
   val prevReqStrobeReg = RegInit(Bool(), false.B)
   // BusMaster関連
   val reqReadReg     = RegInit(Bool(), false.B)
   val readReqAddrReg = RegInit(UInt(16.W), 0.U)
+  val readTmpReg0    = RegInit(UInt(8.W), 0.U) // Indirectなどで一時読みする場合に使用する, Resultと同じタイミングで初期化
+  val readTmpReg1    = RegInit(UInt(8.W), 0.U) // Indirectなどで一時読みする場合に使用する, Resultと同じタイミングで初期化
   // 結果出力
   val validReg         = RegInit(Bool(), false.B)
   val dstAddrReg       = RegInit(UInt(16.W), 0.U)
-  val readDataReg      = RegInit(UInt(16.W), 0.U)
+  val readDataReg      = RegInit(UInt(8.W), 0.U)
   val dstAddrValidReg  = RegInit(Bool(), false.B)
   val readDataValidReg = RegInit(Bool(), false.B)
 
@@ -88,10 +90,73 @@ class OperandFetch extends Module {
   io.control.readData      := readDataReg
   io.control.dstAddrValid  := dstAddrValidReg
   io.control.readDataValid := readDataValidReg
-
   // Req立ち上がり検出用
   val onRequest = (!prevReqStrobeReg) & io.control.reqStrobe // 今回の立ち上がりで判断させる
   prevReqStrobeReg := io.control.reqStrobe
+
+  // 出力レジスタを初期化
+  def clearResult(isValid: Bool) = {
+    validReg         := isValid
+    dstAddrReg       := 0.U
+    readDataReg      := 0.U
+    dstAddrValidReg  := false.B
+    readDataValidReg := false.B
+    readTmpReg0      := 0.U
+    readTmpReg1      := 0.U
+  }
+  // 出力レジスタに結果を設定
+  def setResult(dstAddr: Option[UInt], readData: Option[UInt]) = {
+    validReg := true.B
+    dstAddr match {
+      // 有効データ
+      case Some(addr) => {
+        dstAddrReg      := addr
+        dstAddrValidReg := true.B
+      }
+      // 無効データ
+      case None => {
+        dstAddrReg      := 0.U
+        dstAddrValidReg := false.B
+      }
+    }
+    readData match {
+      // 有効データ
+      case Some(data) => {
+        readDataReg      := data
+        readDataValidReg := true.B
+      }
+      // 無効データ
+      case None => {
+        readDataReg      := 0.U
+        readDataValidReg := false.B
+      }
+    }
+  }
+  // BusMasterのRead要求をクリア
+  def clearReadReq() = {
+    reqReadReg          := false.B
+    readReqAddrReg      := 0.U
+    currentReadCountReg := 0.U
+    totalReadCountReg   := 0.U
+  }
+  // BusMasterにRead要求を設定
+  def setReadReq(addr: UInt, totalCount: Option[UInt]) = {
+    reqReadReg     := true.B
+    readReqAddrReg := addr
+    totalCount match {
+      // 新規Read
+      case Some(count) => {
+        currentReadCountReg := 1.U
+        totalReadCountReg   := count
+      }
+      // 継続
+      case None => {
+        currentReadCountReg := currentReadCountReg + 1.U // increment
+        totalReadCountReg   := totalReadCountReg         // 据え置き
+
+      }
+    }
+  }
 
   switch(statusReg) {
     is(OperandFetchStatus.idle) {
@@ -101,79 +166,87 @@ class OperandFetch extends Module {
           // 初期値に戻す, validRegも立てない
           is(Addressing.invalid) {
             statusReg := OperandFetchStatus.idle // 完了
-
-            validReg         := false.B
-            dstAddrReg       := 0.U
-            readDataReg      := 0.U
-            dstAddrValidReg  := false.B
-            readDataValidReg := false.B
-
-            reqReadReg       := false.B
-            readReqAddrReg   := 0.U
-            currentReadCount := 0.U
-            totalReadCount   := 0.U
+            clearResult(false.B)
+            clearReadReq()
           }
           // 処理不要
           is(Addressing.implied) {
             statusReg := OperandFetchStatus.idle // 完了
-
-            validReg         := true.B
-            dstAddrReg       := 0.U
-            readDataReg      := 0.U
-            dstAddrValidReg  := false.B
-            readDataValidReg := false.B
-
-            reqReadReg       := false.B
-            readReqAddrReg   := 0.U
-            currentReadCount := 0.U
-            totalReadCount   := 0.U
+            clearResult(true.B)
+            clearReadReq()
           }
           // データだけ載せて完了
           is(Addressing.accumulator) {
             statusReg := OperandFetchStatus.idle // 完了
-
-            validReg         := true.B
-            dstAddrReg       := DontCare
-            readDataReg      := io.control.a
-            dstAddrValidReg  := false.B
-            readDataValidReg := true.B
-
-            reqReadReg       := false.B
-            readReqAddrReg   := 0.U
-            currentReadCount := 0.U
-            totalReadCount   := 0.U
+            setResult(None, Some(io.control.a))
+            clearReadReq()
           }
-          // 1dataだけ読んで終わり
+          // OpCodeの次のデータが即値
           is(Addressing.immediate) {
             statusReg := OperandFetchStatus.readRom
-
-            validReg         := false.B
-            dstAddrReg       := 0.U
-            readDataReg      := 0.U
-            dstAddrValidReg  := false.B
-            readDataValidReg := false.B
-
-            reqReadReg       := true.B
-            readReqAddrReg   := (io.control.opcodeAddr + 1.U)
-            currentReadCount := 1.U
-            totalReadCount   := 1.U
+            clearResult(false.B)
+            setReadReq(io.control.opcodeAddr + 1.U, Some(1.U))
           }
           // lower,upper
           is(Addressing.absolute) {
             statusReg := OperandFetchStatus.readRom
-
-            validReg         := false.B
-            dstAddrReg       := 0.U
-            readDataReg      := 0.U
-            dstAddrValidReg  := false.B
-            readDataValidReg := false.B
-
-            reqReadReg       := true.B
-            readReqAddrReg   := (io.control.opcodeAddr + 1.U)
-            currentReadCount := 1.U
-            totalReadCount   := 2.U
+            clearResult(false.B)
+            setReadReq(io.control.opcodeAddr + 1.U, Some(2.U))
           }
-          // TODO: 他のアドレッシングモード
+          // lowerのみ
+          is(Addressing.zeroPage) {
+            statusReg := OperandFetchStatus.readRom
+            clearResult(false.B)
+            setReadReq(io.control.opcodeAddr + 1.U, Some(1.U))
+          }
+          // lowerのみ
+          is(Addressing.indexedZeroPageX) {
+            statusReg := OperandFetchStatus.readRom
+            clearResult(false.B)
+            setReadReq(io.control.opcodeAddr + 1.U, Some(1.U))
+          }
+          // lowerのみ
+          is(Addressing.indexedZeroPageY) {
+            statusReg := OperandFetchStatus.readRom
+            clearResult(false.B)
+            setReadReq(io.control.opcodeAddr + 1.U, Some(1.U))
+          }
+          // lower,upper
+          is(Addressing.indexedAbsoluteX) {
+            statusReg := OperandFetchStatus.readRom
+            clearResult(false.B)
+            setReadReq(io.control.opcodeAddr + 1.U, Some(2.U))
+          }
+          // lower,upper
+          is(Addressing.indexedAbsoluteY) {
+            statusReg := OperandFetchStatus.readRom
+            clearResult(false.B)
+            setReadReq(io.control.opcodeAddr + 1.U, Some(2.U))
+          }
+          // offsetのみ
+          is(Addressing.relative) {
+            statusReg := OperandFetchStatus.readRom
+            clearResult(false.B)
+            setReadReq(io.control.opcodeAddr + 1.U, Some(1.U))
+          }
+          // lower,upper
+          is(Addressing.indirectAbsolute) {
+            statusReg := OperandFetchStatus.readRom
+            clearResult(false.B)
+            setReadReq(io.control.opcodeAddr + 1.U, Some(2.U))
+          }
+          // lowerのみ
+          is(Addressing.indexedIndirectX) {
+            statusReg := OperandFetchStatus.readRom
+            clearResult(false.B)
+            setReadReq(io.control.opcodeAddr + 1.U, Some(1.U))
+          }
+          // lowerのみ
+          is(Addressing.indirectIndexedY) {
+            statusReg := OperandFetchStatus.readRom
+            clearResult(false.B)
+            setReadReq(io.control.opcodeAddr + 1.U, Some(1.U))
+          }
         }
       }.otherwise {
         // 現状維持
@@ -185,17 +258,17 @@ class OperandFetch extends Module {
         dstAddrValidReg  := dstAddrValidReg
         readDataValidReg := readDataValidReg
 
-        reqReadReg       := false.B
-        readReqAddrReg   := 0.U
-        currentReadCount := 0.U
-        totalReadCount   := 0.U
+        reqReadReg          := false.B
+        readReqAddrReg      := 0.U
+        currentReadCountReg := 0.U
+        totalReadCountReg   := 0.U
       }
     }
     is(OperandFetchStatus.readRom) {
-      //TODO: totalReadCountまでよむ + reqDataFetch=trueなら継続してReadを仕掛ける
+      //TODO: totalReadCountRegまでよむ + reqDataFetch=trueなら継続してReadを仕掛ける
     }
     is(OperandFetchStatus.readRam) {
-      //TODO: totalReadCountまで回収して完了する
+      //TODO: totalReadCountRegまで回収して完了する
     }
   }
 }
