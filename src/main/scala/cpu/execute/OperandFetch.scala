@@ -131,6 +131,19 @@ class OperandFetch extends Module {
         readDataValidReg := false.B
       }
     }
+    // 結果を出すときに明示する必要はないので保持
+    readTmpReg0 := readTmpReg0
+    readTmpReg1 := readTmpReg1
+  }
+  // 出力レジスタの結果保持
+  def keepResult() = {
+    validReg         := validReg
+    dstAddrReg       := dstAddrReg
+    readDataReg      := readDataReg
+    dstAddrValidReg  := dstAddrValidReg
+    readDataValidReg := readDataValidReg
+    readTmpReg0      := readTmpReg0
+    readTmpReg1      := readTmpReg1
   }
   // BusMasterのRead要求をクリア
   def clearReadReq() = {
@@ -157,11 +170,24 @@ class OperandFetch extends Module {
       }
     }
   }
+  // Read要求を保持
+  def keepReadReq() = {
+    reqReadReg          := reqReadReg
+    readReqAddrReg      := readReqAddrReg
+    currentReadCountReg := currentReadCountReg
+    totalReadCountReg   := totalReadCountReg
+  }
 
+  // 処理本体はステータスで処理分岐
   switch(statusReg) {
     is(OperandFetchStatus.idle) {
-      // idle->read開始
-      when(onRequest) {
+      when(!onRequest) {
+        // 現状維持
+        statusReg := OperandFetchStatus.idle
+        keepResult()
+        clearReadReq() // read要求はいらないので念の為クリア
+      }.otherwise {
+        // idle->read開始
         switch(io.control.addressing) {
           // 初期値に戻す, validRegも立てない
           is(Addressing.invalid) {
@@ -248,24 +274,18 @@ class OperandFetch extends Module {
             setReadReq(io.control.opcodeAddr + 1.U, Some(1.U))
           }
         }
-      }.otherwise {
-        // 現状維持
-        statusReg := OperandFetchStatus.idle
-
-        validReg         := validReg
-        dstAddrReg       := dstAddrReg
-        readDataReg      := readDataReg
-        dstAddrValidReg  := dstAddrValidReg
-        readDataValidReg := readDataValidReg
-
-        reqReadReg          := false.B
-        readReqAddrReg      := 0.U
-        currentReadCountReg := 0.U
-        totalReadCountReg   := 0.U
       }
     }
     is(OperandFetchStatus.readRom) {
       //TODO: totalReadCountRegまでよむ + reqDataFetch=trueなら継続してReadを仕掛ける
+      when(!io.busMaster.valid) {
+        // read完了まで現状維持
+        keepResult()
+        keepReadReq()
+      }.otherwise {
+        // 処理ごと、Read進捗ごとに分岐
+        // TODO:
+      }
     }
     is(OperandFetchStatus.readRam) {
       //TODO: totalReadCountRegまで回収して完了する
