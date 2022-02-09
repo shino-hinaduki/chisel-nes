@@ -200,25 +200,25 @@ class OperandFetch extends Module {
             setReadReq(io.control.opcodeAddr + 1.U, Some(1.U))
           }
           // lowerのみ
-          is(Addressing.indexedZeroPageX) {
+          is(Addressing.xIndexedZeroPage) {
             statusReg := OperandFetchStatus.readRom
             clearResult(false.B)
             setReadReq(io.control.opcodeAddr + 1.U, Some(1.U))
           }
           // lowerのみ
-          is(Addressing.indexedZeroPageY) {
+          is(Addressing.yIndexedZeroPage) {
             statusReg := OperandFetchStatus.readRom
             clearResult(false.B)
             setReadReq(io.control.opcodeAddr + 1.U, Some(1.U))
           }
           // lower,upper
-          is(Addressing.indexedAbsoluteX) {
+          is(Addressing.xIndexedAbsolute) {
             statusReg := OperandFetchStatus.readRom
             clearResult(false.B)
             setReadReq(io.control.opcodeAddr + 1.U, Some(2.U))
           }
           // lower,upper
-          is(Addressing.indexedAbsoluteY) {
+          is(Addressing.yIndexedAbsolute) {
             statusReg := OperandFetchStatus.readRom
             clearResult(false.B)
             setReadReq(io.control.opcodeAddr + 1.U, Some(2.U))
@@ -230,19 +230,19 @@ class OperandFetch extends Module {
             setReadReq(io.control.opcodeAddr + 1.U, Some(1.U))
           }
           // lower,upper
-          is(Addressing.indirectAbsolute) {
+          is(Addressing.indirect) {
             statusReg := OperandFetchStatus.readRom
             clearResult(false.B)
             setReadReq(io.control.opcodeAddr + 1.U, Some(2.U))
           }
           // lowerのみ
-          is(Addressing.indexedIndirectX) {
+          is(Addressing.xIndexedIndirect) {
             statusReg := OperandFetchStatus.readRom
             clearResult(false.B)
             setReadReq(io.control.opcodeAddr + 1.U, Some(1.U))
           }
           // lowerのみ
-          is(Addressing.indirectIndexedY) {
+          is(Addressing.indirectYIndexed) {
             statusReg := OperandFetchStatus.readRom
             clearResult(false.B)
             setReadReq(io.control.opcodeAddr + 1.U, Some(1.U))

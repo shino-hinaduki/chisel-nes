@@ -19,19 +19,19 @@ object Addressing extends ChiselEnum {
   // [zpg | $12] lowerをFetch。({0x00, lower})が実効アドレス
   val zeroPage = Value
   // [zpg,X | $12,X] lowerをFetch。({0x00, lower} + (uint8)X)が実効アドレス
-  val indexedZeroPageX = Value
+  val xIndexedZeroPage = Value
   // [zpg,Y | $12,Y] lowerをFetch。({0x00, lower} + (uint8)Y)が実効アドレス
-  val indexedZeroPageY = Value
+  val yIndexedZeroPage = Value
   // [abs,X | $1234,X] lower, upperをFetch。({upper, lower} + (uint16)X)が実効アドレス
-  val indexedAbsoluteX = Value
+  val xIndexedAbsolute = Value
   // [abs,Y | $1234,Y] lower, upperをFetch。({upper, lower} + (uint16)Y)が実効アドレス
-  val indexedAbsoluteY = Value
+  val yIndexedAbsolute = Value
   // [rel, $12] offsetをFetch。 (PC + (int8)offset)が実効アドレス
   val relative = Value
   // [ind | ($1234)] lower, upperをFetch。addr={upper, lower}を計算。{*(addr+1), *addr}が実効アドレス
-  val indirectAbsolute = Value
+  val indirect = Value
   // [X,ind | ($44,X)] lowerをFetch。addr=({0x00, lower} + (uint8)X)を計算。 {*(addr+1), *addr}が実効アドレス
-  val indexedIndirectX = Value
+  val xIndexedIndirect = Value
   // [ind,Y | ($12),Y] lowerをFetch。addr={0x00, lower}を計算。{*(addr+1), *addr} + (uint16)Yが実効アドレス
-  val indirectIndexedY = Value
+  val indirectYIndexed = Value
 }
