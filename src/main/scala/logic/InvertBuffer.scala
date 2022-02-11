@@ -1,4 +1,4 @@
-package io
+package logic
 
 import chisel3._
 import common.TriState

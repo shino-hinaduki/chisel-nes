@@ -1,4 +1,4 @@
-package ppu
+package logic
 
 import chisel3._
 import chiseltest._

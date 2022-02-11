@@ -1,4 +1,4 @@
-package bus
+package logic
 
 import chisel3._
 import chisel3.util.Cat
