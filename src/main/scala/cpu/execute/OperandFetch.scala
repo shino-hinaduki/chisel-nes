@@ -115,7 +115,7 @@ class OperandFetch extends Module {
       }
       // 無効データ
       case None => {
-        dstAddrReg      := 0.U
+        dstAddrReg      := DontCare
         dstAddrValidReg := false.B
       }
     }
@@ -127,7 +127,7 @@ class OperandFetch extends Module {
       }
       // 無効データ
       case None => {
-        readDataReg      := 0.U
+        readDataReg      := DontCare
         readDataValidReg := false.B
       }
     }
@@ -166,7 +166,6 @@ class OperandFetch extends Module {
       case None => {
         currentReadCountReg := currentReadCountReg + 1.U // increment
         totalReadCountReg   := totalReadCountReg         // 据え置き
-
       }
     }
   }

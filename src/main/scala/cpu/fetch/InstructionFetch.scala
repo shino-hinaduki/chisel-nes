@@ -64,8 +64,8 @@ class InstructionFetch extends Module {
       // 出力レジスタクリア or 現状維持
       when(io.control.discard) {
         validReg        := false.B
-        readDoneAddrReg := 0.U
-        readDataReg     := 0.U
+        readDoneAddrReg := DontCare
+        readDataReg     := DontCare
         instructionReg  := Instruction.invalid
         addressingReg   := Addressing.invalid
       }.otherwise {
@@ -92,8 +92,8 @@ class InstructionFetch extends Module {
         readReqAddrReg := readReqAddrReg
 
         validReg        := false.B
-        readDoneAddrReg := 0.U
-        readDataReg     := 0.U
+        readDoneAddrReg := DontCare
+        readDataReg     := DontCare
         instructionReg  := Instruction.invalid
         addressingReg   := Addressing.invalid
       }.elsewhen(io.busMaster.valid) {

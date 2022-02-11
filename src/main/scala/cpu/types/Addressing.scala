@@ -26,7 +26,7 @@ object Addressing extends ChiselEnum {
   val xIndexedAbsolute = Value
   // [abs,Y | $1234,Y] lower, upperをFetch。({upper, lower} + (uint16)Y)が実効アドレス
   val yIndexedAbsolute = Value
-  // [rel, $12] offsetをFetch。 (PC + (int8)offset)が実効アドレス
+  // [rel | $12] offsetをFetch。 (PC + (int8)offset)が実効アドレス
   val relative = Value
   // [ind | ($1234)] lower, upperをFetch。addr={upper, lower}を計算。{*(addr+1), *addr}が実効アドレス
   val indirect = Value
