@@ -3,7 +3,7 @@ package cpu
 import chisel3._
 import chisel3.experimental.ChiselEnum
 
-import bus.BusIO
+import _root_.bus.BusIO
 import cpu.types.Addressing
 import chisel3.util.switch
 import chisel3.util.is
