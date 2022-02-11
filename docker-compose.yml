@@ -13,4 +13,12 @@ services:
    working_dir: /work
    command: sbt 'run --target-dir dst'
 
+  diagram:
+    build: 
+      context: ./utils/diagrammer/
+      dockerfile: Dockerfile
+    volumes:
+      - ./dst:/diagrammer/dst
+    command: /bin/bash ./diagram.sh -td ./dst -i ./dst/ChiselNes.fir --open-command echo
+    
 
