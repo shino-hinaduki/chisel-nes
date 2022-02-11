@@ -1,15 +1,14 @@
-package cpu.fetch
+package cpu
 
 import chisel3._
 import chisel3.experimental.ChiselEnum
 import chisel3.util.MuxLookup
-
-import cpu.types.Addressing
-import cpu.types.Instruction
-import bus.BusIO
 import chisel3.util.switch
 import chisel3.util.is
 
+import bus.BusIO
+import cpu.types.Addressing
+import cpu.types.Instruction
 import cpu.types.InstructionFetchControl
 import cpu.types.InstructionFetchStatus
 
