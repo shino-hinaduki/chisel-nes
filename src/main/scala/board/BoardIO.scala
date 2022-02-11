@@ -6,7 +6,7 @@ import common.TriState
 /** DE0-CVのボード定義
   * 他のボードへのポーティングが必要であれば、Config等でtop自体を切り替える必要がある
   */
-class ExternalPort extends Bundle {
+class BoardIO extends Bundle {
   // clock
   val CLOCK_50  = Input(Clock())
   val CLOCK2_50 = Input(Clock())

@@ -1,7 +1,7 @@
 package top
 
 import chisel3._
-import board.ExternalPort
+import board.BoardIO
 import board.SevenSegmentLed
 import chisel3.util.MuxLookup
 
@@ -10,7 +10,7 @@ import chisel3.util.MuxLookup
 class ChiselNes extends Module {
   val io = IO(new Bundle {
     // DE0-CV外部コンポーネント
-    val extPort = new ExternalPort()
+    val extPort = new BoardIO()
     // TODO: PLLで生成したClock
     // TODO: その他
   })
