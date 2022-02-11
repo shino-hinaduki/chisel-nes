@@ -3,7 +3,7 @@ package cpu.execute
 import chisel3._
 import chisel3.experimental.ChiselEnum
 
-import bus.BusSlavePort
+import bus.BusIO
 import cpu.types.Addressing
 import chisel3.util.switch
 import chisel3.util.is
@@ -53,7 +53,7 @@ class OperandFetch extends Module {
     // 現在のステータス
     val status = Output(OperandFetchStatus())
     // Addr/Data BusMaster
-    val busMaster = Flipped(new BusSlavePort())
+    val busMaster = Flipped(new BusIO())
     // OperandFetch制御用
     val control = new OperandFetchControl
   })

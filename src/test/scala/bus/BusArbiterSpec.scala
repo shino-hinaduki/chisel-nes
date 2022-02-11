@@ -7,21 +7,21 @@ import org.scalatest.freespec.AnyFreeSpec
 class BusArbiterSpec extends AnyFreeSpec with ChiselScalatestTester {
   /* Bus Mater: 設定 */
   // Write要求を投げる
-  def reqWrite(p: BusSlavePort, addr: UInt, data: UInt) = {
+  def reqWrite(p: BusIO, addr: UInt, data: UInt) = {
     p.addr.poke(addr)
     p.req.poke(true.B)
     p.writeEnable.poke(true.B)
     p.dataIn.poke(data)
   }
   // Read要求を投げる
-  def reqRead(p: BusSlavePort, addr: UInt) = {
+  def reqRead(p: BusIO, addr: UInt) = {
     p.addr.poke(addr)
     p.req.poke(true.B)
     p.writeEnable.poke(false.B)
     p.dataIn.poke(0.U) // Don't care
   }
   // 要求を行わない
-  def release(p: BusSlavePort) = {
+  def release(p: BusIO) = {
     p.addr.poke(0.U) // Don't care
     p.req.poke(false.B)
     p.writeEnable.poke(true.B) // Don't care
@@ -30,12 +30,12 @@ class BusArbiterSpec extends AnyFreeSpec with ChiselScalatestTester {
 
   /* Bus Mater: 期待値確認 */
   // Read応答の期待値を確認
-  def expectReadResp(p: BusSlavePort, data: UInt) = {
+  def expectReadResp(p: BusIO, data: UInt) = {
     p.valid.expect(true.B)
     p.dataOut.expect(data)
   }
   // Busyで待たされていることを期待
-  def expectNoResp(p: BusSlavePort) = {
+  def expectNoResp(p: BusIO) = {
     p.valid.expect(false.B)
     // dataOutはDon't care
   }

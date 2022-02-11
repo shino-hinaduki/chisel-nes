@@ -5,24 +5,6 @@ import chisel3.util.Cat
 
 import common.TriState
 
-/** Arbiterの受け側, Master側はFlipped()で定義する
-  */
-class BusSlavePort extends Bundle {
-  // アクセス先のアドレス
-  val addr = Input(UInt(16.W))
-  // R/W要求している場合はfalse
-  val req = Input(Bool())
-  // 要求内容がWriteが有効ならtrue、Readが有効ならfalse
-  val writeEnable = Input(Bool())
-  // (要求後次Cycleで出力) バス調停が通り要求内容の通りにBusAddr/Dataが設定できていればtrue
-  val valid = Output(Bool())
-
-  // (Writeする場合)対象のデータ, nWriteEnable=trueの場合はDon't care
-  val dataIn = Input(UInt(8.W))
-  // (Readする場合)対象のデータ
-  val dataOut = Output(UInt(8.W))
-}
-
 /** Address Bus/Data Busの調停を行う
  *  execute > interrupt > fetchの優先度で調停する想定
  *  自アクセスが有効であるかは、reqをアサート後、次サイクル以後のvalidで判断する
@@ -32,7 +14,7 @@ class BusArbiter(val n: Int) extends Module {
   assert(n > 0) // 最低1portは必要
   val io = IO(new Bundle {
     // CPU内部のBus Masterと接続する
-    val slavePorts = Vec(n, new BusSlavePort())
+    val slavePorts = Vec(n, new BusIO())
     // アドレス出力、Master固定
     val extAddr = Output(UInt(16.W))
     // 外部からのデータ入力
@@ -62,7 +44,7 @@ class BusArbiter(val n: Int) extends Module {
   io.extDataOut.oe   := writeEnableReg
   // 外部データ出力→内部BusMasterデータ入力は常に見せておいて、Validで判断
   io.slavePorts.zipWithIndex.foreach {
-    case (p: BusSlavePort, i: Int) => {
+    case (p: BusIO, i: Int) => {
       p.dataOut := io.extDataIn
       p.valid   := validReg(i.U)
     }

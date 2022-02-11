@@ -6,7 +6,7 @@ import chisel3.util.MuxLookup
 
 import cpu.types.Addressing
 import cpu.types.Instruction
-import bus.BusSlavePort
+import bus.BusIO
 import chisel3.util.switch
 import chisel3.util.is
 
@@ -20,7 +20,7 @@ class InstructionFetch extends Module {
     // 現在のステータス確認用
     val status = Output(InstructionFetchStatus())
     // Addr/DataBusのArbiterと接続
-    val busMaster = Flipped(new BusSlavePort())
+    val busMaster = Flipped(new BusIO())
     // EX,INTからFetch制御する用に公開するI/F
     val control = new InstructionFetchControl()
   })
