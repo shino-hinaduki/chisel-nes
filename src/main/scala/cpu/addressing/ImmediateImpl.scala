@@ -14,9 +14,9 @@ class ImmediateImpl extends AddressingImpl {
   override def onRequest(reqReadData: Boolean, opcodeAddr: UInt, reg: CpuRegister): Process =
     Process.ReadOperand(opcodeAddr + 1.U, 1.U)
   // 読みだしたデータを報告
-  override def doneReadOperand(reqReadData: Boolean, opcodeAddr: UInt, readData: UInt, reg: CpuRegister): Process =
+  override def doneReadOperand(reqReadData: Boolean, opcodeAddr: UInt, reg: CpuRegister, readData: UInt): Process =
     Process.ReportData(readData)
-  override def doneReadPointer(reqReadData: Boolean, opcodeAddr: UInt, readData: UInt, reg: CpuRegister): Process =
+  override def doneReadPointer(reqReadData: Boolean, opcodeAddr: UInt, reg: CpuRegister, readData: UInt): Process =
     Process.Clear(isIllegal = true)
   override def doneReadData(opcodeAddr: UInt, readAddr: UInt, readData: UInt, reg: CpuRegister): Process =
     Process.Clear(isIllegal = true)

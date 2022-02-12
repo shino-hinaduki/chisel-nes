@@ -28,30 +28,30 @@ trait AddressingImpl {
     *
     * @param reqReadData Dataの読み出しを要求されていればtrue
     * @param opcodeAddr OpCodeが配置されていたアドレスUInt(16.W)
-    * @param readData Readしたデータ。複数byte Readした場合は結合済
     * @param reg CPUレジスタの値
+    * @param readData Readしたデータ。複数byte Readした場合は結合済
     * @return 次の処理
     */
-  def doneReadOperand(reqReadData: Boolean, opcodeAddr: UInt, readData: UInt, reg: CpuRegister): Process
+  def doneReadOperand(reqReadData: Boolean, opcodeAddr: UInt, reg: CpuRegister, readData: UInt): Process
 
   /**
     * (Indirect限定) 解決先アドレス算出に必要なReadが完了したときの処理
     *
     * @param reqReadData Dataの読み出しを要求されていればtrue
     * @param opcodeAddr OpCodeが配置されていたアドレスUInt(16.W)
-    * @param readData Readしたデータ。複数byte Readした場合は結合済
     * @param reg CPUレジスタの値
+    * @param readData Readしたデータ。複数byte Readした場合は結合済
     * @return 次の処理
     */
-  def doneReadPointer(reqReadData: Boolean, opcodeAddr: UInt, readData: UInt, reg: CpuRegister): Process
+  def doneReadPointer(reqReadData: Boolean, opcodeAddr: UInt, reg: CpuRegister, readData: UInt): Process
 
   /**
     * データを読みだしたあとの処理
     *
     * @param readAddr 最後に読みだしたアドレス
     * @param opcodeAddr OpCodeが配置されていたアドレスUInt(16.W)
-    * @param readData Readしたデータ。複数byte Readした場合は結合済
     * @param reg CPUレジスタの値
+    * @param readData Readしたデータ。複数byte Readした場合は結合済
     * @return 次の処理
     */
   def doneReadData(opcodeAddr: UInt, readAddr: UInt, readData: UInt, reg: CpuRegister): Process

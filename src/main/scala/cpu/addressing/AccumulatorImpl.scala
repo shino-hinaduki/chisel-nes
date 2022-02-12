@@ -12,9 +12,9 @@ class AccumulatorImpl extends AddressingImpl {
     Addressing.accumulator
   override def onRequest(reqReadData: Boolean, opcodeAddr: UInt, reg: CpuRegister): Process =
     Process.ReportData(reg.a)
-  override def doneReadOperand(reqReadData: Boolean, opcodeAddr: UInt, readData: UInt, reg: CpuRegister): Process =
+  override def doneReadOperand(reqReadData: Boolean, opcodeAddr: UInt, reg: CpuRegister, readData: UInt): Process =
     Process.Clear(isIllegal = true)
-  override def doneReadPointer(reqReadData: Boolean, opcodeAddr: UInt, readData: UInt, reg: CpuRegister): Process =
+  override def doneReadPointer(reqReadData: Boolean, opcodeAddr: UInt, reg: CpuRegister, readData: UInt): Process =
     Process.Clear(isIllegal = true)
   override def doneReadData(opcodeAddr: UInt, readAddr: UInt, readData: UInt, reg: CpuRegister): Process =
     Process.Clear(isIllegal = true)
