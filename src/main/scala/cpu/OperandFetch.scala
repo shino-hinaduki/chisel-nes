@@ -197,7 +197,7 @@ class OperandFetch(resetOnPanic: Boolean) extends Module {
     }
     case ReadOperand(addr, length) => {
       statusReg := OperandFetchStatus.readOperand
-      clearResult(isValid = false.B)
+      clearResult(isValid = false.B) // Read初回なので結果クリアを兼ねる
       setReadReq(addr, length)
     }
     case ReadPointer(addr, length) => {
@@ -206,7 +206,6 @@ class OperandFetch(resetOnPanic: Boolean) extends Module {
     }
     case ReadData(addr, length) => {
       statusReg := OperandFetchStatus.readData
-      clearResult(isValid = false.B)
       setReadReq(addr, length)
     }
     case ReportAddr(addr) => {
