@@ -98,8 +98,7 @@ trait OperandFetchImpl {
     * @param reqReadData Dataの読み出しを要求されていればtrue
     * @param readAddr 最後に読みだしたアドレス
     * @param readData Readしたデータ。複数byte Readした場合は結合済
-    * @param xReg Xレジスタの値
-    * @param yReg Yレジスタの値
+    * @param reg CPUレジスタの値
     * @return 次の処理
     */
   def doneReadPointer(opcodeAddr: UInt, reqReadData: Boolean, readAddr: UInt, readData: UInt, reg: CpuRegister): Process
@@ -110,8 +109,7 @@ trait OperandFetchImpl {
     * @param opcodeAddr OpCodeが配置されていたアドレスUInt(16.W)
     * @param readAddr 最後に読みだしたアドレス
     * @param readData Readしたデータ。複数byte Readした場合は結合済
-    * @param xReg Xレジスタの値
-    * @param yReg Yレジスタの値
+    * @param reg CPUレジスタの値
     * @return 次の処理
     */
   def doneReadData(opcodeAddr: UInt, readAddr: UInt, readData: UInt, reg: CpuRegister): Process
