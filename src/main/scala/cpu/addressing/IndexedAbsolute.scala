@@ -18,8 +18,10 @@ class IndexedAbsoluteImpl(val indexReg: IndexRegister) extends OperandFetchImpl 
     case Y() => reg.y
   }
 
-  override def addressing: Addressing.Type =
-    Addressing.absolute
+  override def addressing: Addressing.Type = indexReg match {
+    case X() => Addressing.xIndexedAbsolute
+    case Y() => Addressing.yIndexedAbsolute
+  }
   // OpCode後2byteが実効アドレスなので読み出し
   override def onRequest(opcodeAddr: UInt, reqReadData: Boolean, reg: CpuRegister): Process =
     Process.ReadOperand(opcodeAddr + 1.U, 2.U)
