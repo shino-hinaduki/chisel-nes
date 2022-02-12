@@ -73,9 +73,10 @@ trait OperandFetchImpl {
     * Fetch要求を受けたときの処理
     * @param opcodeAddr OpCodeが配置されていたアドレスUInt(16.W)
     * @param reqReadData Dataの読み出しを要求されていればtrue
+    * @param aReg Aレジスタの値
     * @return 次の処理
     */
-  def onRequest(opcodeAddr: UInt, reqReadData: Boolean): Process
+  def onRequest(opcodeAddr: UInt, reqReadData: Boolean, aReg: UInt): Process
 
   /**
     * OP直後のデータを読みだしたあとの処理
