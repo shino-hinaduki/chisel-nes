@@ -5,6 +5,7 @@ import chisel3.experimental.ChiselEnum
 
 import _root_.bus.types.BusIO
 import cpu.types.Addressing
+import cpu.register.CpuRegister
 
 /** OperandFetchする機能を提供する, 使う側はFlippedして使う
  */
@@ -17,12 +18,8 @@ class OperandFetchIO extends Bundle {
   val addressing = Input(Addressing())
   // アドレスを求めるだけであればfalse(メモリ転送系の命令など)、それ以外はtrue
   val reqDataFetch = Input(Bool())
-  // A reg。そのまま見せれば良い
-  val a = Input(UInt(8.W))
-  // X reg。そのまま見せれば良い
-  val x = Input(UInt(8.W))
-  // Y reg。そのまま見せれば良い
-  val y = Input(UInt(8.W))
+  // CPU reg。そのまま見せれば良い
+  val cpuReg = Input(new CpuRegister())
 
   // 処理中であればtrue, この状態ではreqStrobeを受け付けない
   val busy = Output(Bool())
