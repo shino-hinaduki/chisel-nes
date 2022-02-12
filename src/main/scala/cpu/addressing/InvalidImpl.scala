@@ -12,9 +12,9 @@ class InvalidImpl extends AddressingImpl {
     Addressing.invalid
   override def onRequest(reqReadData: Boolean, opcodeAddr: UInt, reg: CpuRegister): Process =
     Process.Clear(isIllegal = true)
-  override def doneReadOperand(reqReadData: Boolean, opcodeAddr: UInt, readAddr: UInt, readData: UInt, reg: CpuRegister): Process =
+  override def doneReadOperand(reqReadData: Boolean, opcodeAddr: UInt, readData: UInt, reg: CpuRegister): Process =
     Process.Clear(isIllegal = true)
-  override def doneReadPointer(reqReadData: Boolean, opcodeAddr: UInt, readAddr: UInt, readData: UInt, reg: CpuRegister): Process =
+  override def doneReadPointer(reqReadData: Boolean, opcodeAddr: UInt, readData: UInt, reg: CpuRegister): Process =
     Process.Clear(isIllegal = true)
   override def doneReadData(opcodeAddr: UInt, readAddr: UInt, readData: UInt, reg: CpuRegister): Process =
     Process.Clear(isIllegal = true)

@@ -16,10 +16,10 @@ class IndirectYIndexedImpl extends AddressingImpl {
   override def onRequest(reqReadData: Boolean, opcodeAddr: UInt, reg: CpuRegister): Process =
     Process.ReadOperand(opcodeAddr + 1.U, 1.U)
   // opcode後1byteのreadDataにあるアドレス(上位は0固定)を読み出す
-  override def doneReadOperand(reqReadData: Boolean, opcodeAddr: UInt, readAddr: UInt, readData: UInt, reg: CpuRegister): Process =
+  override def doneReadOperand(reqReadData: Boolean, opcodeAddr: UInt, readData: UInt, reg: CpuRegister): Process =
     Process.ReadPointer(readData, 2.U) // (onRequestで1byte歯科要求していないので、readData上位は0)
   // 読みだしたアドレスがreadDataにY分をオフセットした分が目的のアドレス。これを返すか、更にこのアドレスにあるデータを読み出して返す
-  override def doneReadPointer(reqReadData: Boolean, opcodeAddr: UInt, readAddr: UInt, readData: UInt, reg: CpuRegister): Process = {
+  override def doneReadPointer(reqReadData: Boolean, opcodeAddr: UInt, readData: UInt, reg: CpuRegister): Process = {
     val addr = (readData + Cat(0.U(8.W), reg.y))(15, 0)
     if (reqReadData) {
       Process.ReadData(addr, 1.U)
