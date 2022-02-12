@@ -7,7 +7,7 @@ import cpu.register.CpuRegister
 /**
   * IndirectのOF実装
   */
-class IndirectImpl extends OperandFetchImpl {
+class IndirectImpl extends AddressingImpl {
   override def addressing: Addressing.Type =
     Addressing.indirect
   // OpCode後2byteが実効アドレスへのポインタなので読み出し

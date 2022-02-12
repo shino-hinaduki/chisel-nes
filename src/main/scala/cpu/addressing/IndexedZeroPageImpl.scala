@@ -13,7 +13,7 @@ import cpu.register.IndexRegister.Y
   * IndexedZeroPageのOF実装
   * @param indexReg 対象のIndex Register
   */
-class IndexedZeroPageImpl(val indexReg: IndexRegister) extends OperandFetchImpl {
+class IndexedZeroPageImpl(val indexReg: IndexRegister) extends AddressingImpl {
   // 対象のIndex Registerの値を取得する
   def getIndexRegData(reg: CpuRegister) = indexReg match {
     case X() => reg.x

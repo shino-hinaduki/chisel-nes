@@ -9,7 +9,7 @@ import cpu.register.CpuRegister
 /**
   * RelativeのOF実装
   */
-class RelativeImpl extends OperandFetchImpl {
+class RelativeImpl extends AddressingImpl {
   override def addressing: Addressing.Type =
     Addressing.relative
   // OpCode後1byteをオフセットとして読み出す

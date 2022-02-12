@@ -7,7 +7,7 @@ import cpu.register.CpuRegister
 /**
   * InvalidのOF実装
   */
-class InvalidImpl extends OperandFetchImpl {
+class InvalidImpl extends AddressingImpl {
   override def addressing: Addressing.Type =
     Addressing.invalid
   override def onRequest(opcodeAddr: UInt, reqReadData: Boolean, reg: CpuRegister): Process =

@@ -7,7 +7,7 @@ import cpu.register.CpuRegister
 /**
   * ImpliedのOF実装
   */
-class ImpliedImpl extends OperandFetchImpl {
+class ImpliedImpl extends AddressingImpl {
   override def addressing: Addressing.Type =
     Addressing.implied
   override def onRequest(opcodeAddr: UInt, reqReadData: Boolean, reg: CpuRegister): Process =

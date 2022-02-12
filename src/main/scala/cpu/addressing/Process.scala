@@ -5,7 +5,7 @@ import _root_.cpu.types.Addressing
 import cpu.register.CpuRegister
 
 /**
-  * OperandFetchImplが行う処理を定義する
+  * AddressingImplが行う処理を定義する
   */
 sealed trait Process {}
 

@@ -7,7 +7,7 @@ import cpu.register.CpuRegister
 /**
   * ImmediateのOF実装
   */
-class ImmediateImpl extends OperandFetchImpl {
+class ImmediateImpl extends AddressingImpl {
   override def addressing: Addressing.Type =
     Addressing.immediate
   // OpCode後1byteが即値なので読み出し

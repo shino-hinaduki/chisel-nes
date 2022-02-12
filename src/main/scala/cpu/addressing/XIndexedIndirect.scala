@@ -9,7 +9,7 @@ import cpu.register.CpuRegister
 /**
   * IndexedIndirectのOF実装
   */
-class XIndexedIndirectImpl extends OperandFetchImpl {
+class XIndexedIndirectImpl extends AddressingImpl {
   override def addressing: Addressing.Type =
     Addressing.xIndexedIndirect
   // OpCode後1byteが実効アドレスへのポインタのLowerなので読み出し

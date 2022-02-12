@@ -9,7 +9,7 @@ import cpu.register.CpuRegister
 /**
   * ZeroPageのOF実装
   */
-class ZeroPageImpl extends OperandFetchImpl {
+class ZeroPageImpl extends AddressingImpl {
   override def addressing: Addressing.Type =
     Addressing.zeroPage
   // OpCode後1byteが実効アドレスLowerなので読み出し

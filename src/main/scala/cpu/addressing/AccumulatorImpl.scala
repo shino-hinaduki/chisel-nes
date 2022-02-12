@@ -7,7 +7,7 @@ import cpu.register.CpuRegister
 /**
   * AccumulatorのOF実装
   */
-class AccumulatorImpl extends OperandFetchImpl {
+class AccumulatorImpl extends AddressingImpl {
   override def addressing: Addressing.Type =
     Addressing.accumulator
   override def onRequest(opcodeAddr: UInt, reqReadData: Boolean, reg: CpuRegister): Process =

@@ -7,7 +7,7 @@ import cpu.register.CpuRegister
 /**
   * AbsoluteのOF実装
   */
-class AbsoluteImpl extends OperandFetchImpl {
+class AbsoluteImpl extends AddressingImpl {
   override def addressing: Addressing.Type =
     Addressing.absolute
   // OpCode後2byteが実効アドレスなので読み出し

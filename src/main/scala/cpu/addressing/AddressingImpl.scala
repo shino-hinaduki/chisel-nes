@@ -7,7 +7,7 @@ import cpu.register.CpuRegister
 /**
  * AddressingModeごとのOperandFetchするときの挙動を定義する
  */
-trait OperandFetchImpl {
+trait AddressingImpl {
 
   /**
    * 対象のAddressingModeを返す

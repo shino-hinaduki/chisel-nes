@@ -11,7 +11,7 @@ import cpu.register.IndexRegister.Y
   * IndexedAbsoluteのOF実装
   * @param indexReg 対象のIndex Register
   */
-class IndexedAbsoluteImpl(val indexReg: IndexRegister) extends OperandFetchImpl {
+class IndexedAbsoluteImpl(val indexReg: IndexRegister) extends AddressingImpl {
   // 対象のIndex Registerの値を取得する
   def getIndexRegData(reg: CpuRegister) = indexReg match {
     case X() => reg.x
