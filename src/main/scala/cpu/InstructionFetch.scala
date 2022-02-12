@@ -12,8 +12,9 @@ import cpu.types.Instruction
 import cpu.types.InstructionFetchIO
 import cpu.types.InstructionFetchStatus
 
-/** DataBusからの命令取得と、その内容をデコードしてRegisterに保持する役割を持つ
-  */
+/** 
+ * DataBusからの命令取得と、その内容をデコードしてRegisterに保持する役割を持つ
+ */
 class InstructionFetch extends Module {
   val io = IO(new Bundle {
     // 現在のステータス確認用

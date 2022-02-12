@@ -5,8 +5,9 @@ import board.BoardIO
 import board.SevenSegmentLed
 import chisel3.util.MuxLookup
 
-/** Top Module
-  */
+/** 
+ * Top Module
+ */
 class ChiselNes extends Module {
   val io = IO(new Bundle {
     // DE0-CV外部コンポーネント

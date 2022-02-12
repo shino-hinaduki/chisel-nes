@@ -2,8 +2,9 @@ package cpu.register
 
 import chisel3._
 
-/** CPU Register
-  */
+/** 
+ * CPU Register
+ */
 class CpuRegister extends Module {
   val io = IO(new Bundle {
     val a  = UInt(8.W)

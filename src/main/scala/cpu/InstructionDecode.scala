@@ -4,8 +4,9 @@ import chisel3._
 import cpu.types.Addressing
 import cpu.types.Instruction
 
-/** IFで取得した命令をDecodeしてOFへのOperand取得依頼、ALUで実行する命令の決定を行う...が
- *  命令が可変長で8bit BusでOFで複数回Readが必要なことから IF->ID->OFはpipeline化しない。
+/** 
+ * IFで取得した命令をDecodeしてOFへのOperand取得依頼、ALUで実行する命令の決定を行う...が
+ * 命令が可変長で8bit BusでOFで複数回Readが必要なことから IF->ID->OFはpipeline化しない。
  */
 object InstructionDecode {
   // opcode -> Instructionの対応を取得する

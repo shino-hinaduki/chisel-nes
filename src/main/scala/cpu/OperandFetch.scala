@@ -11,7 +11,8 @@ import cpu.types.Addressing
 import cpu.types.OperandFetchStatus
 import cpu.types.OperandFetchIO
 
-/** 指定されたAddressing modeに従ってデータを読み出します
+/**
+ * 指定されたAddressing modeに従ってデータを読み出します
  * @param resetOnPanic 想定していない挙動に陥ったときに放置せずにOFをリセットする
  */
 class OperandFetch(resetOnPanic: Boolean) extends Module {
