@@ -8,8 +8,17 @@ import chisel3.util.Cat
 
 import _root_.bus.types.BusIO
 import cpu.types.Addressing
-import cpu.types.OperandFetchStatus
 import cpu.types.OperandFetchIO
+
+/** OperandFetch状況を示します
+ */
+object OperandFetchStatus extends ChiselEnum {
+  // idle        : 処理なし
+  // readOperand : OpCode後のデータを読み出し中
+  // readPointer : (Indirect系のみ) アドレス取得のためのRAM Read
+  // readData    : (redDataFetch=true時のみ、かつImmediate/Accumulate以外) データ取得のためのRAM Read
+  val idle, readOperand, readPointer, readData = Value
+}
 
 /**
  * 指定されたAddressing modeに従ってデータを読み出します
@@ -65,7 +74,7 @@ class OperandFetch(resetOnPanic: Boolean) extends Module {
 
   /* 出力レジスタ関連 */
   // 出力レジスタを初期化
-  def clearResult(isValid: Bool) = {
+  protected def clearResult(isValid: Bool) = {
     validReg         := isValid
     dstAddrReg       := 0.U
     readDataReg      := 0.U
@@ -74,7 +83,7 @@ class OperandFetch(resetOnPanic: Boolean) extends Module {
     readTmpRegs foreach { _ := 0.U }
   }
   // 出力レジスタに結果を設定
-  def setResult(dstAddr: Option[UInt], readData: Option[UInt]) = {
+  protected def setResult(dstAddr: Option[UInt], readData: Option[UInt]) = {
     validReg := true.B
     dstAddr match {
       // 有効データ
@@ -104,7 +113,7 @@ class OperandFetch(resetOnPanic: Boolean) extends Module {
     readTmpRegs foreach { r => r := r }
   }
   // 出力レジスタの結果保持
-  def keepResult() = {
+  protected def keepResult() = {
     validReg         := validReg
     dstAddrReg       := dstAddrReg
     readDataReg      := readDataReg
@@ -115,14 +124,14 @@ class OperandFetch(resetOnPanic: Boolean) extends Module {
 
   /* Read関連 */
   // BusMasterのRead要求をクリア
-  def clearReadReq() = {
+  protected def clearReadReq() = {
     reqReadReg          := false.B
     readReqAddrReg      := 0.U
     currentReadCountReg := 0.U
     totalReadCountReg   := 0.U
   }
   // BusMasterにRead要求を設定
-  def setReadReq(addr: UInt, totalCount: Option[UInt]) = {
+  protected def setReadReq(addr: UInt, totalCount: Option[UInt]) = {
     reqReadReg     := true.B
     readReqAddrReg := addr
     totalCount match {
@@ -139,7 +148,7 @@ class OperandFetch(resetOnPanic: Boolean) extends Module {
     }
   }
   // Read要求を保持
-  def keepReadReq() = {
+  protected def keepReadReq() = {
     reqReadReg          := reqReadReg
     readReqAddrReg      := readReqAddrReg
     currentReadCountReg := currentReadCountReg
@@ -148,7 +157,7 @@ class OperandFetch(resetOnPanic: Boolean) extends Module {
 
   /* OF完了関連 */
   // status, 出力レジスタ、Read要求ともにクリアする
-  def resetAndDone(isIllegal: Boolean) = {
+  protected def resetAndDone(isIllegal: Boolean) = {
     // sim時は止める。それ以外はデバッグレジスタに残す
     assert(!isIllegal, "illegal state")
     if (isIllegal) {
@@ -163,13 +172,13 @@ class OperandFetch(resetOnPanic: Boolean) extends Module {
     }
   }
   // アドレスだけ報告して完了する
-  def reportAddrAndDone(addr: UInt) = {
+  protected def reportAddrAndDone(addr: UInt) = {
     statusReg := OperandFetchStatus.idle
     setResult(Some(addr), None)
     clearReadReq()
   }
   // 現在読みだしたアドレスとデータを報告して完了する
-  def reportCurrentReadDataAndDone() = {
+  protected def reportCurrentReadDataAndDone() = {
     statusReg := OperandFetchStatus.idle
     setResult(Some(readReqAddrReg), Some(io.busMaster.dataOut)) // 現在の結果
     clearReadReq()

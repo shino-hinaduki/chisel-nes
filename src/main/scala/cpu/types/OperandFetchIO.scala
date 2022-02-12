@@ -6,16 +6,6 @@ import chisel3.experimental.ChiselEnum
 import _root_.bus.types.BusIO
 import cpu.types.Addressing
 
-/** OperandFetch状況を示します
- */
-object OperandFetchStatus extends ChiselEnum {
-  // idle        : 処理なし
-  // readOperand : OpCode後のデータを読み出し中
-  // readPointer : (Indirect系のみ) アドレス取得のためのRAM Read
-  // readData    : (redDataFetch=true時のみ、かつImmediate/Accumulate以外) データ取得のためのRAM Read
-  val idle, readOperand, readPointer, readData = Value
-}
-
 /** OperandFetchする機能を提供する, 使う側はFlippedして使う
  */
 class OperandFetchIO extends Bundle {
