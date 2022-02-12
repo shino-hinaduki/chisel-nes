@@ -30,6 +30,7 @@ class RelativeImpl extends OperandFetchImpl {
   }
   override def doneReadPointer(opcodeAddr: UInt, reqReadData: Boolean, readAddr: UInt, readData: UInt, reg: CpuRegister): Process =
     Process.Clear(isIllegal = true)
+  // Relativeはjmp,branch系のみで使わないはず...
   override def doneReadData(opcodeAddr: UInt, readAddr: UInt, readData: UInt, reg: CpuRegister): Process =
     Process.Clear(isIllegal = true)
 }
