@@ -26,10 +26,10 @@ class IndexedZeroPageImpl(val indexReg: IndexRegister) extends AddressingImpl {
   }
 
   // OpCode後1byteが実効アドレスLowerなので読み出し
-  override def onRequest(opcodeAddr: UInt, reqReadData: Boolean, reg: CpuRegister): Process =
+  override def onRequest(reqReadData: Boolean, opcodeAddr: UInt, reg: CpuRegister): Process =
     Process.ReadOperand(opcodeAddr + 1.U, 1.U)
   // opcode後1byteのreadDataが実効アドレスLower, upperは0固定。Dataが必要であればそのアドレスも読み出し
-  override def doneReadOperand(opcodeAddr: UInt, reqReadData: Boolean, readAddr: UInt, readData: UInt, reg: CpuRegister): Process = {
+  override def doneReadOperand(reqReadData: Boolean, opcodeAddr: UInt, readAddr: UInt, readData: UInt, reg: CpuRegister): Process = {
     // 読みだしたアドレス + (X or Y) reg した値をアドレスとして扱う。上位8bit分は捨てる
     val addr = Cat(0.U(8.W), (readData + getIndexRegData(reg))(7, 0))
     if (reqReadData) {
@@ -38,7 +38,7 @@ class IndexedZeroPageImpl(val indexReg: IndexRegister) extends AddressingImpl {
       Process.ReportAddr(addr)
     }
   }
-  override def doneReadPointer(opcodeAddr: UInt, reqReadData: Boolean, readAddr: UInt, readData: UInt, reg: CpuRegister): Process =
+  override def doneReadPointer(reqReadData: Boolean, opcodeAddr: UInt, readAddr: UInt, readData: UInt, reg: CpuRegister): Process =
     Process.Clear(isIllegal = true)
   // 読み出し先アドレスと読みだしたデータを報告
   override def doneReadData(opcodeAddr: UInt, readAddr: UInt, readData: UInt, reg: CpuRegister): Process =

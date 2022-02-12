@@ -13,10 +13,10 @@ class RelativeImpl extends AddressingImpl {
   override def addressing: Addressing.Type =
     Addressing.relative
   // OpCode後1byteをオフセットとして読み出す
-  override def onRequest(opcodeAddr: UInt, reqReadData: Boolean, reg: CpuRegister): Process =
+  override def onRequest(reqReadData: Boolean, opcodeAddr: UInt, reg: CpuRegister): Process =
     Process.ReadOperand(opcodeAddr + 1.U, 1.U)
   // opcode後1byteのreadDataが実効アドレスLower, upperは0固定。Dataが必要であればそのアドレスも読み出し
-  override def doneReadOperand(opcodeAddr: UInt, reqReadData: Boolean, readAddr: UInt, readData: UInt, reg: CpuRegister): Process = {
+  override def doneReadOperand(reqReadData: Boolean, opcodeAddr: UInt, readAddr: UInt, readData: UInt, reg: CpuRegister): Process = {
     // offsetをint8として解釈し、現在のPCとの差分を計算した値を求める
     val offsetSigned = readData(7, 0).asSInt()
     val pc           = opcodeAddr + 2.U // current_opcode, $offset[readAddr], next_op[*PC*]
@@ -28,7 +28,7 @@ class RelativeImpl extends AddressingImpl {
     assert(dstSigned.litValue.toInt >= 0) // 0以上の値にはなっているはず(その前提がなければこのassertは外す)
     Process.ReportAddr(dst)
   }
-  override def doneReadPointer(opcodeAddr: UInt, reqReadData: Boolean, readAddr: UInt, readData: UInt, reg: CpuRegister): Process =
+  override def doneReadPointer(reqReadData: Boolean, opcodeAddr: UInt, readAddr: UInt, readData: UInt, reg: CpuRegister): Process =
     Process.Clear(isIllegal = true)
   // Relativeはjmp,branch系のみで使わないはず...
   override def doneReadData(opcodeAddr: UInt, readAddr: UInt, readData: UInt, reg: CpuRegister): Process =
