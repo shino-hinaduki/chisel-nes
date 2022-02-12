@@ -9,7 +9,7 @@ import chisel3.util.is
 import _root_.bus.BusIO
 import cpu.types.Addressing
 import cpu.types.Instruction
-import cpu.types.InstructionFetchControl
+import cpu.types.InstructionFetchIO
 import cpu.types.InstructionFetchStatus
 
 /** DataBusからの命令取得と、その内容をデコードしてRegisterに保持する役割を持つ
@@ -21,7 +21,7 @@ class InstructionFetch extends Module {
     // Addr/DataBusのArbiterと接続
     val busMaster = Flipped(new BusIO())
     // EX,INTからFetch制御する用に公開するI/F
-    val control = new InstructionFetchControl()
+    val control = new InstructionFetchIO()
   })
 
   // internal

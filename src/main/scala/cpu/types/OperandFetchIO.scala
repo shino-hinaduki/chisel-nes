@@ -18,7 +18,7 @@ object OperandFetchStatus extends ChiselEnum {
 
 /** OperandFetchする機能を提供する, 使う側はFlippedして使う
  */
-class OperandFetchControl extends Bundle {
+class OperandFetchIO extends Bundle {
   // 立ち上がり変化で要求する, busyが解除されるまで入力データ保持が必要
   val reqStrobe = Input(Bool())
   // 命令が配置されていたアドレス

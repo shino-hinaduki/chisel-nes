@@ -9,7 +9,7 @@ import chisel3.util.Cat
 import _root_.bus.BusIO
 import cpu.types.Addressing
 import cpu.types.OperandFetchStatus
-import cpu.types.OperandFetchControl
+import cpu.types.OperandFetchIO
 
 /** 指定されたAddressing modeに従ってデータを読み出します
  * @param resetOnPanic 想定していない挙動に陥ったときに放置せずにOFをリセットする
@@ -21,7 +21,7 @@ class OperandFetch(resetOnPanic: Boolean) extends Module {
     // Addr/Data BusMaster
     val busMaster = Flipped(new BusIO())
     // OperandFetch制御用
-    val control = new OperandFetchControl
+    val control = new OperandFetchIO
   })
 
   // 内部
