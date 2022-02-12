@@ -10,6 +10,12 @@
             "problemMatcher": []
         },
         {
+            "label": "generate diagram",
+            "type": "shell",
+            "command": "docker-compose run diagram",
+            "problemMatcher": []
+        },
+        {
             "label": "format",
             "type": "shell",
             "command": "sbt 'scalafmt'",

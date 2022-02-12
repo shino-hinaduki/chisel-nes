@@ -1,6 +1,5 @@
 vendor_name = ModelSim
 source_file = 1, C:/Users/user/repos/chisel-nes/dst/ChiselNes.v
-source_file = 1, C:/Users/user/repos/chisel-nes/eda/quartusprime_lite_21.1/virtual_jtag/synthesis/virtual_jtag.v
 source_file = 1, C:/Users/user/repos/chisel-nes/eda/quartusprime_lite_21.1/DE0_CV_golden_top.v
 source_file = 1, C:/Users/user/repos/chisel-nes/eda/quartusprime_lite_21.1/db/chisel_nes.cbx.xml
 design_name = DE0_CV_golden_top

@@ -1,6 +1,7 @@
 package bus
 
 import chisel3._
+import logic.Decoder
 
 /**
   * CPU Busのアドレス線とPHI2から /RAMSEL, /DBE, /ROMSEL 信号を生成する 
