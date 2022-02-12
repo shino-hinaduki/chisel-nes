@@ -2,6 +2,7 @@ package cpu.addressing
 
 import chisel3._
 import cpu.types.Addressing
+import cpu.register.CpuRegister
 
 /**
   * ImpliedのOF実装
@@ -9,12 +10,12 @@ import cpu.types.Addressing
 class ImpliedImpl extends OperandFetchImpl {
   override def addressing: Addressing.Type =
     Addressing.implied
-  override def onRequest(opcodeAddr: UInt, reqReadData: Boolean, aReg: UInt): Process =
+  override def onRequest(opcodeAddr: UInt, reqReadData: Boolean, reg: CpuRegister): Process =
     ReportNone()
-  override def doneReadOperand(opcodeAddr: UInt, reqReadData: Boolean, readAddr: UInt, readData: UInt, xReg: UInt, yReg: UInt): Process =
+  override def doneReadOperand(opcodeAddr: UInt, reqReadData: Boolean, readAddr: UInt, readData: UInt, reg: CpuRegister): Process =
     Clear(isIllegal = true)
-  override def doneReadPointer(opcodeAddr: UInt, reqReadData: Boolean, readAddr: UInt, readData: UInt, xReg: UInt, yReg: UInt): Process =
+  override def doneReadPointer(opcodeAddr: UInt, reqReadData: Boolean, readAddr: UInt, readData: UInt, reg: CpuRegister): Process =
     Clear(isIllegal = true)
-  override def doneReadData(opcodeAddr: UInt, readAddr: UInt, readData: UInt, xReg: UInt, yReg: UInt): Process =
+  override def doneReadData(opcodeAddr: UInt, readAddr: UInt, readData: UInt, reg: CpuRegister): Process =
     Clear(isIllegal = true)
 }
