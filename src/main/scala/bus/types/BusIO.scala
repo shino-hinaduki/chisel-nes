@@ -1,4 +1,4 @@
-package bus
+package bus.types
 
 import chisel3._
 

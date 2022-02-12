@@ -6,7 +6,7 @@ import chisel3.util.MuxLookup
 import chisel3.util.switch
 import chisel3.util.is
 
-import _root_.bus.BusIO
+import _root_.bus.types.BusIO
 import cpu.types.Addressing
 import cpu.types.Instruction
 import cpu.types.InstructionFetchIO

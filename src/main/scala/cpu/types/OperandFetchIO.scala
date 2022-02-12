@@ -3,7 +3,7 @@ package cpu.types
 import chisel3._
 import chisel3.experimental.ChiselEnum
 
-import _root_.bus.BusIO
+import _root_.bus.types.BusIO
 import cpu.types.Addressing
 
 /** OperandFetch状況を示します

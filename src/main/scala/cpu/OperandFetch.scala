@@ -6,7 +6,7 @@ import chisel3.util.switch
 import chisel3.util.is
 import chisel3.util.Cat
 
-import _root_.bus.BusIO
+import _root_.bus.types.BusIO
 import cpu.types.Addressing
 import cpu.types.OperandFetchStatus
 import cpu.types.OperandFetchIO
