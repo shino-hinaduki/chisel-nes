@@ -32,6 +32,12 @@
             "type": "shell",
             "command": "sbt 'testOnly *${fileBasenameNoExtension}*'",
             "problemMatcher": []
-        }
+        },
+        {
+            "label": "doc",
+            "type": "shell",
+            "command": "sbt doc",
+            "problemMatcher": []
+        },
     ]
 }
