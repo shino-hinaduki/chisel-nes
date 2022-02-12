@@ -14,7 +14,7 @@ class RelativeImpl extends OperandFetchImpl {
     Addressing.relative
   // OpCode後1byteをオフセットとして読み出す
   override def onRequest(opcodeAddr: UInt, reqReadData: Boolean, reg: CpuRegister): Process =
-    ReadOperand(opcodeAddr + 1.U, 1.U)
+    Process.ReadOperand(opcodeAddr + 1.U, 1.U)
   // opcode後1byteのreadDataが実効アドレスLower, upperは0固定。Dataが必要であればそのアドレスも読み出し
   override def doneReadOperand(opcodeAddr: UInt, reqReadData: Boolean, readAddr: UInt, readData: UInt, reg: CpuRegister): Process = {
     // offsetをint8として解釈し、現在のPCとの差分を計算した値を求める
@@ -26,10 +26,10 @@ class RelativeImpl extends OperandFetchImpl {
     // 16bitに戻して報告
     val dst = dstSigned.asUInt()(15, 0)
     assert(dstSigned.litValue.toInt >= 0) // 0以上の値にはなっているはず(その前提がなければこのassertは外す)
-    ReportAddr(dst)
+    Process.ReportAddr(dst)
   }
   override def doneReadPointer(opcodeAddr: UInt, reqReadData: Boolean, readAddr: UInt, readData: UInt, reg: CpuRegister): Process =
-    Clear(isIllegal = true)
+    Process.Clear(isIllegal = true)
   override def doneReadData(opcodeAddr: UInt, readAddr: UInt, readData: UInt, reg: CpuRegister): Process =
-    Clear(isIllegal = true)
+    Process.Clear(isIllegal = true)
 }

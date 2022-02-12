@@ -14,17 +14,17 @@ class ZeroPageImpl extends OperandFetchImpl {
     Addressing.zeroPage
   // OpCode後1byteが実効アドレスLowerなので読み出し
   override def onRequest(opcodeAddr: UInt, reqReadData: Boolean, reg: CpuRegister): Process =
-    ReadOperand(opcodeAddr + 1.U, 1.U)
+    Process.ReadOperand(opcodeAddr + 1.U, 1.U)
   // opcode後1byteのreadDataが実効アドレスLower, upperは0固定。Dataが必要であればそのアドレスも読み出し
   override def doneReadOperand(opcodeAddr: UInt, reqReadData: Boolean, readAddr: UInt, readData: UInt, reg: CpuRegister): Process =
     if (reqReadData) {
-      ReadData(Cat(0.U(8.W), readData(7, 0)), 1.U)
+      Process.ReadData(Cat(0.U(8.W), readData(7, 0)), 1.U)
     } else {
-      ReportAddr(Cat(0.U(8.W), readData(7, 0)))
+      Process.ReportAddr(Cat(0.U(8.W), readData(7, 0)))
     }
   override def doneReadPointer(opcodeAddr: UInt, reqReadData: Boolean, readAddr: UInt, readData: UInt, reg: CpuRegister): Process =
-    Clear(isIllegal = true)
+    Process.Clear(isIllegal = true)
   // 読み出し先アドレスと読みだしたデータを報告
   override def doneReadData(opcodeAddr: UInt, readAddr: UInt, readData: UInt, reg: CpuRegister): Process =
-    ReportFull(readAddr, readData)
+    Process.ReportFull(readAddr, readData)
 }
