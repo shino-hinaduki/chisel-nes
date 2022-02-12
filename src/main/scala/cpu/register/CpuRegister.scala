@@ -2,6 +2,15 @@ package cpu.register
 
 import chisel3._
 
+/**
+  * X,YいずれかのIndex Registerを示す
+  */
+sealed trait IndexRegister {}
+object IndexRegister {
+  case class X() extends IndexRegister
+  case class Y() extends IndexRegister
+}
+
 /** 
  * CPU Register
  */
