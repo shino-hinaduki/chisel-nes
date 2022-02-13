@@ -279,20 +279,20 @@ object InstructionDecode {
     0x57.U(8.W) -> (Instruction.sre, Addressing.xIndexedZeroPage),
     0x5b.U(8.W) -> (Instruction.sre, Addressing.yIndexedAbsolute),
     0x5f.U(8.W) -> (Instruction.sre, Addressing.xIndexedAbsolute),
-    0xeb.U(8.W) -> (Instruction.usbc, Addressing.immediate),
+    0xeb.U(8.W) -> (Instruction.sbc, Addressing.immediate),
 
     // illegal
-    0x02.U(8.W) -> (Instruction.jam, Addressing.invalid),
-    0x12.U(8.W) -> (Instruction.jam, Addressing.invalid),
-    0x22.U(8.W) -> (Instruction.jam, Addressing.invalid),
-    0x32.U(8.W) -> (Instruction.jam, Addressing.invalid),
-    0x42.U(8.W) -> (Instruction.jam, Addressing.invalid),
-    0x52.U(8.W) -> (Instruction.jam, Addressing.invalid),
-    0x62.U(8.W) -> (Instruction.jam, Addressing.invalid),
-    0x72.U(8.W) -> (Instruction.jam, Addressing.invalid),
-    0x92.U(8.W) -> (Instruction.jam, Addressing.invalid),
-    0xb2.U(8.W) -> (Instruction.jam, Addressing.invalid),
-    0xd2.U(8.W) -> (Instruction.jam, Addressing.invalid),
-    0xf2.U(8.W) -> (Instruction.jam, Addressing.invalid)
+    0x02.U(8.W) -> (Instruction.halt, Addressing.invalid),
+    0x12.U(8.W) -> (Instruction.halt, Addressing.invalid),
+    0x22.U(8.W) -> (Instruction.halt, Addressing.invalid),
+    0x32.U(8.W) -> (Instruction.halt, Addressing.invalid),
+    0x42.U(8.W) -> (Instruction.halt, Addressing.invalid),
+    0x52.U(8.W) -> (Instruction.halt, Addressing.invalid),
+    0x62.U(8.W) -> (Instruction.halt, Addressing.invalid),
+    0x72.U(8.W) -> (Instruction.halt, Addressing.invalid),
+    0x92.U(8.W) -> (Instruction.halt, Addressing.invalid),
+    0xb2.U(8.W) -> (Instruction.halt, Addressing.invalid),
+    0xd2.U(8.W) -> (Instruction.halt, Addressing.invalid),
+    0xf2.U(8.W) -> (Instruction.halt, Addressing.invalid)
   )
 }

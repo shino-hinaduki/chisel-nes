@@ -12,7 +12,7 @@ class InstructionDecodeSpec extends AnyFreeSpec {
     // 0x
     0x00 -> (Instruction.brk, Addressing.implied),
     0x01 -> (Instruction.ora, Addressing.xIndexedIndirect),
-    0x02 -> (Instruction.jam, Addressing.invalid),
+    0x02 -> (Instruction.halt, Addressing.invalid),
     0x03 -> (Instruction.slo, Addressing.xIndexedIndirect),
     0x04 -> (Instruction.nop, Addressing.zeroPage),
     0x05 -> (Instruction.ora, Addressing.zeroPage),
@@ -29,7 +29,7 @@ class InstructionDecodeSpec extends AnyFreeSpec {
     // 1x
     0x10 -> (Instruction.bpl, Addressing.relative),
     0x11 -> (Instruction.ora, Addressing.indirectYIndexed),
-    0x12 -> (Instruction.jam, Addressing.invalid),
+    0x12 -> (Instruction.halt, Addressing.invalid),
     0x13 -> (Instruction.slo, Addressing.indirectYIndexed),
     0x14 -> (Instruction.nop, Addressing.xIndexedZeroPage),
     0x15 -> (Instruction.ora, Addressing.xIndexedZeroPage),
@@ -46,7 +46,7 @@ class InstructionDecodeSpec extends AnyFreeSpec {
     // 2x
     0x20 -> (Instruction.jsr, Addressing.absolute),
     0x21 -> (Instruction.and, Addressing.xIndexedIndirect),
-    0x22 -> (Instruction.jam, Addressing.invalid),
+    0x22 -> (Instruction.halt, Addressing.invalid),
     0x23 -> (Instruction.rla, Addressing.xIndexedIndirect),
     0x24 -> (Instruction.bit, Addressing.zeroPage),
     0x25 -> (Instruction.and, Addressing.zeroPage),
@@ -63,7 +63,7 @@ class InstructionDecodeSpec extends AnyFreeSpec {
     // 3x
     0x30 -> (Instruction.bmi, Addressing.relative),
     0x31 -> (Instruction.and, Addressing.indirectYIndexed),
-    0x32 -> (Instruction.jam, Addressing.invalid),
+    0x32 -> (Instruction.halt, Addressing.invalid),
     0x33 -> (Instruction.rla, Addressing.indirectYIndexed),
     0x34 -> (Instruction.nop, Addressing.xIndexedZeroPage),
     0x35 -> (Instruction.and, Addressing.xIndexedZeroPage),
@@ -80,7 +80,7 @@ class InstructionDecodeSpec extends AnyFreeSpec {
     // 4x
     0x40 -> (Instruction.rti, Addressing.implied),
     0x41 -> (Instruction.eor, Addressing.xIndexedIndirect),
-    0x42 -> (Instruction.jam, Addressing.invalid),
+    0x42 -> (Instruction.halt, Addressing.invalid),
     0x43 -> (Instruction.sre, Addressing.xIndexedIndirect),
     0x44 -> (Instruction.nop, Addressing.zeroPage),
     0x45 -> (Instruction.eor, Addressing.zeroPage),
@@ -97,7 +97,7 @@ class InstructionDecodeSpec extends AnyFreeSpec {
     // 5x
     0x50 -> (Instruction.bvc, Addressing.relative),
     0x51 -> (Instruction.eor, Addressing.indirectYIndexed),
-    0x52 -> (Instruction.jam, Addressing.invalid),
+    0x52 -> (Instruction.halt, Addressing.invalid),
     0x53 -> (Instruction.sre, Addressing.indirectYIndexed),
     0x54 -> (Instruction.nop, Addressing.xIndexedZeroPage),
     0x55 -> (Instruction.eor, Addressing.xIndexedZeroPage),
@@ -114,7 +114,7 @@ class InstructionDecodeSpec extends AnyFreeSpec {
     // 6x
     0x60 -> (Instruction.rts, Addressing.implied),
     0x61 -> (Instruction.adc, Addressing.xIndexedIndirect),
-    0x62 -> (Instruction.jam, Addressing.invalid),
+    0x62 -> (Instruction.halt, Addressing.invalid),
     0x63 -> (Instruction.rra, Addressing.xIndexedIndirect),
     0x64 -> (Instruction.nop, Addressing.zeroPage),
     0x65 -> (Instruction.adc, Addressing.zeroPage),
@@ -131,7 +131,7 @@ class InstructionDecodeSpec extends AnyFreeSpec {
     // 7x
     0x70 -> (Instruction.bvs, Addressing.relative),
     0x71 -> (Instruction.adc, Addressing.indirectYIndexed),
-    0x72 -> (Instruction.jam, Addressing.invalid),
+    0x72 -> (Instruction.halt, Addressing.invalid),
     0x73 -> (Instruction.rra, Addressing.indirectYIndexed),
     0x74 -> (Instruction.nop, Addressing.xIndexedZeroPage),
     0x75 -> (Instruction.adc, Addressing.xIndexedZeroPage),
@@ -165,7 +165,7 @@ class InstructionDecodeSpec extends AnyFreeSpec {
     // 9x
     0x90 -> (Instruction.bcc, Addressing.relative),
     0x91 -> (Instruction.sta, Addressing.indirectYIndexed),
-    0x92 -> (Instruction.jam, Addressing.invalid),
+    0x92 -> (Instruction.halt, Addressing.invalid),
     0x93 -> (Instruction.ahx, Addressing.indirectYIndexed),
     0x94 -> (Instruction.sty, Addressing.xIndexedZeroPage),
     0x95 -> (Instruction.sta, Addressing.xIndexedZeroPage),
@@ -179,6 +179,23 @@ class InstructionDecodeSpec extends AnyFreeSpec {
     0x9d -> (Instruction.sta, Addressing.xIndexedAbsolute),
     0x9e -> (Instruction.shx, Addressing.yIndexedAbsolute),
     0x9f -> (Instruction.ahx, Addressing.yIndexedAbsolute),
+    // ax
+    0xa0 -> (Instruction.ldy, Addressing.immediate),
+    0xa1 -> (Instruction.lda, Addressing.xIndexedIndirect),
+    0xa2 -> (Instruction.ldx, Addressing.immediate),
+    0xa3 -> (Instruction.lax, Addressing.xIndexedIndirect),
+    0xa4 -> (Instruction.ldy, Addressing.zeroPage),
+    0xa5 -> (Instruction.lda, Addressing.zeroPage),
+    0xa6 -> (Instruction.ldx, Addressing.zeroPage),
+    0xa7 -> (Instruction.lax, Addressing.zeroPage),
+    0xa8 -> (Instruction.tay, Addressing.implied),
+    0xa9 -> (Instruction.lda, Addressing.immediate),
+    0xaa -> (Instruction.tax, Addressing.implied),
+    0xab -> (Instruction.lax, Addressing.immediate),
+    0xac -> (Instruction.ldy, Addressing.absolute),
+    0xad -> (Instruction.lda, Addressing.absolute),
+    0xae -> (Instruction.ldx, Addressing.absolute),
+    0xaf -> (Instruction.lax, Addressing.absolute),
   )
   // 本家で定義されているテーブル(UIntでMapにすると、論理環境でうまくKeyが見つからなかったので数値に変換)
   val decode: Map[Int, (Instruction.Type, Addressing.Type)] =
