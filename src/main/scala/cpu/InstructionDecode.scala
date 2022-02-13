@@ -191,6 +191,7 @@ object InstructionDecode {
     // undocumented
     0x4b.U(8.W) -> (Instruction.alr, Addressing.immediate),
     0x0b.U(8.W) -> (Instruction.anc, Addressing.immediate),
+    0x2b.U(8.W) -> (Instruction.anc, Addressing.immediate),
     0x6b.U(8.W) -> (Instruction.arr, Addressing.immediate),
     0xcb.U(8.W) -> (Instruction.sbx, Addressing.immediate),
     0xa3.U(8.W) -> (Instruction.lax, Addressing.xIndexedIndirect),
