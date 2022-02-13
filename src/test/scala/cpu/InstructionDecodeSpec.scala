@@ -9,6 +9,7 @@ import cpu.types.Addressing
 class InstructionDecodeSpec extends AnyFreeSpec {
   // (別の表を見ながら順に作り直した...)
   val expectTable: Seq[(Int, (Instruction.Type, Addressing.Type))] = Seq(
+    // 0x
     0x00 -> (Instruction.brk, Addressing.implied),
     0x01 -> (Instruction.ora, Addressing.xIndexedIndirect),
     0x02 -> (Instruction.jam, Addressing.invalid),
@@ -25,6 +26,23 @@ class InstructionDecodeSpec extends AnyFreeSpec {
     0x0d -> (Instruction.ora, Addressing.absolute),
     0x0e -> (Instruction.asl, Addressing.absolute),
     0x0f -> (Instruction.slo, Addressing.absolute),
+    // 1x
+    0x10 -> (Instruction.bpl, Addressing.relative),
+    0x11 -> (Instruction.ora, Addressing.indirectYIndexed),
+    0x12 -> (Instruction.jam, Addressing.invalid),
+    0x13 -> (Instruction.slo, Addressing.indirectYIndexed),
+    0x14 -> (Instruction.nop, Addressing.xIndexedZeroPage),
+    0x15 -> (Instruction.ora, Addressing.xIndexedZeroPage),
+    0x16 -> (Instruction.asl, Addressing.xIndexedZeroPage),
+    0x17 -> (Instruction.slo, Addressing.xIndexedZeroPage),
+    0x18 -> (Instruction.clc, Addressing.implied),
+    0x19 -> (Instruction.ora, Addressing.yIndexedAbsolute),
+    0x1a -> (Instruction.nop, Addressing.implied),
+    0x1b -> (Instruction.slo, Addressing.yIndexedAbsolute),
+    0x1c -> (Instruction.nop, Addressing.xIndexedAbsolute),
+    0x1d -> (Instruction.ora, Addressing.xIndexedAbsolute),
+    0x1e -> (Instruction.asl, Addressing.xIndexedAbsolute),
+    0x1f -> (Instruction.slo, Addressing.xIndexedAbsolute),
   )
   // 本家で定義されているテーブル(UIntでMapにすると、論理環境でうまくKeyが見つからなかったので数値に変換)
   val decode: Map[Int, (Instruction.Type, Addressing.Type)] =
