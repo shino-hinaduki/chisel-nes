@@ -162,6 +162,23 @@ class InstructionDecodeSpec extends AnyFreeSpec {
     0x8d -> (Instruction.sta, Addressing.absolute),
     0x8e -> (Instruction.stx, Addressing.absolute),
     0x8f -> (Instruction.sax, Addressing.absolute),
+    // 9x
+    0x90 -> (Instruction.bcc, Addressing.relative),
+    0x91 -> (Instruction.sta, Addressing.indirectYIndexed),
+    0x92 -> (Instruction.jam, Addressing.invalid),
+    0x93 -> (Instruction.ahx, Addressing.indirectYIndexed),
+    0x94 -> (Instruction.sty, Addressing.xIndexedZeroPage),
+    0x95 -> (Instruction.sta, Addressing.xIndexedZeroPage),
+    0x96 -> (Instruction.stx, Addressing.yIndexedZeroPage),
+    0x97 -> (Instruction.sax, Addressing.yIndexedZeroPage),
+    0x98 -> (Instruction.tya, Addressing.implied),
+    0x99 -> (Instruction.sta, Addressing.yIndexedAbsolute),
+    0x9a -> (Instruction.txs, Addressing.implied),
+    0x9b -> (Instruction.tas, Addressing.yIndexedAbsolute),
+    0x9c -> (Instruction.shy, Addressing.xIndexedAbsolute),
+    0x9d -> (Instruction.sta, Addressing.xIndexedAbsolute),
+    0x9e -> (Instruction.shx, Addressing.yIndexedAbsolute),
+    0x9f -> (Instruction.ahx, Addressing.yIndexedAbsolute),
   )
   // 本家で定義されているテーブル(UIntでMapにすると、論理環境でうまくKeyが見つからなかったので数値に変換)
   val decode: Map[Int, (Instruction.Type, Addressing.Type)] =
@@ -176,7 +193,6 @@ class InstructionDecodeSpec extends AnyFreeSpec {
         assert(inst == expectInst)
         assert(addressing == expectAddressing)
       }
-
     }
   }
 }
