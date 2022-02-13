@@ -111,6 +111,23 @@ class InstructionDecodeSpec extends AnyFreeSpec {
     0x5d -> (Instruction.eor, Addressing.xIndexedAbsolute),
     0x5e -> (Instruction.lsr, Addressing.xIndexedAbsolute),
     0x5f -> (Instruction.sre, Addressing.xIndexedAbsolute),
+    // 6x
+    0x60 -> (Instruction.rts, Addressing.implied),
+    0x61 -> (Instruction.adc, Addressing.xIndexedIndirect),
+    0x62 -> (Instruction.jam, Addressing.invalid),
+    0x63 -> (Instruction.rra, Addressing.xIndexedIndirect),
+    0x64 -> (Instruction.nop, Addressing.zeroPage),
+    0x65 -> (Instruction.adc, Addressing.zeroPage),
+    0x66 -> (Instruction.ror, Addressing.zeroPage),
+    0x67 -> (Instruction.rra, Addressing.zeroPage),
+    0x68 -> (Instruction.pla, Addressing.implied),
+    0x69 -> (Instruction.adc, Addressing.immediate),
+    0x6a -> (Instruction.ror, Addressing.accumulator),
+    0x6b -> (Instruction.arr, Addressing.immediate),
+    0x6c -> (Instruction.jmp, Addressing.indirect),
+    0x6d -> (Instruction.adc, Addressing.absolute),
+    0x6e -> (Instruction.ror, Addressing.absolute),
+    0x6f -> (Instruction.rra, Addressing.absolute),
   )
   // 本家で定義されているテーブル(UIntでMapにすると、論理環境でうまくKeyが見つからなかったので数値に変換)
   val decode: Map[Int, (Instruction.Type, Addressing.Type)] =
@@ -120,7 +137,7 @@ class InstructionDecodeSpec extends AnyFreeSpec {
 
   expectTable foreach {
     case (opcode, (expectInst, expectAddressing)) => {
-      f"$opcode%02x is ($expectInst, $expectAddressing)" in {
+      f"opcode[$opcode%02x] is ($expectInst, $expectAddressing)" in {
         val (inst, addressing) = decode(opcode)
         assert(inst == expectInst)
         assert(addressing == expectAddressing)
