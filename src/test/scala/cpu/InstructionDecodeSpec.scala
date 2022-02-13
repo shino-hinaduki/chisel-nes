@@ -264,6 +264,23 @@ class InstructionDecodeSpec extends AnyFreeSpec {
     0xed -> (Instruction.sbc, Addressing.absolute),
     0xee -> (Instruction.inc, Addressing.absolute),
     0xef -> (Instruction.isc, Addressing.absolute),
+    // fx
+    0xf0 -> (Instruction.beq, Addressing.relative),
+    0xf1 -> (Instruction.sbc, Addressing.indirectYIndexed),
+    0xf2 -> (Instruction.halt, Addressing.invalid),
+    0xf3 -> (Instruction.isc, Addressing.indirectYIndexed),
+    0xf4 -> (Instruction.nop, Addressing.xIndexedZeroPage),
+    0xf5 -> (Instruction.sbc, Addressing.xIndexedZeroPage),
+    0xf6 -> (Instruction.inc, Addressing.xIndexedZeroPage),
+    0xf7 -> (Instruction.isc, Addressing.xIndexedZeroPage),
+    0xf8 -> (Instruction.sed, Addressing.implied),
+    0xf9 -> (Instruction.sbc, Addressing.yIndexedAbsolute),
+    0xfa -> (Instruction.nop, Addressing.implied),
+    0xfb -> (Instruction.isc, Addressing.yIndexedAbsolute),
+    0xfc -> (Instruction.nop, Addressing.xIndexedAbsolute),
+    0xfd -> (Instruction.sbc, Addressing.xIndexedAbsolute),
+    0xfe -> (Instruction.inc, Addressing.xIndexedAbsolute),
+    0xff -> (Instruction.isc, Addressing.xIndexedAbsolute),
   )
   // 本家で定義されているテーブル(UIntでMapにすると、論理環境でうまくKeyが見つからなかったので数値に変換)
   val decode: Map[Int, (Instruction.Type, Addressing.Type)] =
