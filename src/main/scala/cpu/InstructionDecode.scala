@@ -16,7 +16,7 @@ object InstructionDecode {
   def lookUpTableForAddressing(): Seq[(UInt, Addressing.Type)] = InstructionDecode.lookUpTable.map { case (opcode, (instruction, addressing)) => opcode -> addressing }
 
   /* OperandFetchで求めたアドレスに対する事前のDataReadが必要であればtrueを返す */
-  def needDataReadInOperandFetch(inst: Instruction.Type, addressing: Addressing.Type): Boolean = (inst, addressing) match {
+  def needDataRead(inst: Instruction.Type, addressing: Addressing.Type): Boolean = (inst, addressing) match {
     // 不要なもの、Aregを使うものなどは事前に除外
     case (_, Addressing.implied)     => false
     case (_, Addressing.accumulator) => false // A regの値を使うので不要
