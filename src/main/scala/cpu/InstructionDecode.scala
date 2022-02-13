@@ -195,6 +195,7 @@ object InstructionDecode {
     0x6b.U(8.W) -> (Instruction.arr, Addressing.immediate),
     0x8b.U(8.W) -> (Instruction.xaa, Addressing.immediate),
     0xcb.U(8.W) -> (Instruction.axs, Addressing.immediate),
+    0xab.U(8.W) -> (Instruction.lax, Addressing.immediate),
     0xa3.U(8.W) -> (Instruction.lax, Addressing.xIndexedIndirect),
     0xa7.U(8.W) -> (Instruction.lax, Addressing.zeroPage),
     0xaf.U(8.W) -> (Instruction.lax, Addressing.absolute),
