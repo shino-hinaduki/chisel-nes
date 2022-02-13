@@ -3,7 +3,8 @@ package board
 import chisel3._
 import common.TriState
 
-/** DE0-CVのボード定義
+/** 
+  * DE0-CVのボード定義
   * 他のボードへのポーティングが必要であれば、Config等でtop自体を切り替える必要がある
   */
 class BoardIO extends Bundle {

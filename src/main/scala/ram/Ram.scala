@@ -3,19 +3,20 @@ package ram
 import chisel3._
 import common.TriState
 
-/** 6116 5V 2K x 8 Asynchronous Static RAM
-  * WRAM, VRAMがこれを使用している
-  * 
-  * Truth Table
-  * | Mode    | /CS | /OE | /WE | I/O    |
-  * | Standby | H   | X   | X   | High-Z |
-  * | Read    | L   | L   | H   | Dout   |
-  * | Read    | L   | H   | H   | High-Z |
-  * | Write   | L   | X   | L   | Din    |
-  * 
-  * /WE=LであればWrite Modeになっており、Write優先のロジックになっている
-  * /WE=H, /CS=LであればReadだが、/OE次第でDout, High-Zが決定する
-  */
+/** 
+ * 6116 5V 2K x 8 Asynchronous Static RAM
+ * WRAM, VRAMがこれを使用している
+ * 
+ * Truth Table
+ * | Mode    | /CS | /OE | /WE | I/O    |
+ * | Standby | H   | X   | X   | High-Z |
+ * | Read    | L   | L   | H   | Dout   |
+ * | Read    | L   | H   | H   | High-Z |
+ * | Write   | L   | X   | L   | Din    |
+ * 
+ * /WE=LであればWrite Modeになっており、Write優先のロジックになっている
+ * /WE=H, /CS=LであればReadだが、/OE次第でDout, High-Zが決定する
+ */
 class Ram extends Module {
   val io = IO(new Bundle {
     val addr          = Input(UInt(11.W))

@@ -4,6 +4,7 @@ import chisel3._
 import chisel3.util.Cat
 
 import common.TriState
+import types.BusIO
 
 /** Address Bus/Data Busの調停を行う
  *  execute > interrupt > fetchの優先度で調停する想定

@@ -2,8 +2,9 @@ package cpu.register
 
 import chisel3._
 
-/** Processor Status Register
-  */
+/** 
+ * Processor Status Register
+ */
 class ProcessorStatus extends Bundle {
   val negative  = Bool()
   val overflow  = Bool()

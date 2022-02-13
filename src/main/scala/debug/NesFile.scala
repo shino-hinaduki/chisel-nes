@@ -5,8 +5,9 @@ import chisel3.experimental.ChiselEnum
 import java.nio.file.Files
 import java.nio.file.Paths
 
-/** NameTableMirroringの設定を示す
-  */
+/** 
+ * NameTableMirroringの設定を示す
+ */
 object NameTableMirror extends ChiselEnum {
   val Unknown      = Value(0x0.U)
   val Horizontal   = Value(0x1.U)
@@ -15,8 +16,9 @@ object NameTableMirror extends ChiselEnum {
   val FourScreen   = Value(0x4.U)
 }
 
-/** .NES fileの解析に必要な機能を提供します
-  */
+/**
+ * .NES fileの解析に必要な機能を提供します
+ */
 object NesFile {
   // .NES先頭4byteを検査します
   def isValidHeader(byteArr: Array[Byte]) = {
@@ -24,28 +26,29 @@ object NesFile {
   }
 }
 
-/** .NES fileのParse内容を示す
+/** 
+ *.NES fileのParse内容を示す
  * 
-  * - 16byte           : header
-  *   - 0~3 : identify "0x4e, 0x45, 0x53, 0x1a"
-  *   - 4   : PRG ROM Bank数
-  *   - 5   : CHR ROM Bank数
-  *   - 6,7 : config
-  *     - 0    : Mirroring
-  *     - 1    : Battery-Back RAM有無
-  *     - 2    : 512byte trainer有無
-  *     - 3    : Mirroring無効化して4画面VRAMを利用
-  *     - 4~15 : Mapper
-  *   -  8    : PRG-RAM Bank数
-  *   -  9    : TV System
-  *   - 10    : TV System PRG-RAM
-  *   - 11~15 : reserved
-  * - 0byte or 512byte : Trainer Data
-  * - 16KiB * N byte   : PRG ROM Data
-  * -  8KiB * N byte   : CHR ROM Data
-  * - 0 or 8KiB        : INST-ROM    
-  * - 16byte           : PROM        
-  */
+ * - 16byte           : header
+ *   - 0~3 : identify "0x4e, 0x45, 0x53, 0x1a"
+ *   - 4   : PRG ROM Bank数
+ *   - 5   : CHR ROM Bank数
+ *   - 6,7 : config
+ *     - 0    : Mirroring
+ *     - 1    : Battery-Back RAM有無
+ *     - 2    : 512byte trainer有無
+ *     - 3    : Mirroring無効化して4画面VRAMを利用
+ *     - 4~15 : Mapper
+ *   -  8    : PRG-RAM Bank数
+ *   -  9    : TV System
+ *   - 10    : TV System PRG-RAM
+ *   - 11~15 : reserved
+ * - 0byte or 512byte : Trainer Data
+ * - 16KiB * N byte   : PRG ROM Data
+ * -  8KiB * N byte   : CHR ROM Data
+ * - 0 or 8KiB        : INST-ROM    
+ * - 16byte           : PROM        
+ */
 class NesFile(val srcBytes: Array[Byte]) {
   def this(filePath: String) = {
     this(Files.readAllBytes(Paths.get(filePath)))

@@ -3,9 +3,10 @@ package board
 import chisel3._
 import chisel3.util.MuxLookup
 
-/** ボード上に乗っている7seg decoderを使う用
+/** 
+ *ボード上に乗っている7seg decoderを使う用
  * @param isActiveLog 負論理ならtrue
-  */
+ */
 object SevenSegmentLed {
   // gfedcbaの並び順
   val lookupTable: Seq[(UInt, UInt)] = Seq(
@@ -29,21 +30,23 @@ object SevenSegmentLed {
   // 全消灯
   val offPattern = "b0000000".asUInt(7.W)
 
-  /** 1桁の16進数の数値を点灯パターンに変換します
-    * @param num 表示する数値
-    * @param isActiveLow 負論理ならtrue
-    * @return
-    */
+  /**
+   * 1桁の16進数の数値を点灯パターンに変換します
+   * @param num 表示する数値
+   * @param isActiveLow 負論理ならtrue
+   * @return
+   */
   def decode(num: UInt, isActiveLow: Boolean = false): UInt =
     if (isActiveLow) ~MuxLookup(num, offPattern, lookupTable)
     else MuxLookup(num, offPattern, lookupTable)
 
-  /** 複数桁の16進数の数値を点灯パターンに変換します
-    * @param num 表示する数値
-    * @param ledNum 7segの個数。1個あたり4bit
-    * @param isActiveLow 負論理ならtrue
-    * @return
-    */
+  /** 
+   *複数桁の16進数の数値を点灯パターンに変換します
+   * @param num 表示する数値
+   * @param ledNum 7segの個数。1個あたり4bit
+   * @param isActiveLow 負論理ならtrue
+   * @return
+   */
   def decodeNDigits(num: UInt, ledNum: Int, isActiveLow: Boolean = false): Seq[UInt] =
     (0 until ledNum).map(i => {
       val widthPerDigit = 4

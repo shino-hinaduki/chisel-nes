@@ -2,12 +2,16 @@ package cpu
 
 import chisel3._
 import chisel3.experimental.ChiselEnum
-
-import _root_.bus.BusIO
-import cpu.types.Addressing
 import chisel3.util.switch
 import chisel3.util.is
 import chisel3.util.Cat
+
+import _root_.bus.types.BusIO
+import cpu.types.Addressing
+import cpu.types.OperandFetchIO
+import cpu.register.IndexRegister
+import cpu.addressing._
+import cpu.addressing.Process._
 
 /** OperandFetch状況を示します
  */
@@ -19,39 +23,8 @@ object OperandFetchStatus extends ChiselEnum {
   val idle, readOperand, readPointer, readData = Value
 }
 
-/** OperandFetchする機能を提供する, 使う側はFlippedして使う
- */
-class OperandFetchControl extends Bundle {
-  // 立ち上がり変化で要求する, busyが解除されるまで入力データ保持が必要
-  val reqStrobe = Input(Bool())
-  // 命令が配置されていたアドレス
-  val opcodeAddr = Input(UInt(16.W))
-  // Decodeした命令のアドレッシング方式
-  val addressing = Input(Addressing())
-  // アドレスを求めるだけであればfalse(メモリ転送系の命令など)、それ以外はtrue
-  val reqDataFetch = Input(Bool())
-  // A reg。そのまま見せれば良い
-  val a = Input(UInt(8.W))
-  // X reg。そのまま見せれば良い
-  val x = Input(UInt(8.W))
-  // Y reg。そのまま見せれば良い
-  val y = Input(UInt(8.W))
-
-  // 処理中であればtrue, この状態ではreqStrobeを受け付けない
-  val busy = Output(Bool())
-  // 処理完了後、有効なデータになっていればtrue。reqStrobeから最短1cycで出力
-  val valid = Output(Bool())
-  // 対象のアドレス
-  val dstAddr = Output(UInt(16.W))
-  // 読みだした結果。reqReadDataがfalseの場合はDon't care
-  val readData = Output(UInt(16.W))
-  // dstAddrに有効なデータが入っていればtrue. A regを参照してほしい場合はfalse
-  val dstAddrValid = Output(Bool())
-  // readDataに有効なデータが入っていればtrue. Implied, Accumulate, MemWrite系の命令だとfalse
-  val readDataValid = Output(Bool())
-}
-
-/** 指定されたAddressing modeに従ってデータを読み出します
+/**
+ * 指定されたAddressing modeに従ってデータを読み出します
  * @param resetOnPanic 想定していない挙動に陥ったときに放置せずにOFをリセットする
  */
 class OperandFetch(resetOnPanic: Boolean) extends Module {
@@ -61,7 +34,7 @@ class OperandFetch(resetOnPanic: Boolean) extends Module {
     // Addr/Data BusMaster
     val busMaster = Flipped(new BusIO())
     // OperandFetch制御用
-    val control = new OperandFetchControl
+    val control = new OperandFetchIO
   })
 
   // 内部
@@ -104,7 +77,7 @@ class OperandFetch(resetOnPanic: Boolean) extends Module {
 
   /* 出力レジスタ関連 */
   // 出力レジスタを初期化
-  def clearResult(isValid: Bool) = {
+  protected def clearResult(isValid: Bool) = {
     validReg         := isValid
     dstAddrReg       := 0.U
     readDataReg      := 0.U
@@ -113,7 +86,7 @@ class OperandFetch(resetOnPanic: Boolean) extends Module {
     readTmpRegs foreach { _ := 0.U }
   }
   // 出力レジスタに結果を設定
-  def setResult(dstAddr: Option[UInt], readData: Option[UInt]) = {
+  protected def setResult(dstAddr: Option[UInt], readData: Option[UInt]) = {
     validReg := true.B
     dstAddr match {
       // 有効データ
@@ -143,7 +116,7 @@ class OperandFetch(resetOnPanic: Boolean) extends Module {
     readTmpRegs foreach { r => r := r }
   }
   // 出力レジスタの結果保持
-  def keepResult() = {
+  protected def keepResult() = {
     validReg         := validReg
     dstAddrReg       := dstAddrReg
     readDataReg      := readDataReg
@@ -154,40 +127,37 @@ class OperandFetch(resetOnPanic: Boolean) extends Module {
 
   /* Read関連 */
   // BusMasterのRead要求をクリア
-  def clearReadReq() = {
+  protected def clearReadReq() = {
     reqReadReg          := false.B
     readReqAddrReg      := 0.U
     currentReadCountReg := 0.U
     totalReadCountReg   := 0.U
   }
   // BusMasterにRead要求を設定
-  def setReadReq(addr: UInt, totalCount: Option[UInt]) = {
-    reqReadReg     := true.B
-    readReqAddrReg := addr
-    totalCount match {
-      // 新規Read
-      case Some(count) => {
-        currentReadCountReg := 1.U
-        totalReadCountReg   := count
-      }
-      // 継続
-      case None => {
-        currentReadCountReg := currentReadCountReg + 1.U // increment
-        totalReadCountReg   := totalReadCountReg         // 据え置き
-      }
-    }
+  protected def setReadReq(addr: UInt, totalCount: UInt) = {
+    reqReadReg          := true.B
+    readReqAddrReg      := addr
+    currentReadCountReg := 1.U
+    totalReadCountReg   := totalCount
+  }
+  // カウントはクリアせずに次のReadを要求
+  protected def continueReadReq(addr: UInt) = {
+    assert(currentReadCountReg < totalReadCountReg) // 超えることはないはず
+
+    reqReadReg          := true.B
+    readReqAddrReg      := addr
+    currentReadCountReg := currentReadCountReg + 1.U // increment
+    totalReadCountReg   := totalReadCountReg         // 据え置き
   }
   // Read要求を保持
-  def keepReadReq() = {
+  protected def keepReadReq() = {
     reqReadReg          := reqReadReg
     readReqAddrReg      := readReqAddrReg
     currentReadCountReg := currentReadCountReg
     totalReadCountReg   := totalReadCountReg
   }
-
-  /* OF完了関連 */
   // status, 出力レジスタ、Read要求ともにクリアする
-  def resetAndDone(isIllegal: Boolean) = {
+  protected def doReset(isIllegal: Boolean) = {
     // sim時は止める。それ以外はデバッグレジスタに残す
     assert(!isIllegal, "illegal state")
     if (isIllegal) {
@@ -201,17 +171,63 @@ class OperandFetch(resetOnPanic: Boolean) extends Module {
       clearReadReq()
     }
   }
-  // アドレスだけ報告して完了する
-  def reportAddrAndDone(addr: UInt) = {
-    statusReg := OperandFetchStatus.idle
-    setResult(Some(addr), None)
-    clearReadReq()
-  }
-  // 現在読みだしたアドレスとデータを報告して完了する
-  def reportCurrentReadDataAndDone() = {
-    statusReg := OperandFetchStatus.idle
-    setResult(Some(readReqAddrReg), Some(io.busMaster.dataOut)) // 現在の結果
-    clearReadReq()
+
+  /* 実装するAddressing Modeの定義 */
+  // 使用可能なAddressing Mode
+  val addressingImpls: Seq[AddressingImpl] = Seq(
+    new InvalidImpl(),
+    new ImpliedImpl(),
+    new AccumulatorImpl(),
+    new ImmediateImpl(),
+    new AbsoluteImpl(),
+    new ZeroPageImpl(),
+    new IndexedZeroPageImpl(IndexRegister.X()),
+    new IndexedZeroPageImpl(IndexRegister.Y()),
+    new IndexedAbsoluteImpl(IndexRegister.X()),
+    new IndexedAbsoluteImpl(IndexRegister.Y()),
+    new RelativeImpl(),
+    new IndirectImpl(),
+    new XIndexedIndirectImpl(),
+    new IndirectYIndexedImpl(),
+  )
+  // AddressingImplの戻り値をもとに処理を行う
+  protected def doAddressingProcess(p: addressing.Process) = p match {
+    case Clear(isIllegal) => {
+      doReset(isIllegal = isIllegal)
+    }
+    case ReadOperand(addr, length) => {
+      statusReg := OperandFetchStatus.readOperand
+      clearResult(isValid = false.B) // Read初回なので結果クリアを兼ねる
+      setReadReq(addr, length)
+    }
+    case ReadPointer(addr, length) => {
+      statusReg := OperandFetchStatus.readPointer
+      setReadReq(addr, length)
+    }
+    case ReadData(addr, length) => {
+      statusReg := OperandFetchStatus.readData
+      setReadReq(addr, length)
+    }
+    case ReportAddr(addr) => {
+      statusReg := OperandFetchStatus.idle
+      setResult(Some(addr), None)
+      clearReadReq()
+    }
+    case ReportData(data) => {
+      statusReg := OperandFetchStatus.idle
+      setResult(None, Some(data))
+      clearReadReq()
+    }
+    case ReportFull(addr, data) => {
+      statusReg := OperandFetchStatus.idle
+      setResult(Some(addr), Some(data))
+      clearReadReq()
+    }
+    case ReportNone() => {
+      statusReg := OperandFetchStatus.idle
+      setResult(None, None)
+      clearReadReq()
+    }
   }
 
   /* ロジック本体 */
@@ -225,88 +241,11 @@ class OperandFetch(resetOnPanic: Boolean) extends Module {
       clearReadReq() // read要求はいらないので念の為クリア
     }.otherwise {
       // idle->read開始
-      switch(io.control.addressing) {
-        // 初期値に戻す, validRegも立てない
-        is(Addressing.invalid) {
-          resetAndDone(isIllegal = true)
-        }
-        // 処理不要
-        is(Addressing.implied) {
-          statusReg := OperandFetchStatus.idle // 完了
-          clearResult(true.B)
-          clearReadReq()
-        }
-        // データだけ載せて完了
-        is(Addressing.accumulator) {
-          statusReg := OperandFetchStatus.idle // 完了
-          setResult(None, Some(io.control.a))
-          clearReadReq()
-        }
-        // OpCodeの次のデータが即値
-        is(Addressing.immediate) {
-          statusReg := OperandFetchStatus.readOperand
-          clearResult(false.B)
-          setReadReq(io.control.opcodeAddr + 1.U, Some(1.U))
-        }
-        // lower,upper
-        is(Addressing.absolute) {
-          statusReg := OperandFetchStatus.readOperand
-          clearResult(false.B)
-          setReadReq(io.control.opcodeAddr + 1.U, Some(2.U))
-        }
-        // lowerのみ
-        is(Addressing.zeroPage) {
-          statusReg := OperandFetchStatus.readOperand
-          clearResult(false.B)
-          setReadReq(io.control.opcodeAddr + 1.U, Some(1.U))
-        }
-        // lowerのみ
-        is(Addressing.xIndexedZeroPage) {
-          statusReg := OperandFetchStatus.readOperand
-          clearResult(false.B)
-          setReadReq(io.control.opcodeAddr + 1.U, Some(1.U))
-        }
-        // lowerのみ
-        is(Addressing.yIndexedZeroPage) {
-          statusReg := OperandFetchStatus.readOperand
-          clearResult(false.B)
-          setReadReq(io.control.opcodeAddr + 1.U, Some(1.U))
-        }
-        // lower,upper
-        is(Addressing.xIndexedAbsolute) {
-          statusReg := OperandFetchStatus.readOperand
-          clearResult(false.B)
-          setReadReq(io.control.opcodeAddr + 1.U, Some(2.U))
-        }
-        // lower,upper
-        is(Addressing.yIndexedAbsolute) {
-          statusReg := OperandFetchStatus.readOperand
-          clearResult(false.B)
-          setReadReq(io.control.opcodeAddr + 1.U, Some(2.U))
-        }
-        // offsetのみ
-        is(Addressing.relative) {
-          statusReg := OperandFetchStatus.readOperand
-          clearResult(false.B)
-          setReadReq(io.control.opcodeAddr + 1.U, Some(1.U))
-        }
-        // lower,upper
-        is(Addressing.indirect) {
-          statusReg := OperandFetchStatus.readOperand
-          clearResult(false.B)
-          setReadReq(io.control.opcodeAddr + 1.U, Some(2.U))
-        }
-        // lowerのみ
-        is(Addressing.xIndexedIndirect) {
-          statusReg := OperandFetchStatus.readOperand
-          clearResult(false.B)
-          setReadReq(io.control.opcodeAddr + 1.U, Some(1.U))
-        }
-        // lowerのみ
-        is(Addressing.indirectYIndexed) {
-          statusReg := OperandFetchStatus.readOperand
-          clearResult(false.B)
-          setReadReq(io.control.opcodeAddr + 1.U, Some(1.U))
+      addressingImpls foreach { impl =>
+        when(io.control.addressing === impl.addressing) {
+          // 対象のAddressing Modeのコマンドを取り出して処理を行う
+          val p = impl.onRequest(reqReadData = io.control.reqDataFetch.litToBoolean, opcodeAddr = io.control.opcodeAddr, reg = io.control.cpuReg)
+          doAddressingProcess(p)
         }
       }
     }
@@ -318,76 +257,54 @@ class OperandFetch(resetOnPanic: Boolean) extends Module {
       keepReadReq()
     }.otherwise {
       // 今回のRead結果を保持, 本cycleで参照するならbusMaster.dataOutを直に見ること
-      val readData1Req = Cat(0.U(8.W), io.busMaster.dataOut)       // Immediate, ZeroPage, Relative (上と同じだが2byte)
-      val readData2Req = Cat(io.busMaster.dataOut, readTmpRegs(0)) // Absolute, Indirect
       switch(currentReadCountReg) {
-        is(0.U) {} // 要求時にインクリメント済
+        is(0.U) { assert(false, "illegal state") } // 要求時にインクリメント済
         is(1.U) { readTmpRegs(0) := io.busMaster.dataOut }
         is(2.U) { readTmpRegs(1) := io.busMaster.dataOut } // for debug
         is(3.U) { assert(false, "illegal state") }
+      }
+      // 今回の参照用
+      val readData: UInt = currentReadCountReg.litValue.toInt match {
+        case 1 => Cat(0.U(8.W), io.busMaster.dataOut)       // {   $00, lower}: Immediate, ZeroPage, Relative
+        case 2 => Cat(io.busMaster.dataOut, readTmpRegs(0)) // { upper, lower}: Absolute, Indirect
+        case _ => {
+          assert(false, "illegal state")
+          0.U
+        }
       }
 
       // Read進捗で分岐
       when(currentReadCountReg < totalReadCountReg) {
         // Burst継続、次のアドレスに要求を出す
-        setReadReq(readReqAddrReg + 1.U, None)
+        continueReadReq(readReqAddrReg + 1.U)
       }.otherwise {
-        // 処理ごと、Read進捗ごとに分岐
-        switch(io.control.addressing) {
-          // 想定外の挙動, idleに戻す
-          is(Addressing.invalid) {
-            resetAndDone(isIllegal = true)
-          }
-          // 想定外の挙動, idleに戻す
-          is(Addressing.implied) {
-            resetAndDone(isIllegal = true)
-          }
-          // 想定外の挙動, idleに戻す
-          is(Addressing.accumulator) {
-            resetAndDone(isIllegal = true)
-          }
-          // 読みだした結果をそのまま報告して完了
-          is(Addressing.immediate) {
-            assert(statusReg === OperandFetchStatus.readOperand)
-            reportCurrentReadDataAndDone()
-          }
-          // Lower,Higherでアドレスは完成
-          is(Addressing.absolute) {
+        // 対象のAddressingImplに処理させる
+        addressingImpls foreach { impl =>
+          when(io.control.addressing === impl.addressing) {
+            // Readしている目的で分岐し、後の処理はAddressing Modeの実装に委ねる
             switch(statusReg) {
               is(OperandFetchStatus.idle) {
-                resetAndDone(isIllegal = true)
+                // Read中にIdleにはならないはず
+                doReset(isIllegal = true)
               }
               is(OperandFetchStatus.readOperand) {
-                when(io.control.reqDataFetch) {
-                  // 読みだしたアドレスにReadをかける
-                  statusReg := OperandFetchStatus.readData
-                  setReadReq(readData2Req, Some(1.U))
-                }.otherwise {
-                  // データ読み出しがなければアドレスを報告して終わり
-                  reportAddrAndDone(readData2Req)
-                }
+                val p = impl.doneReadOperand(reqReadData = io.control.reqDataFetch.litToBoolean, opcodeAddr = io.control.opcodeAddr, reg = io.control.cpuReg, readData = readData)
+                doAddressingProcess(p)
               }
               is(OperandFetchStatus.readPointer) {
-                resetAndDone(isIllegal = true)
+                val p = impl.doneReadPointer(reqReadData = io.control.reqDataFetch.litToBoolean, opcodeAddr = io.control.opcodeAddr, reg = io.control.cpuReg, readData = readData)
+                doAddressingProcess(p)
               }
               is(OperandFetchStatus.readData) {
-                // 現在読み出しているアドレスとデータを報告
-                reportCurrentReadDataAndDone()
+                val p = impl.doneReadData(opcodeAddr = io.control.opcodeAddr, reg = io.control.cpuReg, readAddr = readReqAddrReg, readData = readData)
+                doAddressingProcess(p)
               }
             }
           }
-          is(Addressing.zeroPage) {}
-          is(Addressing.xIndexedZeroPage) {}
-          is(Addressing.yIndexedZeroPage) {}
-          is(Addressing.xIndexedAbsolute) {}
-          is(Addressing.yIndexedAbsolute) {}
-          is(Addressing.relative) {}
-          is(Addressing.indirect) {}
-          is(Addressing.xIndexedIndirect) {}
-          is(Addressing.indirectYIndexed) {}
         }
       }
 
     }
   }
+
 }

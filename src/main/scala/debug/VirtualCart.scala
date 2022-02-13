@@ -2,9 +2,10 @@ package debug
 
 import chisel3._
 
-/** Mapper機能をサポートしない、単純なカードリッジの模倣IP
-  * @param initNesFilePath 初期値として読み込む.NES File
-  */
+/**
+ * Mapper機能をサポートしない、単純なカードリッジの模倣IP
+ * @param initNesFilePath 初期値として読み込む.NES File
+ */
 class VirtualCart(val initNesFilePath: String) extends Module {
   val io = IO(new Bundle {
     // TODO: 定義

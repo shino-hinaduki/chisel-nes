@@ -3,6 +3,7 @@ package bus
 import chisel3._
 import chiseltest._
 import org.scalatest.freespec.AnyFreeSpec
+import bus.types.BusIO
 
 class BusArbiterSpec extends AnyFreeSpec with ChiselScalatestTester {
   /* Bus Mater: 設定 */
