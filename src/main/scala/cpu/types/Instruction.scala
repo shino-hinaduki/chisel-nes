@@ -31,5 +31,5 @@ object Instruction extends ChiselEnum {
   // other
   val brk, bit, nop = Value
   // unofficial1
-  val alr, anc, arr, xaa, axs, lax, las, sax, shx, ahx, tas, shy, dcp, isc, rla, rra, slo, sre, halt = Value
+  val alr, anc, anc2, sbc2, arr, xaa, axs, lax, lax2, las, sax, shx, ahx, tas, shy, dcp, isc, rla, rra, slo, sre, halt = Value
 }

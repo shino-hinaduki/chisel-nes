@@ -9,11 +9,102 @@ import cpu.types.Instruction
  * 命令が可変長で8bit BusでOFで複数回Readが必要なことから IF->ID->OFはpipeline化しない。
  */
 object InstructionDecode {
-  // opcode -> Instructionの対応を取得する
+  /* opcode -> Instructionの対応を取得 */
   def lookUpTableForInstruction(): Seq[(UInt, Instruction.Type)] = InstructionDecode.lookUpTable.map { case (opcode, (instruction, addressing)) => opcode -> instruction }
-  // opcode -> Addressingの対応を取得する
+
+  /* opcode -> Addressingの対応を取得 */
   def lookUpTableForAddressing(): Seq[(UInt, Addressing.Type)] = InstructionDecode.lookUpTable.map { case (opcode, (instruction, addressing)) => opcode -> addressing }
-  // Opcodeと命令/アドレッシングモードの対応
+
+  /* OperandFetchで求めたアドレスに対する事前のDataReadが必要であればtrueを返す */
+  def needDataReadInOperandFetch(inst: Instruction.Type, addressing: Addressing.Type): Boolean = (inst, addressing) match {
+    // 不要なもの、Aregを使うものなどは事前に除外
+    case (_, Addressing.implied)     => false
+    case (_, Addressing.accumulator) => false // A regの値を使うので不要
+    case (_, Addressing.immediate)   => false // opcodeの後ろの値
+    case (_, Addressing.relative)    => false // PC := PC+offsetなので不要
+    // Logical, Arithmetic
+    case (Instruction.ora, _) => true  // A := A | (*addr)
+    case (Instruction.and, _) => true  // A := A & (*addr)
+    case (Instruction.eor, _) => true  // A := A ^ (*addr)
+    case (Instruction.adc, _) => true  // A := A + (*addr)
+    case (Instruction.sbc, _) => true  // A := A - (*addr)
+    case (Instruction.cmp, _) => true  // A == (*addr)
+    case (Instruction.cpx, _) => true  // X == (*addr)
+    case (Instruction.cpy, _) => true  // Y == (*addr)
+    case (Instruction.dec, _) => true  // (*addr) := (*addr) - 1
+    case (Instruction.dex, _) => false // X       := X       - 1
+    case (Instruction.dey, _) => false // Y       := Y       - 1
+    case (Instruction.asl, _) => true  // (*addr) := (*addr) << 1
+    case (Instruction.rol, _) => true  // (*addr) := ((*addr) << 1) | (carry ? 0x01 : 0x00)
+    case (Instruction.lsr, _) => true  // (*addr) := (*addr) >> 1
+    case (Instruction.ror, _) => true  // (*addr) := ((*addr) >> 1) | (carry ? 0x80 : 0x00)
+    // Move
+    case (Instruction.lda, _) => true  // A       := (*addr)
+    case (Instruction.sta, _) => false // (*addr) := A
+    case (Instruction.ldx, _) => true  // X       := (*addr)
+    case (Instruction.stx, _) => false // (*addr) := X
+    case (Instruction.ldy, _) => true  // X       := (*addr)
+    case (Instruction.sty, _) => false // (*addr) := X
+    case (Instruction.tax, _) => false // X       := A
+    case (Instruction.txa, _) => false // A       := X
+    case (Instruction.tay, _) => false // Y       := A
+    case (Instruction.tya, _) => false // A       := Y
+    case (Instruction.tsx, _) => false // X       := S
+    case (Instruction.txs, _) => false // S       := X
+    case (Instruction.pla, _) => false // sp++, A := (*sp)
+    case (Instruction.pha, _) => false // (*sp)   := A    , sp--
+    case (Instruction.plp, _) => false // sp++, P := (*sp)
+    case (Instruction.php, _) => false // (*sp)   := P    , sp--
+    // Jump, Flag
+    case (Instruction.bpl, _) => false // branch on negative==0
+    case (Instruction.bmi, _) => false // branch on negative==1
+    case (Instruction.bvc, _) => false // branch on overflow==0
+    case (Instruction.bvs, _) => false // branch on overflow==1
+    case (Instruction.bcc, _) => false // branch on carry==0
+    case (Instruction.bcs, _) => false // branch on carry==1
+    case (Instruction.bne, _) => false // branch on zero==0
+    case (Instruction.beq, _) => false // branch on zero==1
+    case (Instruction.brk, _) => false // (*sp) := pc, sp--, (*sp) := p, pc := 0xfffe
+    case (Instruction.rti, _) => false // p := (*sp), sp++, pc := (*sp), sp++
+    case (Instruction.jsr, _) => true  // (*sp) := pc, sp--, pc := (*addr)
+    case (Instruction.rts, _) => false // sp++, pc := (*sp)
+    case (Instruction.jmp, _) => true  // pc := (*addr)
+    case (Instruction.bit, _) => true  // negative := ((*addr) >> 7) & 0x1, overflow := ((*addr) >> 6) & 0x1, zero := (A & (*addr)) != 0
+    case (Instruction.clc, _) => false // carry=0
+    case (Instruction.sec, _) => false // carry=1
+    case (Instruction.cld, _) => false // decimal=0
+    case (Instruction.sed, _) => false // decimal=1
+    case (Instruction.cli, _) => false // interrupt=0
+    case (Instruction.sei, _) => false // interrupt=1
+    case (Instruction.clv, _) => false // overflow=0
+    case (Instruction.nop, _) => false // no operation
+    // Illegal
+    case (Instruction.slo, _)  => true  // ASL + ORA
+    case (Instruction.rla, _)  => true  // ROL + AND
+    case (Instruction.sre, _)  => true  // LSR + EOR
+    case (Instruction.rra, _)  => true  // ROR + ADC
+    case (Instruction.sax, _)  => false // (*addr) := A & X
+    case (Instruction.lax, _)  => true  // LDA + LDX
+    case (Instruction.dcp, _)  => true  // DEC + CMP
+    case (Instruction.isc, _)  => true  // INC + SBC
+    case (Instruction.anc, _)  => false // (Imm Only)
+    case (Instruction.anc2, _) => false // (Imm Only)
+    case (Instruction.alr, _)  => false // (Imm Only)
+    case (Instruction.arr, _)  => false // (Imm Only)
+    case (Instruction.xaa, _)  => false // (Imm Only)
+    case (Instruction.lax2, _) => false // (Imm Only)
+    case (Instruction.axs, _)  => false // (Imm Only)
+    case (Instruction.sbc2, _) => false // (Imm Only)
+    case (Instruction.ahx, _)  => false //
+    case (Instruction.shy, _)  => false //
+    case (Instruction.shx, _)  => false //
+    case (Instruction.tas, _)  => false //
+    case (Instruction.las, _)  => true  // LDA + TSX
+    // default
+    case _ => true
+  }
+
+  /* Opcodeと命令/アドレッシングモードの対応 */
   def lookUpTable: Seq[(UInt, (Instruction.Type, Addressing.Type))] = Seq(
     // binary
     0x69.U(8.W) -> (Instruction.adc, Addressing.immediate),
@@ -191,11 +282,11 @@ object InstructionDecode {
     // undocumented
     0x4b.U(8.W) -> (Instruction.alr, Addressing.immediate),
     0x0b.U(8.W) -> (Instruction.anc, Addressing.immediate),
-    0x2b.U(8.W) -> (Instruction.anc, Addressing.immediate),
+    0x2b.U(8.W) -> (Instruction.anc2, Addressing.immediate),
     0x6b.U(8.W) -> (Instruction.arr, Addressing.immediate),
     0x8b.U(8.W) -> (Instruction.xaa, Addressing.immediate),
     0xcb.U(8.W) -> (Instruction.axs, Addressing.immediate),
-    0xab.U(8.W) -> (Instruction.lax, Addressing.immediate),
+    0xab.U(8.W) -> (Instruction.lax2, Addressing.immediate),
     0xa3.U(8.W) -> (Instruction.lax, Addressing.xIndexedIndirect),
     0xa7.U(8.W) -> (Instruction.lax, Addressing.zeroPage),
     0xaf.U(8.W) -> (Instruction.lax, Addressing.absolute),
@@ -281,7 +372,7 @@ object InstructionDecode {
     0x57.U(8.W) -> (Instruction.sre, Addressing.xIndexedZeroPage),
     0x5b.U(8.W) -> (Instruction.sre, Addressing.yIndexedAbsolute),
     0x5f.U(8.W) -> (Instruction.sre, Addressing.xIndexedAbsolute),
-    0xeb.U(8.W) -> (Instruction.sbc, Addressing.immediate),
+    0xeb.U(8.W) -> (Instruction.sbc2, Addressing.immediate),
 
     // illegal
     0x02.U(8.W) -> (Instruction.halt, Addressing.invalid),
