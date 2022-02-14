@@ -264,7 +264,7 @@ object InstructionDecode {
     0x78.U(8.W) -> (Instruction.sei, Addressing.implied),
     0xb8.U(8.W) -> (Instruction.clv, Addressing.implied),
     0xea.U(8.W) -> (Instruction.nop, Addressing.implied),
-    // Jump, Flag
+    // Illegal
     0x03.U(8.W) -> (Instruction.slo, Addressing.xIndexedIndirect),
     0x07.U(8.W) -> (Instruction.slo, Addressing.zeroPage),
     0x0f.U(8.W) -> (Instruction.slo, Addressing.absolute),
