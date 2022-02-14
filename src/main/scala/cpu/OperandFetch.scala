@@ -20,7 +20,8 @@ object OperandFetchStatus extends ChiselEnum {
   // readOperand : OpCode後のデータを読み出し中
   // readPointer : (Indirect系のみ) アドレス取得のためのRAM Read
   // readData    : (redDataFetch=true時のみ、かつImmediate/Accumulate以外) データ取得のためのRAM Read
-  val idle, readOperand, readPointer, readData = Value
+  // delay       : readDataの報告を行うが、validを建てるのを1cyc遅らせる
+  val idle, readOperand, readPointer, readData, delayReport = Value
 }
 
 /**
@@ -86,8 +87,8 @@ class OperandFetch(resetOnPanic: Boolean) extends Module {
     readTmpRegs foreach { _ := 0.U }
   }
   // 出力レジスタに結果を設定
-  protected def setResult(dstAddr: Option[UInt], readData: Option[UInt]) = {
-    validReg := true.B
+  protected def setResult(valid: Bool, dstAddr: Option[UInt], readData: Option[UInt]) = {
+    validReg := valid
     dstAddr match {
       // 有効データ
       case Some(addr) => {
@@ -114,6 +115,10 @@ class OperandFetch(resetOnPanic: Boolean) extends Module {
     }
     // 結果を出すときに明示する必要はないので保持
     readTmpRegs foreach { r => r := r }
+  }
+  // valid regだけ設定する(delay用)
+  protected def setValid(valid: Bool) = {
+    validReg := valid
   }
   // 出力レジスタの結果保持
   protected def keepResult() = {
@@ -210,22 +215,27 @@ class OperandFetch(resetOnPanic: Boolean) extends Module {
     }
     case ReportAddr(addr) => {
       statusReg := OperandFetchStatus.idle
-      setResult(Some(addr), None)
+      setResult(true.B, Some(addr), None)
       clearReadReq()
     }
     case ReportData(data) => {
       statusReg := OperandFetchStatus.idle
-      setResult(None, Some(data))
+      setResult(true.B, None, Some(data))
       clearReadReq()
     }
     case ReportFull(addr, data) => {
       statusReg := OperandFetchStatus.idle
-      setResult(Some(addr), Some(data))
+      setResult(true.B, Some(addr), Some(data))
+      clearReadReq()
+    }
+    case ReportFullWithDelay(addr, data) => {
+      statusReg := OperandFetchStatus.delayReport
+      setResult(false.B, Some(addr), Some(data)) // validは立てず、次Cycで建てる
       clearReadReq()
     }
     case ReportNone() => {
       statusReg := OperandFetchStatus.idle
-      setResult(None, None)
+      setResult(true.B, None, None)
       clearReadReq()
     }
   }
@@ -298,6 +308,11 @@ class OperandFetch(resetOnPanic: Boolean) extends Module {
               is(OperandFetchStatus.readData) {
                 val p = impl.doneReadData(opcodeAddr = io.control.opcodeAddr, reg = io.control.cpuReg, readAddr = readReqAddrReg, readData = readData)
                 doAddressingProcess(p)
+              }
+              is(OperandFetchStatus.delayReport) {
+                // valid reg以外は準備できているので結果を報告して終わり
+                statusReg := OperandFetchStatus.idle
+                setValid(true.B)
               }
             }
           }

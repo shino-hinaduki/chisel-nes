@@ -42,5 +42,5 @@ class IndexedZeroPageImpl(val indexReg: IndexRegister) extends AddressingImpl {
     Process.Clear(isIllegal = true)
   // 読み出し先アドレスと読みだしたデータを報告
   override def doneReadData(opcodeAddr: UInt, readAddr: UInt, readData: UInt, reg: CpuRegister): Process =
-    Process.ReportFull(readAddr, readData)
+    Process.ReportFullWithDelay(readAddr, readData) // Index regのAddress Busへの反映遅れから、1cyc遅れる
 }
