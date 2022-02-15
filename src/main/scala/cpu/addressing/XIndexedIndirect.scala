@@ -29,5 +29,5 @@ class XIndexedIndirectImpl extends AddressingImpl {
     }
   // 読み出し先アドレスと読みだしたデータを報告
   override def doneReadData(opcodeAddr: UInt, readAddr: UInt, readData: UInt, reg: CpuRegister): Process =
-    Process.ReportFull(readAddr, readData)
+    Process.ReportFullWithDelay(readAddr, readData) // IndirectYIndexedより1cyc遅い
 }

@@ -58,6 +58,13 @@ object Process {
   case class ReportFull(addr: UInt, data: UInt) extends Process
 
   /**
+  * データを読み出し、アドレスとともに報告するが、Validにするまでに1cyc遅らせる
+  * @param addr 解決したアドレス, 2byte
+  * @param data 読みだしたデータ, 1byte
+  */
+  case class ReportFullWithDelay(addr: UInt, data: UInt) extends Process
+
+  /**
   * 完了したことだけ報告する(Impliedなど)
   */
   case class ReportNone() extends Process
