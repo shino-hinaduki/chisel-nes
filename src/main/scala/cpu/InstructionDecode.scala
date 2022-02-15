@@ -18,6 +18,7 @@ object InstructionDecode {
   /* OperandFetchで求めたアドレスに対する事前のDataReadが必要であればtrueを返す */
   def needDataRead(inst: Instruction.Type, addressing: Addressing.Type): Boolean = (inst, addressing) match {
     // 不要なもの、Aregを使うものなどは事前に除外
+    case (_, Addressing.invalid)     => false
     case (_, Addressing.implied)     => false
     case (_, Addressing.accumulator) => false // A regの値を使うので不要
     case (_, Addressing.immediate)   => false // opcodeの後ろの値
@@ -71,7 +72,7 @@ object InstructionDecode {
     case (Instruction.rti, _) => false // p := (*sp), sp++, pc := (*sp), sp++
     case (Instruction.jsr, _) => true  // (*sp) := pc, sp--, pc := (*addr)
     case (Instruction.rts, _) => false // sp++, pc := (*sp)
-    case (Instruction.jmp, _) => true  // pc := (*addr)
+    case (Instruction.jmp, _) => false // pc := addr
     case (Instruction.bit, _) => true  // negative := ((*addr) >> 7) & 0x1, overflow := ((*addr) >> 6) & 0x1, zero := (A & (*addr)) != 0
     case (Instruction.clc, _) => false // carry=0
     case (Instruction.sec, _) => false // carry=1
