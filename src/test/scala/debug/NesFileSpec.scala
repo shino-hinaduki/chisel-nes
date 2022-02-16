@@ -1,4 +1,4 @@
-package debug
+package cart
 
 import org.scalatest.freespec.AnyFreeSpec
 
