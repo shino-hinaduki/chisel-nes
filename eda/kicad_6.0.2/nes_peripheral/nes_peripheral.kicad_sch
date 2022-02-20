@@ -11768,7 +11768,7 @@
     (uuid 74b4d553-83e0-4956-bbc1-05dc682e5b5a)
     (property "Reference" "J23" (id 0) (at 390.525 27.94 0))
     (property "Value" "FC_CONN" (id 1) (at 390.525 30.48 0))
-    (property "Footprint" "" (id 2) (at 389.255 69.85 0)
+    (property "Footprint" "nes_peripheral:FC_CONN" (id 2) (at 389.255 69.85 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 389.255 69.85 0)
@@ -15011,7 +15011,7 @@
       (reference "J22") (unit 1) (value "CONN_JOY2_MIC") (footprint "Connector_PinSocket_2.54mm:PinSocket_2x01_P2.54mm_Vertical")
     )
     (path "/74b4d553-83e0-4956-bbc1-05dc682e5b5a"
-      (reference "J23") (unit 1) (value "FC_CONN") (footprint "")
+      (reference "J23") (unit 1) (value "FC_CONN") (footprint "nes_peripheral:FC_CONN")
     )
     (path "/515b38b0-91db-4d48-94bf-4f99819ee6ef"
       (reference "J24") (unit 1) (value "CONN_CART_DBG") (footprint "Connector_PinSocket_2.54mm:PinSocket_1x30_P2.54mm_Vertical")
