@@ -1,4 +1,4 @@
-20370997236773860
+20370997260727600
 Audio_Module
 Reverb_BTDR-1H
 Digital Reverberation Unit, http://www.belton.co.kr/inc/downfile.php?seq=17&file=pdf (footprint from http://www.uk-electronic.de/PDF/BTDR-1.pdf)
@@ -86692,8 +86692,8 @@ FC_CONN
 
 
 0
-0
-0
+60
+60
 nes_peripheral
 QFN-16_EP_3x3_Pitch0.5mm
 
