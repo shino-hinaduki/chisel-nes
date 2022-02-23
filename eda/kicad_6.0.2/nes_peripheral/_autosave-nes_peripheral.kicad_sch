@@ -8329,7 +8329,7 @@
     (uuid 2061fd68-fcee-4b43-8c05-63194c3db933)
     (property "Reference" "J34" (id 0) (at 556.514 265.176 0))
     (property "Value" "CONN_JOY1_DBG" (id 1) (at 556.514 267.716 0))
-    (property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_2x07_P2.54mm_Vertical" (id 2) (at 555.244 281.686 0)
+    (property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_2x09_P2.54mm_Vertical" (id 2) (at 555.244 281.686 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 555.244 281.686 0)
@@ -9428,7 +9428,7 @@
     (uuid 655f1b3b-8f04-4735-84ec-2edcae616bf3)
     (property "Reference" "J33" (id 0) (at 556.26 327.66 0))
     (property "Value" "CONN_JOY2_DBG" (id 1) (at 556.26 330.2 0))
-    (property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_2x07_P2.54mm_Vertical" (id 2) (at 554.99 344.678 0)
+    (property "Footprint" "Connector_PinSocket_2.54mm:PinSocket_2x09_P2.54mm_Vertical" (id 2) (at 554.99 344.678 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "~" (id 3) (at 554.99 344.678 0)
@@ -12658,10 +12658,10 @@
       (reference "J31") (unit 1) (value "Screw_Terminal_SPK") (footprint "TerminalBlock:TerminalBlock_bornier-4_P5.08mm")
     )
     (path "/655f1b3b-8f04-4735-84ec-2edcae616bf3"
-      (reference "J33") (unit 1) (value "CONN_JOY2_DBG") (footprint "Connector_PinSocket_2.54mm:PinSocket_2x07_P2.54mm_Vertical")
+      (reference "J33") (unit 1) (value "CONN_JOY2_DBG") (footprint "Connector_PinSocket_2.54mm:PinSocket_2x09_P2.54mm_Vertical")
     )
     (path "/2061fd68-fcee-4b43-8c05-63194c3db933"
-      (reference "J34") (unit 1) (value "CONN_JOY1_DBG") (footprint "Connector_PinSocket_2.54mm:PinSocket_2x07_P2.54mm_Vertical")
+      (reference "J34") (unit 1) (value "CONN_JOY1_DBG") (footprint "Connector_PinSocket_2.54mm:PinSocket_2x09_P2.54mm_Vertical")
     )
     (path "/24f48e35-cc03-4a39-93a5-5ae016295ab9"
       (reference "JP1") (unit 1) (value "GPIO0") (footprint "Connector_PinSocket_2.54mm:PinSocket_2x20_P2.54mm_Vertical")
