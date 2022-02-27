@@ -55,7 +55,13 @@
           "width": 0.0
         }
       ],
-      "drc_exclusions": [],
+      "drc_exclusions": [
+        "courtyards_overlap|103379999|132870001|56b35811-d53a-4e5a-a198-c65e5c0d307e|ff26b5cc-1c50-4009-ac93-35a9f76013e4",
+        "courtyards_overlap|132190001|48180000|31e6c9f5-82ae-4301-bfa0-506b67b64648|fcd6476e-d28b-4f13-a36f-55893046a543",
+        "courtyards_overlap|137154538|135098509|31e6c9f5-82ae-4301-bfa0-506b67b64648|a572d5b5-304e-42ee-bba7-611fb648735b",
+        "courtyards_overlap|45802499|102330001|3d5fc258-4afe-4799-97d4-64e4760fb36d|9d906569-c82f-4a7b-82f0-525e85bf8c99",
+        "courtyards_overlap|75429999|102390001|69ee538e-117b-4a2c-a61c-ca2eaee594f9|7cc20d9f-c39b-401a-9732-3def52d7787e"
+      ],
       "meta": {
         "version": 2
       },
@@ -85,8 +91,8 @@
         "padstack": "error",
         "pth_inside_courtyard": "ignore",
         "shorting_items": "error",
-        "silk_over_copper": "warning",
-        "silk_overlap": "warning",
+        "silk_over_copper": "ignore",
+        "silk_overlap": "ignore",
         "skew_out_of_range": "error",
         "through_hole_pad_without_hole": "error",
         "too_many_vias": "error",
