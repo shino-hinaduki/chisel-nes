@@ -10,16 +10,17 @@ TODO:
 
 TODO:
 
-## EVB for DE0-CV
+## NES Peripheral EVB for DE0-CV
+
+
+![基板イメージ](eda\kicad_6.0.2\nes_peripheral\nes_peripheral.png)
 
 ファミコンエミュレータを実際のカートリッジで動作させる目的で設計した。
 
-`eda\kicad_6.0.2\nes_peripheral` に、KiCADで設計した基板ファイルがある。
+`eda\kicad_6.0.2\nes_peripheral` に、KiCADで設計した基板ファイルがあるので、こちらを参照。
 
 
 ### 機能概要
-
-TODO: 画像等を追加
 
 * DE0-CVのGPIO0,1に直結可能
 * カートリッジとの接続
@@ -29,12 +30,18 @@ TODO: 画像等を追加
   * 3.3V - 5V変換付き
 * 純正回路と同じシフトレジスタICを用いたコントローラ入力
   * 3.3Vでプルアップされた入力回路とGNDを公開
+  * 純正/互換コントローラの回路とは切替可
 * MAX98537を使ったI2S-音声出力回路
 * 5Vの外部供給
 
+### 回路図
+
+![回路図](eda\kicad_6.0.2\nes_peripheral\nes_peripheral_sch\nes_peripheral.svg)
 ### BOM
 
-Digikeyで選定した部品を記載。チップコンデンサを始め、サイズ・機能互換であればこれに限らない
+Digikeyで選定した部品を記載。チップコンデンサを始め、サイズ・機能互換であればこれに限らない。
+
+また、不要な回路は実装しなくても問題ない
 
 | Ref | Value | 数量 | メーカ製品番号  | url |
 | --- | ----  | ---- | --- | ---- |
@@ -48,3 +55,9 @@ Digikeyで選定した部品を記載。チップコンデンサを始め、サ�
 | U1-U16 | TXB0104PW	| 16 |TXB0104PWR|https://www.digikey.jp/ja/products/detail/texas-instruments/TXB0104PWR/1629102|
 | U17, U18 | 4021	| 2 |CD4021BMT|https://www.digikey.jp/ja/products/detail/texas-instruments/CD4021BMT/1690863|
 | U19	| MAX98357 | 1 |MAX98357AETE+T|https://www.digikey.jp/ja/products/detail/analog-devices-inc-maxim-integrated/MAX98357AETE-T/4936122|
+
+### 設計データの活用範囲
+
+`eda\kicad_6.0.2\nes_peripheral` にある基板設計データは、 [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/deed) の範囲で利用を許可する。
+
+例えば、本基板の製造データ、もしくはその一部を改変したデータを用いた製品を製造し、営利目的で販売する行為は禁止である。
