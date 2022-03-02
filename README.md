@@ -37,7 +37,7 @@ TODO: 画像等を追加
 Digikeyで選定した部品を記載。チップコンデンサを始め、サイズ・機能互換であればこれに限らない
 
 | Ref | Value | 数量 | メーカ製品番号  | url |
-| --- | ----  | ---- | --- | ------ | ---- |
+| --- | ----  | ---- | --- | ---- |
 | C1-C37 |0.1u	| 7 | CL10B104KB8NNWC | https://www.digikey.jp/ja/products/detail/samsung-electro-mechanics/CL10B104KB8NNWC/3887593 |
 | C40 | 10p	| 1 | CL10C100CB8NNNC | https://www.digikey.jp/ja/products/detail/samsung-electro-mechanics/CL10C100CB8NNNC/3886727 |
 | D1-D3 | LED	| 3 |5988070107F| https://www.digikey.jp/ja/products/detail/dialight/5988070107F/1291269 |
