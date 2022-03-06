@@ -25,5 +25,14 @@ namespace ChiselNesViewer
         {
             InitializeComponent();
         }
+        private void LaunchGitHubSite(object sender, RoutedEventArgs e)
+        {
+            // Launch the GitHub site...
+        }
+
+        private void DeployCupCakes(object sender, RoutedEventArgs e)
+        {
+            // deploy some CupCakes...
+        }
     }
 }
