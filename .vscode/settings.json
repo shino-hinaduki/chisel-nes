@@ -2,5 +2,8 @@
     "files.watcherExclude": {
         "**/target": true,
         "**/null": true
-    }
+    },
+    "github-actions.workflows.pinned.workflows": [
+        ".github/workflows/test.yml"
+    ]
 }
