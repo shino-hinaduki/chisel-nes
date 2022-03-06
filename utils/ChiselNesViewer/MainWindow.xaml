@@ -44,6 +44,14 @@
     </mah:MetroWindow.RightWindowCommands>
 
     <Grid>
+        <mah:MetroAnimatedTabControl>
+            <TabItem Header="TabItem">
+                <Grid/>
+            </TabItem>
+            <TabItem Header="TabItem">
+                <Grid/>
+            </TabItem>
+        </mah:MetroAnimatedTabControl>
         <!--  Your content  -->
     </Grid>
 </mah:MetroWindow>

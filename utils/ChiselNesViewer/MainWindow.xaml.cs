@@ -1,4 +1,5 @@
-﻿using MahApps.Metro.Controls;
+﻿using ControlzEx.Theming;
+using MahApps.Metro.Controls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,6 +25,9 @@ namespace ChiselNesViewer
         public MainWindow()
         {
             InitializeComponent();
+
+            ThemeManager.Current.ChangeTheme(this, "Dark.Blue");
+            //ThemeManager.Current.ChangeTheme(this, "Light.Blue");
         }
         private void LaunchGitHubSite(object sender, RoutedEventArgs e)
         {
