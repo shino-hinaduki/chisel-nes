@@ -6,8 +6,8 @@
                  xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
                  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                  Title="MainWindow"
-                 Width="800"
-                 Height="450"
+                 Width="1280"
+                 Height="800"
                  GlowBrush="{DynamicResource MahApps.Brushes.Accent}"
                  ResizeMode="CanResizeWithGrip"
                  WindowStartupLocation="CenterScreen"
@@ -44,14 +44,77 @@
     </mah:MetroWindow.RightWindowCommands>
 
     <Grid>
-        <mah:MetroAnimatedTabControl>
-            <TabItem Header="TabItem">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="238"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="227.103"/>
+            <RowDefinition Height="35.937"/>
+        </Grid.RowDefinitions>
+        <StatusBar Grid.Row="2" Grid.ColumnSpan="2" Margin="0,13,0,0"/>
+        <StackPanel Grid.Column="1" Grid.RowSpan="2">
+            <Expander Height="223" Header="Device Select" IsExpanded="True">
+                <StackPanel>
+                    <ComboBox/>
+                    <mah:NumericUpDown/>
+                    <CheckBox Content="Connect"/>
+                </StackPanel>
+            </Expander>
+            <Expander Height="223" Header="JTAG Test" IsExpanded="True">
+                <StackPanel>
+                </StackPanel>
+            </Expander>
+            <Expander Height="223" Header="Preview" IsExpanded="True">
+                <StackPanel>
+                </StackPanel>
+            </Expander>
+            <Expander Height="223" Header="Emulator" IsExpanded="True">
+                <StackPanel>
+                </StackPanel>
+            </Expander>
+        </StackPanel>
+        <GroupBox Header="Main">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="53*"/>
+                    <RowDefinition Height="54*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="210"/>
+                    <ColumnDefinition/>
+                    <ColumnDefinition Width="242.6"/>
+                </Grid.ColumnDefinitions>
+                <Grid Background="Black" Margin="0,0,0,0" Grid.RowSpan="2" Grid.Column="1">
+                    <Image HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                </Grid>
+                <ListBox d:ItemsSource="{d:SampleData ItemCount=5}" Grid.RowSpan="2"/>
+                <ListBox Grid.Column="2" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="0,0,0,149" Grid.RowSpan="2"/>
+                <Grid Background="Black" Grid.Column="2" Grid.Row="1">
+                    <Image HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                </Grid>
+            </Grid>
+        </GroupBox>
+        <mah:MetroAnimatedTabControl Grid.Row="1">
+            <TabItem Header="Cartridge">
                 <Grid/>
             </TabItem>
-            <TabItem Header="TabItem">
+            <TabItem Header="Core">
+                <Grid/>
+            </TabItem>
+            <TabItem Header="CPU Bus">
+                <Grid/>
+            </TabItem>
+            <TabItem Header="PPU Bus">
+                <Grid/>
+            </TabItem>
+            <TabItem Header="Sprite/BG Viewer">
+                <Grid/>
+            </TabItem>
+            <TabItem Header="APU Debug">
                 <Grid/>
             </TabItem>
         </mah:MetroAnimatedTabControl>
-        <!--  Your content  -->
     </Grid>
 </mah:MetroWindow>
