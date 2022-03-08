@@ -8,8 +8,23 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="ChiselNesViewer.Core.Test\**" />
+    <Compile Remove="ChiselNesViewer.Core\**" />
+    <EmbeddedResource Remove="ChiselNesViewer.Core.Test\**" />
+    <EmbeddedResource Remove="ChiselNesViewer.Core\**" />
+    <None Remove="ChiselNesViewer.Core.Test\**" />
+    <None Remove="ChiselNesViewer.Core\**" />
+    <Page Remove="ChiselNesViewer.Core.Test\**" />
+    <Page Remove="ChiselNesViewer.Core\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="MahApps.Metro" Version="2.4.9" />
     <PackageReference Include="MahApps.Metro.IconPacks" Version="4.11.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="ChiselNesViewer.Core\ChiselNesViewer.Core.csproj" />
   </ItemGroup>
 
 </Project>
