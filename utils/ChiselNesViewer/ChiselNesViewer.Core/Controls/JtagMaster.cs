@@ -14,7 +14,7 @@ namespace ChiselNesViewer.Core.Controls
     /// * kazu_1995's diary   - https://kazu1995.hatenablog.jp/entry/2017/11/18/202718
     /// * relm.info           - http://relm.info/?x=entry:entry130319-165251
     /// </summary>
-    internal class JtagMaster: IDisposable
+    internal class JtagMaster: IDisposable, IJtagCommunicatable
     {
         /// <summary>
         /// Latencyの初期設定。通常16msがデフォルトだが短くできるデバイスもある
@@ -36,7 +36,7 @@ namespace ChiselNesViewer.Core.Controls
         /// デバイス一覧をリセットし、デバイス数を取得します
         /// </summary>
         /// <returns></returns>
-        public UInt32 GetNumOfDevices()
+        public static UInt32 GetNumOfDevices()
         {
             UInt32 numDevices = 0;
             var device = new FTDI();
@@ -50,7 +50,7 @@ namespace ChiselNesViewer.Core.Controls
         /// 接続されているFTXXXの一覧を取得します
         /// </summary>
         /// <returns>デバイス一覧。エラーが発生した場合も空の配列を返す</returns>
-        public FTDI.FT_DEVICE_INFO_NODE[] GetDevices()
+        public static FTDI.FT_DEVICE_INFO_NODE[] GetDevices()
         {
             // デバイスがない場合は何もしない
             var numOfDevices = GetNumOfDevices();
@@ -142,6 +142,46 @@ namespace ChiselNesViewer.Core.Controls
         {
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
+        }
+
+        bool IJtagCommunicatable.MoveIdle()
+        {
+            throw new NotImplementedException();
+        }
+
+        bool IJtagCommunicatable.MoveIdleToShiftIr()
+        {
+            throw new NotImplementedException();
+        }
+
+        bool IJtagCommunicatable.WriteShiftDr(byte data)
+        {
+            throw new NotImplementedException();
+        }
+
+        bool IJtagCommunicatable.WriteShiftIr(byte data)
+        {
+            throw new NotImplementedException();
+        }
+
+        bool IJtagCommunicatable.MoveShiftIrToShiftDr()
+        {
+            throw new NotImplementedException();
+        }
+
+        bool IJtagCommunicatable.MoveShiftDrToShiftIr()
+        {
+            throw new NotImplementedException();
+        }
+
+        bool IJtagCommunicatable.WriteShiftDr(byte[] datas)
+        {
+            throw new NotImplementedException();
+        }
+
+        byte[] IJtagCommunicatable.ReadShiftDr(uint dataSize)
+        {
+            throw new NotImplementedException();
         }
     }
 }
