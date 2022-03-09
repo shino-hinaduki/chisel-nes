@@ -14,13 +14,13 @@ namespace ChiselNesViewer.Core.Controls
     /// * kazu_1995's diary   - https://kazu1995.hatenablog.jp/entry/2017/11/18/202718
     /// * relm.info           - http://relm.info/?x=entry:entry130319-165251
     /// </summary>
-    internal class JtagMaster: IDisposable, IJtagCommunicatable
+    public class JtagMaster : IDisposable, IJtagCommunicatable
     {
         /// <summary>
         /// Latencyの初期設定。通常16msがデフォルトだが短くできるデバイスもある
         /// </summary>
         private const int Latency = 16;
-        
+
         /// <summary>
         /// BaudRateの初期設定。FT245のApplication Notesおり 3MB/sが最高だが実効は1MB/sほど
         /// </summary>
@@ -32,13 +32,14 @@ namespace ChiselNesViewer.Core.Controls
         protected FTDI? _device = null;
         private bool disposedValue;
 
+        #region FTD2XXのセットアップ関連
         /// <summary>
         /// デバイス一覧をリセットし、デバイス数を取得します
         /// </summary>
         /// <returns></returns>
-        public static UInt32 GetNumOfDevices()
+        public static uint GetNumOfDevices()
         {
-            UInt32 numDevices = 0;
+            uint numDevices = 0;
             var device = new FTDI();
             device.Rescan();
             device.GetNumberOfDevices(ref numDevices);
@@ -64,7 +65,8 @@ namespace ChiselNesViewer.Core.Controls
             {
                 return deviceList;
 
-            } else
+            }
+            else
             {
                 return new FTDI.FT_DEVICE_INFO_NODE[] { };
             }
@@ -131,7 +133,7 @@ namespace ChiselNesViewer.Core.Controls
                 if (disposing)
                 {
                     this._device?.Close();
-                    this._device =null;
+                    this._device = null;
                 }
 
                 disposedValue = true;
@@ -144,44 +146,122 @@ namespace ChiselNesViewer.Core.Controls
             GC.SuppressFinalize(this);
         }
 
-        bool IJtagCommunicatable.MoveIdle()
+        #endregion
+
+        #region JTAG制御関連
+
+        private const ushort L = 0x2d2c;
+        private const ushort H = L | 0x1010;
+        private const ushort TMS = L | 0x0202;
+        private const ushort TMS_H = TMS | H;
+        private const ushort OFF = 0x0d0c;
+        private const byte WR = 0x81;
+        private const byte RD = 0xc0;
+
+        public byte[] ReadU8(int readReqBytes)
         {
-            throw new NotImplementedException();
+            Debug.Assert(_device?.IsOpen ?? false);
+            Debug.Assert(0 <= readReqBytes && readReqBytes < IJtagCommunicatable.ReadUnitSize);
+
+            var readData = new byte[readReqBytes];
+            uint readBytes = 0;
+            var result = _device?.Read(readData, (uint)readData.Length, ref readBytes);
+
+            Debug.Assert(readReqBytes == readBytes);
+            return (result == FTDI.FT_STATUS.FT_OK) ? readData : new byte[] { };
         }
 
-        bool IJtagCommunicatable.MoveIdleToShiftIr()
+        public bool WriteU8(params byte[] data)
         {
-            throw new NotImplementedException();
+            Debug.Assert(_device?.IsOpen ?? false);
+            Debug.Assert(data != null);
+
+            // 転送不要
+            if (data.Length == 0)
+            {
+                return true;
+            }
+
+            uint writtenBytes = 0;
+            var result = _device?.Write(data, data.Length, ref writtenBytes);
+
+            Debug.Assert(writtenBytes == data.Length);
+            return result == FTDI.FT_STATUS.FT_OK;
         }
 
-        bool IJtagCommunicatable.WriteShiftDr(byte data)
+        public bool WriteU16(params ushort[] data)
         {
-            throw new NotImplementedException();
+            Debug.Assert(_device?.IsOpen ?? false);
+            Debug.Assert(data != null);
+
+            // FT_Writeでそのまま送るがbyte[]を求められているので変換する
+            // 速度が気になるようであれば、unsafeでポインタだけ読み替える
+            var dataBytes = data.SelectMany(x => BitConverter.GetBytes(x)).ToArray();
+            return WriteU8(dataBytes);
         }
 
-        bool IJtagCommunicatable.WriteShiftIr(byte data)
+        public bool MoveIdle() =>
+            WriteU16(TMS, TMS, TMS, TMS, TMS, L);
+
+        public bool MoveIdleToShiftIr() =>
+            WriteU16(TMS, TMS, L, L);
+
+        public bool WriteShiftDr(byte data) =>
+            WriteU8(WR, data);
+
+        public bool WriteShiftIr(byte data) =>
+            WriteU16((ushort)((ushort)WR | ((ushort)data) << 8), L);
+
+
+        public bool MoveShiftIrToShiftDr() =>
+            WriteU16(TMS, TMS, TMS, L, L);
+
+
+        public bool MoveShiftDrToShiftIr() =>
+            WriteU16(TMS_H, TMS, TMS, TMS, L, L);
+
+        public bool DeviceClose() =>
+            WriteU16(TMS_H, TMS, OFF);
+
+        public bool WriteShiftDr(IEnumerable<byte> src)
         {
-            throw new NotImplementedException();
+            Debug.Assert(src != null);
+
+            // (u8) WR, data[0], WR, data[1], ... の送信データを作って送信する
+            var writeDatas = src.SelectMany(x => new byte[] { WR, x }).ToArray();
+            return (writeDatas.Length == 0) ? true : WriteU8(writeDatas);
         }
 
-        bool IJtagCommunicatable.MoveShiftIrToShiftDr()
+        public byte[] ReadShiftDr(uint dataSize)
         {
-            throw new NotImplementedException();
-        }
+            // サイズ指定がないときは処理不要
+            if (dataSize == 0)
+            {
+                return new byte[] { };
+            }
 
-        bool IJtagCommunicatable.MoveShiftDrToShiftIr()
-        {
-            throw new NotImplementedException();
-        }
+            // FTD2XX都合で64byteごと処理する
+            var dst = new List<byte>(capacity: (int)dataSize);
+            var remainSize = dataSize;
+            while (remainSize > 0)
+            {
+                // 63byteもしくは残りの端数
+                var readBytes = Math.Min(remainSize, IJtagCommunicatable.ReadUnitSize);
+                remainSize -= readBytes;
+                Debug.Assert(0 < readBytes && readBytes <= IJtagCommunicatable.ReadUnitSize);
 
-        bool IJtagCommunicatable.WriteShiftDr(byte[] datas)
-        {
-            throw new NotImplementedException();
-        }
+                // (u16) RD | readBytes, 0 | L, 0 | L, 0 | L, ....のデータを作って送る
+                var sendDataU16 = Enumerable.Repeat(L, (int)readBytes * 2 + 1).ToArray(); // L | 0を送っているので倍、先頭のRD | readByte分で+1回
+                sendDataU16[0] = (ushort)(RD | readBytes);
+                WriteU16(sendDataU16);
 
-        byte[] IJtagCommunicatable.ReadShiftDr(uint dataSize)
-        {
-            throw new NotImplementedException();
+                // L, L, ... の部分を受け取る。データ分のみなのでreadByteそのまま
+                var readDataU8 = ReadU8((int)readBytes);
+                dst.AddRange(readDataU8);
+            }
+            return dst.ToArray();
+
         }
+        #endregion
     }
 }
