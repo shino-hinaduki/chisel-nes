@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FTD2XX_NET;
 
-namespace ChiselNesViewer.Core.Controls {
+namespace ChiselNesViewer.Core.Jtag {
     /// <summary>
     /// FT245でJTAGを扱うためのクラスです。以下を参考に実装しています
     /// * NES on FPGA pgate1  - https://pgate1.at-ninja.jp/NES_on_FPGA/dev_other.htm

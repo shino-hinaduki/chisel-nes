@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChiselNesViewer.Core.Controls {
+namespace ChiselNesViewer.Core.Jtag {
     /// <summary>
     /// JTAGのTAPコントローラの状態遷移をサポートします
     /// </summary>
