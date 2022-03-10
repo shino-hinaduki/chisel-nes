@@ -191,7 +191,7 @@ namespace ChiselNesViewer.Core.Jtag {
             WriteU8(WR, data);
 
         public bool WriteShiftIr(byte data) =>
-            WriteU16((ushort)((ushort)WR | ((ushort)data) << 8), L);
+            WriteU16(BitConverter.ToUInt16(new byte[] { WR, data }), L);
 
 
         public bool MoveShiftIrToShiftDr() =>
