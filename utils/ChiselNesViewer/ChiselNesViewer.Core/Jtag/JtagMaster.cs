@@ -80,7 +80,7 @@ namespace ChiselNesViewer.Core.Jtag {
 
             // SerialNumberを引数に開く
             var device = new FTDI();
-            if (device.OpenBySerialNumber(targetInfo.SerialNumber) != FTDI.FT_STATUS.FT_OK) {
+            if (device.OpenByDescription(targetInfo.Description) != FTDI.FT_STATUS.FT_OK) {
                 return false;
             }
 
@@ -228,7 +228,7 @@ namespace ChiselNesViewer.Core.Jtag {
                 Debug.Assert(0 < readBytes && readBytes <= IJtagCommunicatable.ReadUnitSize);
 
                 // (u16) RD | readBytes, 0 | L, 0 | L, 0 | L, ....のデータを作って送る
-                var sendDataU16Length = (int)(readBytes + 1) / 2; // 先頭の命令分を追加、2byteごとなので半分
+                var sendDataU16Length = (int)(readBytes + 1); // 先頭の命令分を追加
                 var sendDataU16 = Enumerable.Repeat(L, sendDataU16Length).ToArray();
                 sendDataU16[0] = (ushort)(RD | readBytes);
                 WriteU16(sendDataU16);
