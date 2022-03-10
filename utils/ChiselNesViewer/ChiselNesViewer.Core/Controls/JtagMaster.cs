@@ -6,16 +6,14 @@ using System.Text;
 using System.Threading.Tasks;
 using FTD2XX_NET;
 
-namespace ChiselNesViewer.Core.Controls
-{
+namespace ChiselNesViewer.Core.Controls {
     /// <summary>
     /// FT245でJTAGを扱うためのクラスです。以下を参考に実装しています
     /// * NES on FPGA pgate1  - https://pgate1.at-ninja.jp/NES_on_FPGA/dev_other.htm
     /// * kazu_1995's diary   - https://kazu1995.hatenablog.jp/entry/2017/11/18/202718
     /// * relm.info           - http://relm.info/?x=entry:entry130319-165251
     /// </summary>
-    public class JtagMaster : IDisposable, IJtagCommunicatable
-    {
+    public class JtagMaster : IDisposable, IJtagCommunicatable {
         /// <summary>
         /// Latencyの初期設定。通常16msがデフォルトだが短くできるデバイスもある
         /// </summary>
@@ -37,8 +35,7 @@ namespace ChiselNesViewer.Core.Controls
         /// デバイス一覧をリセットし、デバイス数を取得します
         /// </summary>
         /// <returns></returns>
-        public static uint GetNumOfDevices()
-        {
+        public static uint GetNumOfDevices() {
             uint numDevices = 0;
             var device = new FTDI();
             device.Rescan();
@@ -51,8 +48,7 @@ namespace ChiselNesViewer.Core.Controls
         /// 接続されているFTXXXの一覧を取得します
         /// </summary>
         /// <returns>デバイス一覧。エラーが発生した場合も空の配列を返す</returns>
-        public static FTDI.FT_DEVICE_INFO_NODE[] GetDevices()
-        {
+        public static FTDI.FT_DEVICE_INFO_NODE[] GetDevices() {
             // デバイスがない場合は何もしない
             var numOfDevices = GetNumOfDevices();
             if (numOfDevices == 0) { return new FTDI.FT_DEVICE_INFO_NODE[] { }; }
@@ -61,13 +57,10 @@ namespace ChiselNesViewer.Core.Controls
             var device = new FTDI();
             var deviceList = new FTDI.FT_DEVICE_INFO_NODE[numOfDevices];
             device.Rescan();
-            if (device.GetDeviceList(deviceList) == FTDI.FT_STATUS.FT_OK)
-            {
+            if (device.GetDeviceList(deviceList) == FTDI.FT_STATUS.FT_OK) {
                 return deviceList;
 
-            }
-            else
-            {
+            } else {
                 return new FTDI.FT_DEVICE_INFO_NODE[] { };
             }
         }
@@ -77,8 +70,7 @@ namespace ChiselNesViewer.Core.Controls
         /// </summary>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public bool Open(FTDI.FT_DEVICE_INFO_NODE targetInfo)
-        {
+        public bool Open(FTDI.FT_DEVICE_INFO_NODE targetInfo) {
             Debug.Assert(targetInfo != null);
             Debug.Assert(this._device == null);
 
@@ -88,8 +80,7 @@ namespace ChiselNesViewer.Core.Controls
 
             // SerialNumberを引数に開く
             var device = new FTDI();
-            if (device.OpenBySerialNumber(targetInfo.SerialNumber) != FTDI.FT_STATUS.FT_OK)
-            {
+            if (device.OpenBySerialNumber(targetInfo.SerialNumber) != FTDI.FT_STATUS.FT_OK) {
                 return false;
             }
 
@@ -107,8 +98,7 @@ namespace ChiselNesViewer.Core.Controls
         /// <summary>
         /// デバイスを初期化して、必要な設定を施します
         /// </summary>
-        private void Configure()
-        {
+        private void Configure() {
             Debug.Assert(this._device?.IsOpen ?? false);
 
             _device?.ResetDevice();
@@ -120,18 +110,14 @@ namespace ChiselNesViewer.Core.Controls
         /// デバイスを切断します
         /// </summary>
         /// <returns></returns>
-        public bool Close()
-        {
+        public bool Close() {
             Debug.Assert(this._device != null);
             return _device?.Close() == FTDI.FT_STATUS.FT_OK;
         }
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
+        protected virtual void Dispose(bool disposing) {
+            if (!disposedValue) {
+                if (disposing) {
                     this._device?.Close();
                     this._device = null;
                 }
@@ -140,8 +126,7 @@ namespace ChiselNesViewer.Core.Controls
             }
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
             Dispose(disposing: true);
             GC.SuppressFinalize(this);
         }
@@ -158,8 +143,7 @@ namespace ChiselNesViewer.Core.Controls
         private const byte WR = 0x81;
         private const byte RD = 0xc0;
 
-        public byte[] ReadU8(int readReqBytes)
-        {
+        public byte[] ReadU8(int readReqBytes) {
             Debug.Assert(_device?.IsOpen ?? false);
             Debug.Assert(0 <= readReqBytes && readReqBytes < IJtagCommunicatable.ReadUnitSize);
 
@@ -171,14 +155,12 @@ namespace ChiselNesViewer.Core.Controls
             return (result == FTDI.FT_STATUS.FT_OK) ? readData : new byte[] { };
         }
 
-        public bool WriteU8(params byte[] data)
-        {
+        public bool WriteU8(params byte[] data) {
             Debug.Assert(_device?.IsOpen ?? false);
             Debug.Assert(data != null);
 
             // 転送不要
-            if (data.Length == 0)
-            {
+            if (data.Length == 0) {
                 return true;
             }
 
@@ -189,8 +171,7 @@ namespace ChiselNesViewer.Core.Controls
             return result == FTDI.FT_STATUS.FT_OK;
         }
 
-        public bool WriteU16(params ushort[] data)
-        {
+        public bool WriteU16(params ushort[] data) {
             Debug.Assert(_device?.IsOpen ?? false);
             Debug.Assert(data != null);
 
@@ -223,8 +204,7 @@ namespace ChiselNesViewer.Core.Controls
         public bool DeviceClose() =>
             WriteU16(TMS_H, TMS, OFF);
 
-        public bool WriteShiftDr(IEnumerable<byte> src)
-        {
+        public bool WriteShiftDr(IEnumerable<byte> src) {
             Debug.Assert(src != null);
 
             // (u8) WR, data[0], WR, data[1], ... の送信データを作って送信する
@@ -232,19 +212,16 @@ namespace ChiselNesViewer.Core.Controls
             return (writeDatas.Length == 0) ? true : WriteU8(writeDatas);
         }
 
-        public byte[] ReadShiftDr(uint dataSize)
-        {
+        public byte[] ReadShiftDr(uint dataSize) {
             // サイズ指定がないときは処理不要
-            if (dataSize == 0)
-            {
+            if (dataSize == 0) {
                 return new byte[] { };
             }
 
             // FTD2XX都合で64byteごと処理する
             var dst = new List<byte>(capacity: (int)dataSize);
             var remainSize = dataSize;
-            while (remainSize > 0)
-            {
+            while (remainSize > 0) {
                 // 63byteもしくは残りの端数
                 var readBytes = Math.Min(remainSize, IJtagCommunicatable.ReadUnitSize);
                 remainSize -= readBytes;

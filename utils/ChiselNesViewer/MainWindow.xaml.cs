@@ -15,27 +15,22 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace ChiselNesViewer
-{
+namespace ChiselNesViewer {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : MetroWindow
-    {
-        public MainWindow()
-        {
+    public partial class MainWindow : MetroWindow {
+        public MainWindow() {
             InitializeComponent();
 
             ThemeManager.Current.ChangeTheme(this, "Dark.Blue");
             //ThemeManager.Current.ChangeTheme(this, "Light.Blue");
         }
-        private void LaunchGitHubSite(object sender, RoutedEventArgs e)
-        {
+        private void LaunchGitHubSite(object sender, RoutedEventArgs e) {
             // Launch the GitHub site...
         }
 
-        private void DeployCupCakes(object sender, RoutedEventArgs e)
-        {
+        private void DeployCupCakes(object sender, RoutedEventArgs e) {
             // deploy some CupCakes...
         }
     }

@@ -4,13 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChiselNesViewer.Core.Controls
-{
+namespace ChiselNesViewer.Core.Controls {
     /// <summary>
     /// JTAGのTAPコントローラの状態遷移をサポートします
     /// </summary>
-    public interface IJtagCommunicatable
-    {
+    public interface IJtagCommunicatable {
         /// <summary>
         /// FT232都合だが、ReadU8の成約になっているのでこちらに定義しておく
         /// </summary>
