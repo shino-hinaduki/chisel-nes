@@ -251,11 +251,12 @@ namespace ChiselNesViewer.Core.Controls
                 Debug.Assert(0 < readBytes && readBytes <= IJtagCommunicatable.ReadUnitSize);
 
                 // (u16) RD | readBytes, 0 | L, 0 | L, 0 | L, ....のデータを作って送る
-                var sendDataU16 = Enumerable.Repeat(L, (int)readBytes * 2 + 1).ToArray(); // L | 0を送っているので倍、先頭のRD | readByte分で+1回
+                var sendDataU16Length = (int)(readBytes + 1) / 2; // 先頭の命令分を追加、2byteごとなので半分
+                var sendDataU16 = Enumerable.Repeat(L, sendDataU16Length).ToArray();
                 sendDataU16[0] = (ushort)(RD | readBytes);
                 WriteU16(sendDataU16);
 
-                // L, L, ... の部分を受け取る。データ分のみなのでreadByteそのまま
+                // 0 | L, 0 | L, ... の部分を受け取る。データ分のみなのでreadByteそのまま
                 var readDataU8 = ReadU8((int)readBytes);
                 dst.AddRange(readDataU8);
             }
