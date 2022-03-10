@@ -1,3 +1,6 @@
 [submodule "eda/kicad_6.0.2/nes_peripheral/OPL_Kicad_Library"]
 	path = eda/kicad_6.0.2/nes_peripheral/OPL_Kicad_Library
 	url = git@github.com:Seeed-Studio/OPL_Kicad_Library.git
+[submodule "eda/kicad_6.0.2/nes_peripheral/a8c4a4b96907cfccf616a1edb59d0389"]
+	path = eda/kicad_6.0.2/nes_peripheral/a8c4a4b96907cfccf616a1edb59d0389
+	url = https://gist.github.com/a8c4a4b96907cfccf616a1edb59d0389.git

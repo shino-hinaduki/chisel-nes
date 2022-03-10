@@ -24,6 +24,7 @@ TODO:
 
 * DE0-CVのGPIO0,1に直結可能
   * ピンアサインを踏襲していれば、他評価ボード等でも利用可
+  * GPIO1からカートリッジとのレベル変換回路をまとめてDisableにすることが可能
 * カートリッジとの接続
   * 3.3V - 5V変換付き
   * 周辺にプローブ用ピンも引き出し済
@@ -35,14 +36,45 @@ TODO:
 * MAX98537を使ったI2S-音声出力回路
 * 5Vの外部供給
 
+### ブロック図
+
+
+```mermaid
+graph LR
+    GPIO--3.3V CPU/PPU Bus-->TXB0104PW_1
+    GPIO--Output Enable-->OutputEnableSelect
+    GPIO--5V-->5VSelect
+    GPIO-->LED
+    GPIO-->UserIO
+
+    DC_Jack--5V-->5VSelect
+    5VSelect--5V-->5V
+    5V--5V-->CartridgeConnector
+
+    OutputEnableSelect--Output Enable-->TXB0104PW_1
+    TXB0104PW_1--5V CPU/PPU Bus-->CartridgeConnector
+
+    GPIO--3.3V ShiftRegister I/O-->TXB0104PW_2
+    JoyPadSerialSel-->TXB0104PW_2
+    TXB0104PW_2--5V ShiftRegister I/O-->JoyPad0/1_Serial
+
+    JoyPadParallelSel-->4021
+    GPIO--3.3V ShiftRegister I/O-->4021
+    4021--Parallel IO-->JoyPad0/1_Parallel
+
+    GPIO--I2S-->MAX98357
+    MAX98357--Audio Out-->Speaker
+    GainSelect-->MAX98357
+```
+
 ### 回路図
 
 ![回路図](eda/kicad_6.0.2/nes_peripheral/nes_peripheral_sch/nes_peripheral.svg)
-### BOM
 
-Digikeyで選定した部品を記載。チップコンデンサを始め、サイズ・機能互換であればこれに限らない。
+### 部品表
 
-また、不要な回路は実装しなくても問題ない
+Digikeyで選定した部品を記載。チップコンデンサを始め、サイズ・機能互換であればこれに限らない。また、不要な回路は実装しなくても問題ない
+ピンヘッダ、ピンソケットは2.54mm ピッチのものを別途準備すること。
 
 | Ref | Value | 数量 | メーカ製品番号  | url |
 | --- | ----  | ---- | --- | ---- |
