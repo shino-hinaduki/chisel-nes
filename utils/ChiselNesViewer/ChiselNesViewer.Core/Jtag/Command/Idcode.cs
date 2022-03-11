@@ -22,6 +22,9 @@ namespace ChiselNesViewer.Core.Jtag.Command {
         /// <returns></returns>
 
         public static Idcode Read(IJtagCommunicatable jtag) {
+            jtag.ClearWriteBuffer();
+            jtag.ClearReadBuffer();
+
             jtag.MoveIdle();
             jtag.MoveIdleToShiftIr();
             jtag.WriteShiftIr(0x06);

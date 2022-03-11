@@ -143,6 +143,14 @@ namespace ChiselNesViewer.Core.Jtag {
         private const byte WR = 0x81;
         private const byte RD = 0xc0;
 
+        public bool ClearWriteBuffer() {
+            Debug.Assert(_device?.IsOpen ?? false);
+            return _device?.Purge(FTDI.FT_PURGE.FT_PURGE_TX) == FTDI.FT_STATUS.FT_OK;
+        }
+        public bool ClearReadBuffer() {
+            Debug.Assert(_device?.IsOpen ?? false);
+            return _device?.Purge(FTDI.FT_PURGE.FT_PURGE_RX) == FTDI.FT_STATUS.FT_OK;
+        }
         public byte[] ReadU8(int readReqBytes) {
             Debug.Assert(_device?.IsOpen ?? false);
             Debug.Assert(0 <= readReqBytes && readReqBytes < IJtagCommunicatable.ReadUnitSize);
@@ -217,6 +225,9 @@ namespace ChiselNesViewer.Core.Jtag {
             if (dataSize == 0) {
                 return new byte[] { };
             }
+
+            // 受信バッファの中身がいらないので消しておく
+            ClearReadBuffer();
 
             // FTD2XX都合で64byteごと処理する
             var dst = new List<byte>(capacity: (int)dataSize);

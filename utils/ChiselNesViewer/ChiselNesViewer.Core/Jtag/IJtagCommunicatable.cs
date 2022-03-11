@@ -15,6 +15,18 @@ namespace ChiselNesViewer.Core.Jtag {
         const uint ReadUnitSize = 63;
 
         #region デバイスの操作
+
+        /// <summary>
+        /// WriteBufferの内容をクリアします
+        /// </summary>
+        /// <returns></returns>
+        public bool ClearWriteBuffer();
+        /// <summary>
+        /// ReadBufferの内容をクリアします
+        /// </summary>
+        /// <returns></returns>
+        public bool ClearReadBuffer();
+
         /// <summary>
         /// Readを実行します
         /// </summary>
