@@ -15,16 +15,6 @@ namespace ChiselNesViewer.Core.Jtag {
     /// </summary>
     public class JtagMaster : IDisposable, IJtagCommunicatable {
         /// <summary>
-        /// Latencyの初期設定。通常16msがデフォルトだが短くできるデバイスもある
-        /// </summary>
-        private const int Latency = 16;
-
-        /// <summary>
-        /// BaudRateの初期設定。FT245のApplication Notesおり 3MB/sが最高だが実効は1MB/sほど
-        /// </summary>
-        private const int BaudRate = 3000000;
-
-        /// <summary>
         /// 内部的に持っておくデバイスハンドラ
         /// </summary>
         protected FTDI? _device = null;
@@ -87,23 +77,10 @@ namespace ChiselNesViewer.Core.Jtag {
 
             // JTAGで利用するための設定を施す
             Debug.Assert(_device?.IsOpen ?? false);
-            Configure();
 
             // 成功
             return true;
         }
-
-        /// <summary>
-        /// デバイスを初期化して、必要な設定を施します
-        /// </summary>
-        private void Configure() {
-            Debug.Assert(this._device?.IsOpen ?? false);
-
-            _device?.ResetDevice();
-            _device?.SetLatency(Latency);
-            _device?.SetBaudRate(BaudRate);
-        }
-
         /// <summary>
         /// デバイスを切断します
         /// </summary>

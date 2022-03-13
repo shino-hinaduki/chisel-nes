@@ -29,12 +29,48 @@ namespace ChiselNesViewer.Core.Test.Jtag {
         /// </summary>
         [TestMethod]
         [DoNotParallelize]
-        public void ReadIdcode() {
+        public void TestReadIdcode() {
             var jtag = new JtagMaster();
             var devices = JtagMaster.GetDevices();
             var device = devices.First(x => x.Description == DeviceDescription);
             Assert.IsTrue(jtag.Open(device));
-            var idcode = Idcode.Read(jtag);
+            var idcode = Idcode.Read(jtag); // TODO: 初回だけ読めないケースが有る
+            Assert.IsTrue(jtag.Close());
+
+            // Cyclone V E A4
+            //https://www.intel.co.jp/content/dam/altera-www/global/ja_JP/pdfs/literature/hb/cyclone-v/cv_52009_j.pdf
+            Assert.AreEqual(idcode.Version, 0b0000);
+            Assert.AreEqual(idcode.PartNumber, 0b0010_1011_0000_0101);
+            Assert.AreEqual(idcode.MakerId, 0b000_0110_1110);
+        }
+
+        /// <summary>
+        /// PULSE_NCONFIGコマンドを発行。デバイスがリコンフィリュレーションされていれば成功
+        /// </summary>
+        [TestMethod]
+        [DoNotParallelize]
+        public void TestPulseNConfig() {
+            var jtag = new JtagMaster();
+            var devices = JtagMaster.GetDevices();
+            var device = devices.First(x => x.Description == DeviceDescription);
+
+            Assert.IsTrue(jtag.Open(device));
+            PulseNConfig.Do(jtag);
+        }
+
+        /// <summary>
+        /// 複数のコマンドを受け付けるか確認
+        /// </summary>
+        [TestMethod]
+        [DoNotParallelize]
+        public void TestUseMultiCommand() {
+            var jtag = new JtagMaster();
+            var devices = JtagMaster.GetDevices();
+            var device = devices.First(x => x.Description == DeviceDescription);
+
+            Assert.IsTrue(jtag.Open(device));
+            PulseNConfig.Do(jtag);
+            var idcode = Idcode.Read(jtag); // TODO: 初回だけ読めないケースが有る
             Assert.IsTrue(jtag.Close());
 
             // Cyclone V E A4

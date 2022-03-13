@@ -24,7 +24,7 @@ namespace ChiselNesViewer.Core.Jtag.Command {
         public static Idcode Read(IJtagCommunicatable jtag) {
             jtag.MoveIdle();
             jtag.MoveIdleToShiftIr();
-            jtag.WriteShiftIr(0x06);
+            jtag.WriteShiftIr(0b0000_0110);
             jtag.MoveShiftIrToShiftDr();
             var readDatas = jtag.ReadShiftDr(4);
             jtag.DeviceClose();
