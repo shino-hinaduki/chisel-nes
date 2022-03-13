@@ -216,6 +216,7 @@ namespace ChiselNesViewer.Core.Jtag {
             Debug.Assert(src != null);
 
             // (u8) WR, data[0], WR, data[1], ... の送信データを作って送信する
+            // WriteShiftDrを複数回呼ぶことに等しいが、1回の転送量が増えて得
             var writeDatas = src.SelectMany(x => new byte[] { WR, x }).ToArray();
             return (writeDatas.Length == 0) ? true : WriteU8(writeDatas);
         }
@@ -226,9 +227,6 @@ namespace ChiselNesViewer.Core.Jtag {
                 return new byte[] { };
             }
 
-            // 受信バッファの中身がいらないので消しておく
-            ClearReadBuffer();
-
             // FTD2XX都合で64byteごと処理する
             var dst = new List<byte>(capacity: (int)dataSize);
             var remainSize = dataSize;
@@ -238,13 +236,8 @@ namespace ChiselNesViewer.Core.Jtag {
                 remainSize -= readBytes;
                 Debug.Assert(0 < readBytes && readBytes <= IJtagCommunicatable.ReadUnitSize);
 
-                // (u16) RD | readBytes, 0 | L, 0 | L, 0 | L, ....のデータを作って送る
-                var sendDataU16Length = (int)(readBytes + 1); // 先頭の命令分を追加
-                var sendDataU16 = Enumerable.Repeat(L, sendDataU16Length).ToArray();
-                sendDataU16[0] = (ushort)(RD | readBytes);
-                WriteU16(sendDataU16);
+                WriteU16(BitConverter.ToUInt16(new byte[] { (byte)(RD | readBytes), 0 }), TMS_H, TMS, TMS, L, L);
 
-                // 0 | L, 0 | L, ... の部分を受け取る。データ分のみなのでreadByteそのまま
                 var readDataU8 = ReadU8((int)readBytes);
                 dst.AddRange(readDataU8);
             }
