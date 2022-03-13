@@ -65,6 +65,13 @@ namespace ChiselNesViewer.Core.Jtag {
         /// </summary>
         /// <returns></returns>
         public bool WriteShiftDr(byte data);
+
+        /// <summary>
+        /// TAPコントローラの操作。DRのデータを受け取る
+        /// </summary>
+        /// <returns>ReadUnitSize byte分のReadData</returns>
+        public byte[] ReadShiftDr();
+
         /// <summary>
         /// TAPコントローラの操作。IRにデータを流す
         /// </summary>

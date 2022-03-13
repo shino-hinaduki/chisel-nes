@@ -22,9 +22,6 @@ namespace ChiselNesViewer.Core.Jtag.Command {
         /// <returns></returns>
 
         public static Idcode Read(IJtagCommunicatable jtag) {
-            jtag.ClearWriteBuffer();
-            jtag.ClearReadBuffer();
-
             jtag.MoveIdle();
             jtag.MoveIdleToShiftIr();
             jtag.WriteShiftIr(0x06);
@@ -33,9 +30,7 @@ namespace ChiselNesViewer.Core.Jtag.Command {
             jtag.DeviceClose();
 
             // データの復元
-            var raw = BitConverter.ToUInt32(readDatas);
-            // LSBは1固定のはず
-            Debug.Assert((raw & 0x1) == 0x1);
+            var raw = BitConverter.ToUInt32(readDatas.ToArray());
 
             var dst = new Idcode() {
                 Version = (byte)((raw >> 28) & 0xf),
