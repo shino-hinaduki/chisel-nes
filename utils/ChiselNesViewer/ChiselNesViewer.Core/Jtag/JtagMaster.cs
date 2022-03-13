@@ -202,15 +202,17 @@ namespace ChiselNesViewer.Core.Jtag {
             WriteU8(WR, data);
 
         public byte[] ReadShiftDr() {
-            var wrData = new ushort[] {
-                (ushort)(RD | IJtagCommunicatable.ReadUnitSize)
-            }.Concat(
-                Enumerable.Repeat((ushort)L, (int)IJtagCommunicatable.ReadUnitSize)
-            ).ToArray();
+            WriteU16((ushort)(RD | IJtagCommunicatable.ReadUnitSize));
 
-            WriteU16(wrData);
-            var rdData = ReadU8((int)IJtagCommunicatable.ReadUnitSize);
-            return rdData;
+            var result = new List<byte>((int)IJtagCommunicatable.ReadUnitSize);
+            for(int i = 0; i< IJtagCommunicatable.ReadUnitSize; i++) {
+                // dummy write
+                WriteU16(L);
+                // read
+                var d = ReadU8(1);
+                result.Add(d[0]);
+            }
+            return result.ToArray();
         }
 
         public bool WriteShiftIr(byte data) =>
