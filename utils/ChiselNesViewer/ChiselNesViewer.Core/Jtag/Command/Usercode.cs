@@ -9,10 +9,7 @@ namespace ChiselNesViewer.Core.Jtag.Command {
     /// <summary>
     /// デバイス固有コードの定義と取得関数
     /// </summary>
-    public class Idcode {
-        public byte Version { get; internal set; }
-        public ushort PartNumber { get; internal set; }
-        public ushort MakerId { get; internal set; }
+    public class Usercode {
         public uint Raw { get; internal set; }
 
         /// <summary>
@@ -21,24 +18,20 @@ namespace ChiselNesViewer.Core.Jtag.Command {
         /// <param name="jtag"></param>
         /// <returns></returns>
 
-        public static Idcode Read(IJtagCommunicatable jtag) {
+        public static Usercode Read(IJtagCommunicatable jtag) {
             jtag.ClearWriteBuffer();
             jtag.ClearReadBuffer();
 
             jtag.MoveIdle();
             jtag.MoveIdleToShiftIr();
-            jtag.WriteShiftIr(0b0000_0110);
+            jtag.WriteShiftIr(0b0000_0111);
             jtag.MoveShiftIrToShiftDr();
             var readDatas = jtag.ReadShiftDr(4);
             jtag.DeviceClose();
 
-            // データの復元
             var raw = BitConverter.ToUInt32(readDatas.ToArray());
 
-            var dst = new Idcode() {
-                Version = (byte)((raw >> 28) & 0xf),
-                PartNumber = (ushort)((raw >> 12) & 0xffff),
-                MakerId = (ushort)((raw >> 1) & 0x7ff),
+            var dst = new Usercode() {
                 Raw = raw,
             };
             return dst;
