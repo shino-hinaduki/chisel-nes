@@ -51,7 +51,12 @@ namespace ChiselNesViewer.Core.Jtag {
 
         #region JTAG TAP操作
         /// <summary>
-        /// TAPコントローラの操作。TMSを保って5回クロックを入れReset→Idle遷移する
+        /// TAPコントローラの操作。TMSを保って5回クロックを入れReset
+        /// </summary>
+        /// <returns></returns>
+        public bool MoveTestLogicReset();
+        /// <summary>
+        /// TAPコントローラの操作。TLR->RTI遷移
         /// </summary>
         /// <returns></returns>
         public bool MoveIdle();

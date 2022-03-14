@@ -71,12 +71,12 @@ namespace ChiselNesViewer.Core.Jtag {
             if (device.OpenByDescription(targetInfo.Description) != FTDI.FT_STATUS.FT_OK) {
                 return false;
             }
-
             // ローカルにセット
             this._device = device;
-
-            // JTAGで利用するための設定を施す
             Debug.Assert(_device?.IsOpen ?? false);
+
+            // 初期状態が不明なので、Test/Logic Resetに入れておく
+            MoveTestLogicReset();
 
             // 成功
             return true;
@@ -88,7 +88,7 @@ namespace ChiselNesViewer.Core.Jtag {
         public bool Close() {
             Debug.Assert(this._device != null);
 
-            this?.DeviceClose();
+            this?.MoveTestLogicReset();
             var result = _device?.Close();
             _device = null;
 
@@ -168,6 +168,9 @@ namespace ChiselNesViewer.Core.Jtag {
             var dataBytes = data.SelectMany(x => BitConverter.GetBytes(x)).ToArray();
             return WriteU8(dataBytes);
         }
+
+        public bool MoveTestLogicReset() =>
+            WriteU16(TMS, TMS, TMS, TMS, TMS);
 
         public bool MoveIdle() =>
             WriteU16(TMS, TMS, TMS, TMS, TMS, L);
