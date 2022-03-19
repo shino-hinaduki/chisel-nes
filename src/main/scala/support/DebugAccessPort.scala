@@ -1,77 +1,76 @@
-package support.types
+package support
 
 import chisel3._
 import chisel3.util.switch
 import chisel3.util.is
 import chisel3.util.Cat
+import chisel3.experimental.ChiselEnum
+
+import support.types.DebugAccessIO
+import support.types.DebugAccessDataKind
 
 /**
   * デバッグ向けRead専用レジスタマップへの読み書きを提供する
   */
 class DebugAccessPort extends Module {
-  // 初期値(無効値)gi
+  // 初期値(無効値)
   val initialData = 0x88.U(8.W);
 
   val io = IO(new Bundle {
-    // 読み出し先のアドレス
-    val addr = Input(UInt(32.W))
-    // 読みだしたデータ。address設定後次サイクルで出力
-    val readData = Output(UInt(8.W))
-    // 書き込むデータ
-    val writeData = Input(UInt(8.W))
-    // R/W
-    val isWrite = Input(Bool())
+    val control = new DebugAccessIO
     // TODO: 必要なモジュールを接続
   })
 
   // 読み出しデータ
   val readDataReg = RegInit(UInt(8.W), initialData)
-  io.readData := readDataReg
+  io.control.readData := readDataReg
 
   // 読み出すアドレスマップは上位ビットで決める
-  val bank   = io.addr(31, 30)
-  val offset = io.addr(29, 0)
-  when(bank === 0.U) {
+  when(io.control.dataKind === DebugAccessDataKind.invalid) {
+    assert(false)
+    readDataReg := DontCare
+  }.elsewhen(io.control.dataKind === DebugAccessDataKind.readTest) {
+    // Read Test
+    when(io.control.isWrite) {
+      readDataReg := DontCare
+    }.otherwise {
+      readDataReg := readTest(io.control.addr)
+    }
+  }.elsewhen(io.control.dataKind === DebugAccessDataKind.info) {
     // Info
-    when(io.isWrite) {
+    when(io.control.isWrite) {
       readDataReg := DontCare
+      // TODO: Write可能にするなら
     }.otherwise {
-      readDataReg := readInfo(offset)
+      readDataReg := readInfo(io.control.addr)
     }
-  }.elsewhen(bank === 1.U) {
-    // Seq Test
-    when(io.isWrite) {
-      readDataReg := DontCare
-    }.otherwise {
-      readDataReg := readSeqTest(offset)
-    }
-  }.elsewhen(bank === 2.U) {
+  }.elsewhen(io.control.dataKind === DebugAccessDataKind.screen) {
     // PPU Image
-    when(io.isWrite) {
+    when(io.control.isWrite) {
       readDataReg := DontCare
     }.otherwise {
-      readDataReg := readPpu(offset)
+      readDataReg := readScreen(io.control.addr)
     }
-  }.elsewhen(bank === 3.U) {
+  }.elsewhen(io.control.dataKind === DebugAccessDataKind.cartridge) {
     // Emulated Cartridge
-    when(io.isWrite) {
+    when(io.control.isWrite) {
       readDataReg := DontCare
       // TODO:
     }.otherwise {
-      readDataReg := readPpu(offset)
+      readDataReg := readEmulateCart(io.control.addr)
     }
-  }.elsewhen(bank === 4.U) {
+  }.elsewhen(io.control.dataKind === DebugAccessDataKind.cpuBusMaster) {
     // CPU DataBus Master
-    when(io.isWrite) {
+    when(io.control.isWrite) {
       readDataReg := DontCare
       // TODO:
     }.otherwise {
       readDataReg := DontCare
       // TODO:
     }
-  }.elsewhen(bank === 5.U) {
+  }.elsewhen(io.control.dataKind === DebugAccessDataKind.ppuBusMaster) {
     // PPU DataBus Master
-    when(io.isWrite) {
+    when(io.control.isWrite) {
       readDataReg := DontCare
       // TODO:
     }.otherwise {
@@ -79,27 +78,28 @@ class DebugAccessPort extends Module {
       // TODO:
     }
   }.otherwise {
-    // 0x1000_0000 -
+    assert(false)
+    readDataReg := DontCare
   }
 
-  /**
-    * 本モジュールのアドレスマップを定義し、その値を返す
-    * @param offset 先頭からのオフセット
-    * @return 読み出すデータ
-    */
-  protected def readEmulateCart(index: UInt): UInt = {
+  protected def readPpuBus(addr: UInt): UInt = {
+    // TODO: BusArbiterを使ったRead
+    addr
+  }
+
+  protected def readCpuBus(addr: UInt): UInt = {
+    // TODO: BusArbiterを使ったRead
+    addr
+  }
+
+  protected def readEmulateCart(addr: UInt): UInt = {
     // TODO: .NES から展開したデータの読み出し
-    index
+    addr
   }
 
-  /**
-    * 本モジュールのアドレスマップを定義し、その値を返す
-    * @param offset 先頭からのオフセット
-    * @return 読み出すデータ
-    */
-  protected def readPpu(index: UInt): UInt = {
+  protected def readScreen(addr: UInt): UInt = {
     // 2byte/pixelなので、pixel位置に変換
-    val pixelIndex = index >> 1.U
+    val pixelIndex = addr >> 1.U
     // X位置は0~256
     val xIndex = pixelIndex(7, 0)
     // Y位置はXより上位で0~256
@@ -109,19 +109,9 @@ class DebugAccessPort extends Module {
     pixelIndex
   }
 
-  /**
-    * 本モジュールのアドレスマップを定義し、その値を返す
-    * @param offset 先頭からのオフセット
-    * @return 読み出すデータ
-    */
-  protected def readSeqTest(index: UInt): UInt = index
+  protected def readTest(addr: UInt): UInt = addr
 
-  /**
-    * 本モジュールのアドレスマップを定義し、その値を返す
-    * @param offset 先頭からのオフセット
-    * @return 読み出すデータ
-    */
-  protected def readInfo(offset: UInt): UInt = offset.litValue.toInt match {
+  protected def readInfo(addr: UInt): UInt = addr.litValue.toInt match {
     // Identify
     case 0x0000 => 0xaa.U(8.W)
     case 0x0001 => 0x99.U(8.W)
