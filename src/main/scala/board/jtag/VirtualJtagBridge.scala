@@ -21,13 +21,20 @@ class VirtualJtagBridge extends Module {
     // Virtual JTAG IP Coreと接続
     val vjtag = new VirtualJtagIO(irWidth)
     // DebugAccessPortとのI/F  TODO: 非同期クロックの載せ替え...。
-    val dap = new DebugAccessIO
+    val dap = Flipped(new DebugAccessIO)
   })
+
+  // TODO: クロック載せ替えしてDAP制御できるようにする
+  io.dap.writeData := 0.U
+  io.dap.addr      := 0.U
+  io.dap.reqStrobe := false.B
+  io.dap.isWrite   := false.B
+  io.dap.dataKind  := DebugAccessDataKind.invalid
 
   // JTAG Clock Domain
   withClock(io.vjtag.tck) {
     // 現在キャプチャされている命令
-    val irInReg = RegInit(new VirtualInstruction, VirtualInstruction.invalid())
+    val irInReg = Reg(new VirtualInstruction)
     io.vjtag.ir_out := irInReg.raw // そのまま向けておく
     // 出力するデータ
     val tdoReg = RegInit(Bool(), false.B)
@@ -57,7 +64,7 @@ class VirtualJtagBridge extends Module {
     }.elsewhen(io.vjtag.virtual_state_uir) {
       // Update_IR
       // VirtualJTAGなので (ShiftIR USER1, ShiftDR XXXX) で流した XXXX が io.vjtag.ir_in に入っている
-      irInReg := VirtualInstruction.parse(io.vjtag.ir_in)
+      VirtualInstruction.update(irInReg, io.vjtag.ir_in)
     }.otherwise {
       // NOP
     }

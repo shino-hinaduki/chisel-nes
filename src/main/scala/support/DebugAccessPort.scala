@@ -21,65 +21,85 @@ class DebugAccessPort extends Module {
     // TODO: 必要なモジュールを接続
   })
 
+  // 制御用 TODO: 各所で切り替える
+  val busyReg = RegInit(Bool(), false.B)
+  val doneReg = RegInit(Bool(), false.B)
+  io.control.busy := busyReg
+  io.control.done := doneReg
+
   // 読み出しデータ
-  val readDataReg = RegInit(UInt(8.W), initialData)
-  io.control.readData := readDataReg
+  val readDataReg      = RegInit(UInt(8.W), initialData)
+  val readDataValidReg = RegInit(Bool(), false.B)
+  io.control.readData      := readDataReg
+  io.control.readDataValid := readDataValidReg
 
   // 読み出すアドレスマップは上位ビットで決める
   when(io.control.dataKind === DebugAccessDataKind.invalid) {
-    assert(false)
-    readDataReg := DontCare
+    readDataReg      := DontCare
+    readDataValidReg := false.B
   }.elsewhen(io.control.dataKind === DebugAccessDataKind.readTest) {
     // Read Test
     when(io.control.isWrite) {
-      readDataReg := DontCare
+      readDataReg      := DontCare
+      readDataValidReg := false.B
     }.otherwise {
-      readDataReg := readTest(io.control.addr)
+      readDataReg      := readTest(io.control.addr)
+      readDataValidReg := true.B
     }
   }.elsewhen(io.control.dataKind === DebugAccessDataKind.info) {
     // Info
     when(io.control.isWrite) {
-      readDataReg := DontCare
+      readDataReg      := DontCare
+      readDataValidReg := false.B
       // TODO: Write可能にするなら
     }.otherwise {
-      readDataReg := readInfo(io.control.addr)
+      readDataReg      := readInfo(io.control.addr)
+      readDataValidReg := true.B
     }
   }.elsewhen(io.control.dataKind === DebugAccessDataKind.screen) {
     // PPU Image
     when(io.control.isWrite) {
-      readDataReg := DontCare
+      readDataReg      := DontCare
+      readDataValidReg := false.B
     }.otherwise {
-      readDataReg := readScreen(io.control.addr)
+      readDataReg      := readScreen(io.control.addr)
+      readDataValidReg := true.B
     }
   }.elsewhen(io.control.dataKind === DebugAccessDataKind.cartridge) {
     // Emulated Cartridge
     when(io.control.isWrite) {
-      readDataReg := DontCare
+      readDataReg      := DontCare
+      readDataValidReg := false.B
       // TODO:
     }.otherwise {
-      readDataReg := readEmulateCart(io.control.addr)
+      readDataReg      := readEmulateCart(io.control.addr)
+      readDataValidReg := true.B
     }
   }.elsewhen(io.control.dataKind === DebugAccessDataKind.cpuBusMaster) {
     // CPU DataBus Master
     when(io.control.isWrite) {
-      readDataReg := DontCare
+      readDataReg      := DontCare
+      readDataValidReg := false.B
       // TODO:
     }.otherwise {
-      readDataReg := DontCare
+      readDataReg      := DontCare
+      readDataValidReg := false.B
       // TODO:
     }
   }.elsewhen(io.control.dataKind === DebugAccessDataKind.ppuBusMaster) {
     // PPU DataBus Master
     when(io.control.isWrite) {
-      readDataReg := DontCare
+      readDataReg      := DontCare
+      readDataValidReg := false.B
       // TODO:
     }.otherwise {
-      readDataReg := DontCare
+      readDataReg      := DontCare
+      readDataValidReg := false.B
       // TODO:
     }
   }.otherwise {
-    assert(false)
-    readDataReg := DontCare
+    readDataReg      := DontCare
+    readDataValidReg := false.B
   }
 
   protected def readPpuBus(addr: UInt): UInt = {
@@ -111,53 +131,56 @@ class DebugAccessPort extends Module {
 
   protected def readTest(addr: UInt): UInt = addr
 
-  protected def readInfo(addr: UInt): UInt = addr.litValue.toInt match {
-    // Identify
-    case 0x0000 => 0xaa.U(8.W)
-    case 0x0001 => 0x99.U(8.W)
-    case 0x0002 => 0x55.U(8.W)
-    case 0x0003 => 0x66.U(8.W)
-    // CPU Reg
-    case 0x0020 => 0x00.U(8.W) // TODO: PC(L)
-    case 0x0021 => 0x00.U(8.W) // TODO: PC(H)
-    case 0x0022 => 0x00.U(8.W) // TODO: A
-    case 0x0023 => 0x00.U(8.W) // TODO: X
-    case 0x0024 => 0x00.U(8.W) // TODO: Y
-    case 0x0025 => 0x00.U(8.W) // TODO: SP
-    case 0x0026 => 0x00.U(8.W) // TODO: P
-    // APU/JoyPad/IO Reg
-    case 0x0040 => 0x00.U(8.W) // TODO: 0x4000
-    case 0x0041 => 0x00.U(8.W) // TODO: 0x4001
-    case 0x0042 => 0x00.U(8.W) // TODO: 0x4002
-    case 0x0043 => 0x00.U(8.W) // TODO: 0x4003
-    case 0x0044 => 0x00.U(8.W) // TODO: 0x4004
-    case 0x0045 => 0x00.U(8.W) // TODO: 0x4005
-    case 0x0046 => 0x00.U(8.W) // TODO: 0x4006
-    case 0x0047 => 0x00.U(8.W) // TODO: 0x4007
-    case 0x0048 => 0x00.U(8.W) // TODO: 0x4008
-    case 0x0049 => 0x00.U(8.W) // TODO: 0x4009
-    case 0x004a => 0x00.U(8.W) // TODO: 0x400a
-    case 0x004b => 0x00.U(8.W) // TODO: 0x400b
-    case 0x004c => 0x00.U(8.W) // TODO: 0x400c
-    case 0x004d => 0x00.U(8.W) // TODO: 0x400d
-    case 0x004e => 0x00.U(8.W) // TODO: 0x400e
-    case 0x004f => 0x00.U(8.W) // TODO: 0x400f
-    case 0x00a0 => 0x00.U(8.W) // TODO: 0x4010
-    case 0x00a1 => 0x00.U(8.W) // TODO: 0x4011
-    case 0x00a2 => 0x00.U(8.W) // TODO: 0x4012
-    case 0x00a3 => 0x00.U(8.W) // TODO: 0x4013
-    case 0x00a4 => 0x00.U(8.W) // TODO: 0x4014
-    case 0x00a5 => 0x00.U(8.W) // TODO: 0x4015
-    case 0x00a6 => 0x00.U(8.W) // TODO: 0x4016
-    case 0x00a7 => 0x00.U(8.W) // TODO: 0x4017
-    case 0x00a8 => 0x00.U(8.W) // TODO: 0x4018
-    case 0x00a9 => 0x00.U(8.W) // TODO: 0x4019
-    case 0x00aa => 0x00.U(8.W) // TODO: 0x401a
-    case 0x00ab => 0x00.U(8.W) // TODO: 0x401b
-    case 0x00ac => 0x00.U(8.W) // TODO: 0x401c
-    case 0x00ad => 0x00.U(8.W) // TODO: 0x401d
-    case 0x00ae => 0x00.U(8.W) // TODO: 0x401e
-    case 0x00af => 0x00.U(8.W) // TODO: 0x401f
-    case _      => initialData
+  protected def readInfo(addr: UInt): UInt = if (!addr.isLit) { initialData } // TODO: 多分この書き方だとコンパイル時に消えている気がする
+  else {
+    addr.litValue.toInt match {
+      // Identify
+      case 0x0000 => 0xaa.U(8.W)
+      case 0x0001 => 0x99.U(8.W)
+      case 0x0002 => 0x55.U(8.W)
+      case 0x0003 => 0x66.U(8.W)
+      // CPU Reg
+      case 0x0020 => 0x00.U(8.W) // TODO: PC(L)
+      case 0x0021 => 0x00.U(8.W) // TODO: PC(H)
+      case 0x0022 => 0x00.U(8.W) // TODO: A
+      case 0x0023 => 0x00.U(8.W) // TODO: X
+      case 0x0024 => 0x00.U(8.W) // TODO: Y
+      case 0x0025 => 0x00.U(8.W) // TODO: SP
+      case 0x0026 => 0x00.U(8.W) // TODO: P
+      // APU/JoyPad/IO Reg
+      case 0x0040 => 0x00.U(8.W) // TODO: 0x4000
+      case 0x0041 => 0x00.U(8.W) // TODO: 0x4001
+      case 0x0042 => 0x00.U(8.W) // TODO: 0x4002
+      case 0x0043 => 0x00.U(8.W) // TODO: 0x4003
+      case 0x0044 => 0x00.U(8.W) // TODO: 0x4004
+      case 0x0045 => 0x00.U(8.W) // TODO: 0x4005
+      case 0x0046 => 0x00.U(8.W) // TODO: 0x4006
+      case 0x0047 => 0x00.U(8.W) // TODO: 0x4007
+      case 0x0048 => 0x00.U(8.W) // TODO: 0x4008
+      case 0x0049 => 0x00.U(8.W) // TODO: 0x4009
+      case 0x004a => 0x00.U(8.W) // TODO: 0x400a
+      case 0x004b => 0x00.U(8.W) // TODO: 0x400b
+      case 0x004c => 0x00.U(8.W) // TODO: 0x400c
+      case 0x004d => 0x00.U(8.W) // TODO: 0x400d
+      case 0x004e => 0x00.U(8.W) // TODO: 0x400e
+      case 0x004f => 0x00.U(8.W) // TODO: 0x400f
+      case 0x00a0 => 0x00.U(8.W) // TODO: 0x4010
+      case 0x00a1 => 0x00.U(8.W) // TODO: 0x4011
+      case 0x00a2 => 0x00.U(8.W) // TODO: 0x4012
+      case 0x00a3 => 0x00.U(8.W) // TODO: 0x4013
+      case 0x00a4 => 0x00.U(8.W) // TODO: 0x4014
+      case 0x00a5 => 0x00.U(8.W) // TODO: 0x4015
+      case 0x00a6 => 0x00.U(8.W) // TODO: 0x4016
+      case 0x00a7 => 0x00.U(8.W) // TODO: 0x4017
+      case 0x00a8 => 0x00.U(8.W) // TODO: 0x4018
+      case 0x00a9 => 0x00.U(8.W) // TODO: 0x4019
+      case 0x00aa => 0x00.U(8.W) // TODO: 0x401a
+      case 0x00ab => 0x00.U(8.W) // TODO: 0x401b
+      case 0x00ac => 0x00.U(8.W) // TODO: 0x401c
+      case 0x00ad => 0x00.U(8.W) // TODO: 0x401d
+      case 0x00ae => 0x00.U(8.W) // TODO: 0x401e
+      case 0x00af => 0x00.U(8.W) // TODO: 0x401f
+      case _      => initialData
+    }
   }
 }

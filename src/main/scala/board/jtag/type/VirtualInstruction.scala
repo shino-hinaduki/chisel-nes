@@ -19,38 +19,34 @@ class VirtualInstruction extends Bundle {
   /* 操作するデータのベースアドレス。この値はShift-DRを1byteすすめるたびにオートインクリメントする */
   val baseAddr = UInt(16.W)
 }
-
 object VirtualInstruction {
 
   /**
-      * VIRの値を解釈した値を返します
+      * VIRの値を解釈した値で更新します
       * VIRは24bit設定想定で、中身のフォーマットは { baseAddr[15:8], baseAddr[7:0], isWrite[1], dataKind[6:0] } とする
       * 
       * @param vir USER1命令で設定されたIRの値
       * @return 解釈した命令
       */
-  def parse(vir: UInt): VirtualInstruction = {
-    val (dataKind, isValid) = DebugAccessDataKind.safe(vir(6, 0))
+  def update(dst: VirtualInstruction, vir: UInt) = {
+    val (dataKind, isValid) = DebugAccessDataKind.safe(vir(DebugAccessDataKind.getWidth - 1, 0))
 
-    val dst = new VirtualInstruction
+    dst.raw      := vir
     dst.baseAddr := vir(23, 8)
     dst.isWrite  := vir(7)
     dst.dataKind := dataKind
     dst.isValid  := isValid
-
-    dst
   }
 
   /**
-    * 無効値を返す
+    * 無効値を設定
+    * @param dst 更新対象
     */
-  def invalid(): VirtualInstruction = {
-    val dst = new VirtualInstruction
-    dst.baseAddr := 0.U
+  def setInvalid(dst: VirtualInstruction) = {
+    dst.raw      := 0.U(24.W)
+    dst.baseAddr := 0.U(16.W)
     dst.isWrite  := false.B
     dst.dataKind := DebugAccessDataKind.invalid
     dst.isValid  := false.B
-
-    dst
   }
 }
