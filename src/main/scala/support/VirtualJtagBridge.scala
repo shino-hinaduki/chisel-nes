@@ -25,13 +25,8 @@ class VirtualJtagBridge extends Module {
   // JTAG Clock Domain
   withClock(io.vjtag.tck) {
     // 現在キャプチャされている命令
-    val irInReg = RegInit(UInt(irWidth), 0.U)
-    io.vjtag.ir_out := irInReg // そのまま向けておく
-    // irInRegを解釈した値
-    val isValidIrReg = RegInit(Bool(), false.B)
-    val isWriteReg   = RegInit(Bool(), false.B)
-    val dataKindReg  = RegInit(DebugAccessDataKind.Type(), DebugAccessDataKind.invalid)
-    val baseAddrReg  = RegInit(UInt(16.W), 0.U)
+    val irInReg = RegInit(new VirtualInstruction, VirtualInstruction.invalid())
+    io.vjtag.ir_out := irInReg.raw // そのまま向けておく
     // 出力するデータ
     val tdoReg = RegInit(Bool(), false.B)
     io.vjtag.tdo := tdoReg
@@ -40,7 +35,7 @@ class VirtualJtagBridge extends Module {
       // Capture_DR
     }.elsewhen(io.vjtag.virtual_state_sdr) {
       // Shift_DR
-      when(isValidIrReg) {
+      when(irInReg.isValid) {
         // TODO: 有効なデータを流す
       }.otherwise {
         // 本IPとは無関係の命令が流れているので、Bypassする
@@ -56,17 +51,11 @@ class VirtualJtagBridge extends Module {
       // Update_DR
     }.elsewhen(io.vjtag.virtual_state_cir) {
       // Capture_IR
-      // (irInRegを見せているものがキャプチャされるだけなのでケア不要)
+      // (irInReg.rawを見せているものがキャプチャされるだけなのでケア不要)
     }.elsewhen(io.vjtag.virtual_state_uir) {
       // Update_IR
       // VirtualJTAGなので (ShiftIR USER1, ShiftDR XXXX) で流した XXXX が io.vjtag.ir_in に入っている
-      irInReg := io.vjtag.ir_in
-
-      val inst = VirtualInstruction.parse(io.vjtag.ir_in)
-      isValidIrReg := inst.isValid
-      isWriteReg   := inst.isWrite
-      dataKindReg  := inst.dataKind
-      baseAddrReg  := inst.dataKind
+      irInReg := VirtualInstruction.parse(io.vjtag.ir_in)
     }.otherwise {
       // NOP
     }

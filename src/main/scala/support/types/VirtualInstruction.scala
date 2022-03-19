@@ -5,13 +5,20 @@ import support.types.DebugAccessDataKind
 import chisel3.util.Cat
 
 /**
-  * VIRに指定されたデータを解釈した型
-  * @param isValid 正しくParseできていればtrue
-  * @param dataKind 操作するデータ対象
-  * @param write DebugAccessPortに対しReadする場合はfalse,Writeする場合はtrue
-  * @param baseAddr 操作するデータのベースアドレス。この値はShift-DRを1byteすすめるたびにオートインクリメントする
+  * Virtual JTAGで受付可能な命令の定義
   */
-case class VirtualInstruction(isValid: Bool, isWrite: Bool, dataKind: DebugAccessDataKind.Type, baseAddr: UInt)
+class VirtualInstruction extends Bundle {
+  /* IR生の値 */
+  val raw = UInt(24.W)
+  /* 正しくParseできていればtrue */
+  val isValid = Bool()
+  /* 操作するデータ対象 */
+  val isWrite = Bool()
+  /* DebugAccessPortに対しReadする場合はfalse,Writeする場合はtrue */
+  val dataKind = DebugAccessDataKind.Type()
+  /* 操作するデータのベースアドレス。この値はShift-DRを1byteすすめるたびにオートインクリメントする */
+  val baseAddr = UInt(16.W)
+}
 
 object VirtualInstruction {
 
@@ -23,10 +30,27 @@ object VirtualInstruction {
       * @return 解釈した命令
       */
   def parse(vir: UInt): VirtualInstruction = {
-    val addr            = vir(23, 8)
-    val isWrite         = vir(7)
-    val (inst, isValid) = DebugAccessDataKind.safe(vir(6, 0))
+    val (dataKind, isValid) = DebugAccessDataKind.safe(vir(6, 0))
 
-    VirtualInstruction(isValid, isWrite, inst, addr)
+    val dst = new VirtualInstruction
+    dst.baseAddr := vir(23, 8)
+    dst.isWrite  := vir(7)
+    dst.dataKind := dataKind
+    dst.isValid  := isValid
+
+    dst
+  }
+
+  /**
+    * 無効値を返す
+    */
+  def invalid(): VirtualInstruction = {
+    val dst = new VirtualInstruction
+    dst.baseAddr := 0.U
+    dst.isWrite  := false.B
+    dst.dataKind := DebugAccessDataKind.invalid
+    dst.isValid  := false.B
+
+    dst
   }
 }
