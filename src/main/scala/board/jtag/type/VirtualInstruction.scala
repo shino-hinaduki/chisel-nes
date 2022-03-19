@@ -1,4 +1,4 @@
-package support.types
+package board.jtag.types
 
 import chisel3._
 import support.types.DebugAccessDataKind
