@@ -53,7 +53,12 @@
             <RowDefinition Height="227.103"/>
             <RowDefinition Height="35.937"/>
         </Grid.RowDefinitions>
-        <StatusBar Grid.Row="2" Grid.ColumnSpan="2" Margin="0,13,0,0"/>
+        <StatusBar Grid.Row="2" Grid.ColumnSpan="2" Margin="0,5,0,0">
+            <Grid>
+                
+            </Grid>
+            <Label Content="Label"/>
+        </StatusBar>
         <StackPanel Grid.Column="1" Grid.RowSpan="2">
             <Expander Height="223" Header="Device Select" IsExpanded="True">
                 <StackPanel>
@@ -64,6 +69,7 @@
             </Expander>
             <Expander Height="223" Header="JTAG Test" IsExpanded="True">
                 <StackPanel>
+                    <Button Content="IDCODE"/>
                 </StackPanel>
             </Expander>
             <Expander Height="223" Header="Preview" IsExpanded="True">

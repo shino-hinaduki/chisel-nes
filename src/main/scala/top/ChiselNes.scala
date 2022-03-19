@@ -4,6 +4,9 @@ import chisel3._
 import board.BoardIO
 import board.SevenSegmentLed
 import chisel3.util.MuxLookup
+import board.jtag.VirtualJtagBridge
+import board.jtag.types.VirtualJtagIO
+import support.DebugAccessPort
 
 /** 
  * Top Module
@@ -12,6 +15,8 @@ class ChiselNes extends Module {
   val io = IO(new Bundle {
     // DE0-CV外部コンポーネント
     val extPort = new BoardIO()
+    // Virtual JTAG I/F
+    val vjtag = new VirtualJtagIO(24.W)
     // TODO: PLLで生成したClock
     // TODO: その他
   })
@@ -68,6 +73,12 @@ class ChiselNes extends Module {
 
   // TODO: エミュレータ自体のImpl
   // TODO: エミュレータと外部コンポーネントの接続
+
+  // Virtual JTAG & DebugAccessPort
+  val virtualJtagBridge = Module(new VirtualJtagBridge)
+  val debugAccessPort   = Module(new DebugAccessPort)
+  virtualJtagBridge.io.vjtag <> io.vjtag
+  virtualJtagBridge.io.dap <> debugAccessPort.io.control
 }
 
 /** Generate Verilog

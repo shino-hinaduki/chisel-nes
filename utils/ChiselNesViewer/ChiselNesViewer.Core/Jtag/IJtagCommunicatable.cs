@@ -15,6 +15,18 @@ namespace ChiselNesViewer.Core.Jtag {
         const uint ReadUnitSize = 63;
 
         #region デバイスの操作
+
+        /// <summary>
+        /// WriteBufferの内容をクリアします
+        /// </summary>
+        /// <returns></returns>
+        public bool ClearWriteBuffer();
+        /// <summary>
+        /// ReadBufferの内容をクリアします
+        /// </summary>
+        /// <returns></returns>
+        public bool ClearReadBuffer();
+
         /// <summary>
         /// Readを実行します
         /// </summary>
@@ -39,7 +51,12 @@ namespace ChiselNesViewer.Core.Jtag {
 
         #region JTAG TAP操作
         /// <summary>
-        /// TAPコントローラの操作。TMSを保って5回クロックを入れReset→Idle遷移する
+        /// TAPコントローラの操作。TMSを保って5回クロックを入れReset
+        /// </summary>
+        /// <returns></returns>
+        public bool MoveTestLogicReset();
+        /// <summary>
+        /// TAPコントローラの操作。TLR->RTI遷移
         /// </summary>
         /// <returns></returns>
         public bool MoveIdle();
@@ -53,6 +70,13 @@ namespace ChiselNesViewer.Core.Jtag {
         /// </summary>
         /// <returns></returns>
         public bool WriteShiftDr(byte data);
+
+        /// <summary>
+        /// TAPコントローラの操作。DRのデータを受け取る
+        /// </summary>
+        /// <returns>ReadUnitSize byte分のReadData</returns>
+        public byte[] ReadShiftDr();
+
         /// <summary>
         /// TAPコントローラの操作。IRにデータを流す
         /// </summary>

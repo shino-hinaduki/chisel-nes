@@ -15,16 +15,6 @@ namespace ChiselNesViewer.Core.Jtag {
     /// </summary>
     public class JtagMaster : IDisposable, IJtagCommunicatable {
         /// <summary>
-        /// Latencyの初期設定。通常16msがデフォルトだが短くできるデバイスもある
-        /// </summary>
-        private const int Latency = 16;
-
-        /// <summary>
-        /// BaudRateの初期設定。FT245のApplication Notesおり 3MB/sが最高だが実効は1MB/sほど
-        /// </summary>
-        private const int BaudRate = 3000000;
-
-        /// <summary>
         /// 内部的に持っておくデバイスハンドラ
         /// </summary>
         protected FTDI? _device = null;
@@ -72,47 +62,37 @@ namespace ChiselNesViewer.Core.Jtag {
         /// <exception cref="NotImplementedException"></exception>
         public bool Open(FTDI.FT_DEVICE_INFO_NODE targetInfo) {
             Debug.Assert(targetInfo != null);
-            Debug.Assert(this._device == null);
 
             // Close済想定だが、念の為あるなら閉じておく
             this._device?.Close();
-            this._device = null;
 
             // SerialNumberを引数に開く
             var device = new FTDI();
             if (device.OpenByDescription(targetInfo.Description) != FTDI.FT_STATUS.FT_OK) {
                 return false;
             }
-
             // ローカルにセット
             this._device = device;
-
-            // JTAGで利用するための設定を施す
             Debug.Assert(_device?.IsOpen ?? false);
-            Configure();
+
+            // 初期状態が不明なので、Test/Logic Resetに入れておく
+            MoveTestLogicReset();
 
             // 成功
             return true;
         }
-
-        /// <summary>
-        /// デバイスを初期化して、必要な設定を施します
-        /// </summary>
-        private void Configure() {
-            Debug.Assert(this._device?.IsOpen ?? false);
-
-            _device?.ResetDevice();
-            _device?.SetLatency(Latency);
-            _device?.SetBaudRate(BaudRate);
-        }
-
         /// <summary>
         /// デバイスを切断します
         /// </summary>
         /// <returns></returns>
         public bool Close() {
             Debug.Assert(this._device != null);
-            return _device?.Close() == FTDI.FT_STATUS.FT_OK;
+
+            this?.MoveTestLogicReset();
+            var result = _device?.Close();
+            _device = null;
+
+            return result == FTDI.FT_STATUS.FT_OK;
         }
 
         protected virtual void Dispose(bool disposing) {
@@ -143,9 +123,17 @@ namespace ChiselNesViewer.Core.Jtag {
         private const byte WR = 0x81;
         private const byte RD = 0xc0;
 
+        public bool ClearWriteBuffer() {
+            Debug.Assert(_device?.IsOpen ?? false);
+            return _device?.Purge(FTDI.FT_PURGE.FT_PURGE_TX) == FTDI.FT_STATUS.FT_OK;
+        }
+        public bool ClearReadBuffer() {
+            Debug.Assert(_device?.IsOpen ?? false);
+            return _device?.Purge(FTDI.FT_PURGE.FT_PURGE_RX) == FTDI.FT_STATUS.FT_OK;
+        }
         public byte[] ReadU8(int readReqBytes) {
             Debug.Assert(_device?.IsOpen ?? false);
-            Debug.Assert(0 <= readReqBytes && readReqBytes < IJtagCommunicatable.ReadUnitSize);
+            Debug.Assert(0 <= readReqBytes && readReqBytes <= IJtagCommunicatable.ReadUnitSize);
 
             var readData = new byte[readReqBytes];
             uint readBytes = 0;
@@ -181,6 +169,9 @@ namespace ChiselNesViewer.Core.Jtag {
             return WriteU8(dataBytes);
         }
 
+        public bool MoveTestLogicReset() =>
+            WriteU16(TMS, TMS, TMS, TMS, TMS);
+
         public bool MoveIdle() =>
             WriteU16(TMS, TMS, TMS, TMS, TMS, L);
 
@@ -189,6 +180,18 @@ namespace ChiselNesViewer.Core.Jtag {
 
         public bool WriteShiftDr(byte data) =>
             WriteU8(WR, data);
+
+        public byte[] ReadShiftDr() {
+            ClearReadBuffer();
+            WriteU16((ushort)(RD | IJtagCommunicatable.ReadUnitSize));
+
+            // dummy write
+            WriteU16(Enumerable.Repeat(L, (int)IJtagCommunicatable.ReadUnitSize).ToArray());
+            // read
+            var d = ReadU8((int)IJtagCommunicatable.ReadUnitSize);
+
+            return d;
+        }
 
         public bool WriteShiftIr(byte data) =>
             WriteU16(BitConverter.ToUInt16(new byte[] { WR, data }), L);
@@ -205,40 +208,32 @@ namespace ChiselNesViewer.Core.Jtag {
             WriteU16(TMS_H, TMS, OFF);
 
         public bool WriteShiftDr(IEnumerable<byte> src) {
-            Debug.Assert(src != null);
-
-            // (u8) WR, data[0], WR, data[1], ... の送信データを作って送信する
-            var writeDatas = src.SelectMany(x => new byte[] { WR, x }).ToArray();
-            return (writeDatas.Length == 0) ? true : WriteU8(writeDatas);
+            foreach (var d in src) {
+                var result = WriteShiftDr(d);
+                if (!result) {
+                    Debug.Fail("WriteShiftDr failed");
+                    return false;
+                }
+            }
+            return true;
         }
 
         public byte[] ReadShiftDr(uint dataSize) {
-            // サイズ指定がないときは処理不要
-            if (dataSize == 0) {
-                return new byte[] { };
+            var result = new List<byte>((int)dataSize);
+            // 63byteで通信する分
+            var maxTransferCount = dataSize / IJtagCommunicatable.ReadUnitSize;
+            for (var i = 0; i < maxTransferCount; i++) {
+                var datas = ReadShiftDr();
+                result.AddRange(datas);
             }
-
-            // FTD2XX都合で64byteごと処理する
-            var dst = new List<byte>(capacity: (int)dataSize);
-            var remainSize = dataSize;
-            while (remainSize > 0) {
-                // 63byteもしくは残りの端数
-                var readBytes = Math.Min(remainSize, IJtagCommunicatable.ReadUnitSize);
-                remainSize -= readBytes;
-                Debug.Assert(0 < readBytes && readBytes <= IJtagCommunicatable.ReadUnitSize);
-
-                // (u16) RD | readBytes, 0 | L, 0 | L, 0 | L, ....のデータを作って送る
-                var sendDataU16Length = (int)(readBytes + 1); // 先頭の命令分を追加
-                var sendDataU16 = Enumerable.Repeat(L, sendDataU16Length).ToArray();
-                sendDataU16[0] = (ushort)(RD | readBytes);
-                WriteU16(sendDataU16);
-
-                // 0 | L, 0 | L, ... の部分を受け取る。データ分のみなのでreadByteそのまま
-                var readDataU8 = ReadU8((int)readBytes);
-                dst.AddRange(readDataU8);
+            // 最後のあまり
+            var remainBytes = dataSize % IJtagCommunicatable.ReadUnitSize;
+            if (remainBytes > 0) {
+                var datas = ReadShiftDr();
+                result.AddRange(datas.Take((int)remainBytes));
             }
-            return dst.ToArray();
-
+            // 連結して返す
+            return result.ToArray();
         }
         #endregion
     }
