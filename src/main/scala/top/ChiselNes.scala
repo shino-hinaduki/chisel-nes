@@ -1,11 +1,14 @@
 package top
 
 import chisel3._
+import chisel3.util.Cat
+import chisel3.util.MuxLookup
+
 import board.BoardIO
 import board.SevenSegmentLed
-import chisel3.util.MuxLookup
 import board.jtag.VirtualJtagBridge
 import board.jtag.types.VirtualJtagIO
+
 import support.DebugAccessPort
 
 /** 
@@ -57,18 +60,45 @@ class ChiselNes extends Module {
   io.extPort.VGA_R             := 0.U
   io.extPort.VGA_VS            := false.B
 
-  // ボードテスト回路
-  withClockAndReset(io.extPort.CLOCK_50, !io.extPort.RESET_N) {
-    val counter = RegInit(UInt(64.W), 0.U)
-    counter         := counter + 1.U
-    io.extPort.LEDR := (1.U(10.W) << counter(23, 20))
-    val digits = SevenSegmentLed.decodeNDigits(counter >> 16.U, 6, isActiveLow = true)
+  // ボードテスト回路(7segにカウンタの値を出す)
+  // withClockAndReset(io.extPort.CLOCK_50, !io.extPort.RESET_N) {
+  //   val counter = RegInit(UInt(64.W), 0.U)
+  //   counter         := counter + 1.U
+  //   io.extPort.LEDR := (1.U(10.W) << counter(23, 20))
+  //   val digits = SevenSegmentLed.decodeNDigits(counter >> 16.U, 6, isActiveLow = true)
+  //   io.extPort.HEX0 := digits(0)
+  //   io.extPort.HEX1 := digits(1)
+  //   io.extPort.HEX2 := digits(2)
+  //   io.extPort.HEX3 := digits(3)
+  //   io.extPort.HEX4 := digits(4)
+  //   io.extPort.HEX5 := digits(5)
+  // }
+
+  // ボードテスト回路(7segにVJTAGのVIRの値を出す)
+  withClock(io.vjtag.tck) {
+    // ir_inの値そのまま
+    val digits = SevenSegmentLed.decodeNDigits(io.vjtag.ir_in, 6, isActiveLow = true)
     io.extPort.HEX0 := digits(0)
     io.extPort.HEX1 := digits(1)
     io.extPort.HEX2 := digits(2)
     io.extPort.HEX3 := digits(3)
     io.extPort.HEX4 := digits(4)
     io.extPort.HEX5 := digits(5)
+
+    // VJTAGのstate
+    io.extPort.LEDR := Cat(
+      io.vjtag.virtual_state_cdr,
+      io.vjtag.virtual_state_sdr,
+      io.vjtag.virtual_state_e1dr,
+      io.vjtag.virtual_state_pdr,
+      io.vjtag.virtual_state_e2dr,
+      io.vjtag.virtual_state_udr,
+      io.vjtag.virtual_state_cir,
+      io.vjtag.virtual_state_uir,
+      io.vjtag.tdi,
+      io.vjtag.tck.asBool
+    )
+
   }
 
   // TODO: エミュレータ自体のImpl
