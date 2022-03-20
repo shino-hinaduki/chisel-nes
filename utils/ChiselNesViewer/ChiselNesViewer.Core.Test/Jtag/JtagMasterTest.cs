@@ -95,5 +95,47 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             Assert.AreEqual(idcode.Raw, (uint)0x02b050dd);
             Assert.AreEqual(usercode.Raw, (uint)0x04b56019);
         }
+
+
+        /// <summary>
+        /// VIRへの書き込みと、適当なデータの流し込みテスト
+        /// </summary>
+        [TestMethod]
+        [DoNotParallelize]
+        public void TestVirtualJtagWrite() {
+            var jtag = new JtagMaster();
+            var devices = JtagMaster.GetDevices();
+            var device = devices.First(x => x.Description == DeviceDescription);
+            Assert.IsTrue(jtag.Open(device));
+
+            jtag.MoveIdle();
+            jtag.MoveIdleToShiftIr();
+
+            // USER1 testVirtualInst
+            // お試し命令, e6b954b3cc のデザインを焼いていればLEDに出るはず
+            const byte VJTAG_USER1 = 0x0e;
+            var testVirtualInst = new byte[] { 0xab, 0xcd, 0xef }.Reverse(); 
+
+            jtag.WriteShiftIr(VJTAG_USER1);
+            jtag.MoveShiftIrToShiftDr();
+            jtag.WriteShiftDr(testVirtualInst);
+            jtag.MoveShiftDrToShiftIr();
+
+            // USER0 testData
+            // お試しデータ。こちらはVDRに流しているので何も起きない
+            const byte VJTAG_USER0 = 0x0c;
+            var testVirtualData = new byte[] { 0x01,0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef }.Reverse(); // お試しデータ
+
+            jtag.WriteShiftIr(VJTAG_USER0);
+            jtag.MoveShiftIrToShiftDr();
+            jtag.WriteShiftDr(testVirtualData);
+            jtag.MoveShiftDrToShiftIr();
+
+            // TLRに戻しておく
+            jtag.MoveTestLogicReset();
+
+            Assert.IsTrue(jtag.Close());
+
+        }
     }
 }
