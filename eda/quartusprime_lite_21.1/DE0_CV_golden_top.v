@@ -157,39 +157,44 @@ module DE0_CV_golden_top (
 
 /*****************************************************************/
 // for jtag debug
-//debug_subsystem debug_subsystem0 (
-    // .clk_clk                                                 (CLOCK_50CLOCK_50CLOCK_50),                                                 //                                         clk.clk
-    // .cpu_debug_bus_bridge_0_interrupt_irq                    (<connected-to-cpu_debug_bus_bridge_0_interrupt_irq>),                    //            cpu_debug_bus_bridge_0_interrupt.irq
-    // .ppu_debug_bus_bridge_0_interrupt_irq                    (<connected-to-ppu_debug_bus_bridge_0_interrupt_irq>),                    //            ppu_debug_bus_bridge_0_interrupt.irq
-    // .reset_reset_n                                           (RESET_NRESET_NRESET_N),                                           //                                       reset.reset_n
-    // .to_external_bus_bridge_0_external_interface_acknowledge (<connected-to-to_external_bus_bridge_0_external_interface_acknowledge>), // to_external_bus_bridge_0_external_interface.acknowledge
-    // .to_external_bus_bridge_0_external_interface_irq         (<connected-to-to_external_bus_bridge_0_external_interface_irq>),         //                                            .irq
-    // .to_external_bus_bridge_0_external_interface_address     (<connected-to-to_external_bus_bridge_0_external_interface_address>),     //                                            .address
-    // .to_external_bus_bridge_0_external_interface_bus_enable  (<connected-to-to_external_bus_bridge_0_external_interface_bus_enable>),  //                                            .bus_enable
-    // .to_external_bus_bridge_0_external_interface_byte_enable (<connected-to-to_external_bus_bridge_0_external_interface_byte_enable>), //                                            .byte_enable
-    // .to_external_bus_bridge_0_external_interface_rw          (<connected-to-to_external_bus_bridge_0_external_interface_rw>),          //                                            .rw
-    // .to_external_bus_bridge_0_external_interface_write_data  (<connected-to-to_external_bus_bridge_0_external_interface_write_data>),  //                                            .write_data
-    // .to_external_bus_bridge_0_external_interface_read_data   (<connected-to-to_external_bus_bridge_0_external_interface_read_data>),   //                                            .read_data
-    // .to_external_bus_bridge_1_external_interface_acknowledge (<connected-to-to_external_bus_bridge_1_external_interface_acknowledge>), // to_external_bus_bridge_1_external_interface.acknowledge
-    // .to_external_bus_bridge_1_external_interface_irq         (<connected-to-to_external_bus_bridge_1_external_interface_irq>),         //                                            .irq
-    // .to_external_bus_bridge_1_external_interface_address     (<connected-to-to_external_bus_bridge_1_external_interface_address>),     //                                            .address
-    // .to_external_bus_bridge_1_external_interface_bus_enable  (<connected-to-to_external_bus_bridge_1_external_interface_bus_enable>),  //                                            .bus_enable
-    // .to_external_bus_bridge_1_external_interface_byte_enable (<connected-to-to_external_bus_bridge_1_external_interface_byte_enable>), //                                            .byte_enable
-    // .to_external_bus_bridge_1_external_interface_rw          (<connected-to-to_external_bus_bridge_1_external_interface_rw>),          //                                            .rw
-    // .to_external_bus_bridge_1_external_interface_write_data  (<connected-to-to_external_bus_bridge_1_external_interface_write_data>),  //                                            .write_data
-    // .to_external_bus_bridge_1_external_interface_read_data   (<connected-to-to_external_bus_bridge_1_external_interface_read_data>),   //                                            .read_data
-    // .clk_1_clk_clk                                           (<connected-to-clk_1_clk_clk>),                                           //                                   clk_1_clk.clk
-    // .clk_1_clk_reset_reset_n                                 (<connected-to-clk_1_clk_reset_reset_n>),                                 //                             clk_1_clk_reset.reset_n
-    // .clk_ppu_0_clk_clk                                       (<connected-to-clk_ppu_0_clk_clk>),                                       //                               clk_ppu_0_clk.clk
-    // .clk_ppu_0_clk_reset_reset_n                             (<connected-to-clk_ppu_0_clk_reset_reset_n>)                              //                         clk_ppu_0_clk_reset.reset_n
-// );
+wire        tdi;
+wire        tdo;
+wire [23:0] ir_in;
+wire [23:0] ir_out;
+wire        virtual_state_cdr;
+wire        virtual_state_sdr;
+wire        virtual_state_e1dr;
+wire        virtual_state_pdr;
+wire        virtual_state_e2dr;
+wire        virtual_state_udr;
+wire        virtual_state_cir;
+wire        virtual_state_uir;
+wire        tck;
 
-
+virtual_jtag vjtag0 (
+		.tdi(tdi),
+		.tdo(tdo),
+		.ir_in(ir_in),
+		.ir_out(ir_out),
+		.virtual_state_cdr(virtual_state_cdr),
+		.virtual_state_sdr(virtual_state_sdr),
+		.virtual_state_e1dr(virtual_state_e1dr),
+		.virtual_state_pdr(virtual_state_pdr),
+		.virtual_state_e2dr(virtual_state_e2dr),
+		.virtual_state_udr(virtual_state_udr),
+		.virtual_state_cir(virtual_state_cir),
+		.virtual_state_uir(virtual_state_uir),
+		.tck(tck)
+	);
+	
 /*****************************************************************/
 // TODO: inout兼用ピンが未定義のwireのまま
 ChiselNes chiselNes0(
+  // System Clock
 //  .clock(clock),
 //  .reset(reset),
+
+  // External Port
   .io_extPort_CLOCK_50(CLOCK_50),
   .io_extPort_CLOCK2_50(CLOCK2_50),
   .io_extPort_CLOCK3_50(CLOCK3_50),
@@ -246,8 +251,23 @@ ChiselNes chiselNes0(
   .io_extPort_VGA_G(VGA_G),
   .io_extPort_VGA_HS(VGA_HS),
   .io_extPort_VGA_R(VGA_R),
-  .io_extPort_VGA_VS(VGA_VS)
-);
+  .io_extPort_VGA_VS(VGA_VS),
+
+  // Virtual JTAG
+  .io_vjtag_tdi(tdi),
+  .io_vjtag_tdo(tdo),
+  .io_vjtag_ir_in(ir_in),
+  .io_vjtag_ir_out(ir_out),
+  .io_vjtag_virtual_state_cdr(virtual_state_cdr),
+  .io_vjtag_virtual_state_sdr(virtual_state_sdr),
+  .io_vjtag_virtual_state_e1dr(virtual_state_e1dr),
+  .io_vjtag_virtual_state_pdr(virtual_state_pdr),
+  .io_vjtag_virtual_state_e2dr(virtual_state_e2dr),
+  .io_vjtag_virtual_state_udr(virtual_state_udr),
+  .io_vjtag_virtual_state_cir(virtual_state_cir),
+  .io_vjtag_virtual_state_uir(virtual_state_uir),
+  .io_vjtag_tck(tck)
+  );
 
 endmodule 
 
