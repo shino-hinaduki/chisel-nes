@@ -102,7 +102,7 @@ namespace ChiselNesViewer.Core.Test.Jtag {
         /// </summary>
         [TestMethod]
         [DoNotParallelize]
-        public void TestVirtualJtagWrite() {
+        public void TestVirtualJtagWriteRead() {
             var jtag = new JtagMaster();
             var devices = JtagMaster.GetDevices();
             var device = devices.First(x => x.Description == DeviceDescription);
@@ -114,26 +114,31 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             // USER1 testVirtualInst
             // お試し命令, e6b954b3cc のデザインを焼いていればLEDに出るはず
             const byte VJTAG_USER1 = 0x0e;
-            var testVirtualInst = new byte[] { 0xab, 0xcd, 0xef }.Reverse(); 
+            var testVirtualInst = new byte[] { 0x12, 0x34, 0x56 }.Reverse().ToArray(); 
 
             jtag.WriteShiftIr(VJTAG_USER1);
             jtag.MoveShiftIrToShiftDr();
             jtag.WriteShiftDr(testVirtualInst);
             jtag.MoveShiftDrToShiftIr();
 
-            // USER0 testData
+            // USER0 Write testData
             // お試しデータ。こちらはVDRに流しているので何も起きない
             const byte VJTAG_USER0 = 0x0c;
-            var testVirtualData = new byte[] { 0x01,0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef }.Reverse(); // お試しデータ
+            var testWriteData = new byte[] { 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef }.Reverse().ToArray();
 
             jtag.WriteShiftIr(VJTAG_USER0);
             jtag.MoveShiftIrToShiftDr();
-            jtag.WriteShiftDr(testVirtualData);
+            jtag.WriteShiftDr(testWriteData);
             jtag.MoveShiftDrToShiftIr();
 
-            // TLRに戻しておく
-            jtag.MoveTestLogicReset();
+            // USER0 Read testData
+            // お試しデータの読み出し。 e6b954b3cc のデザインだとbypassされているはず
+            jtag.WriteShiftIr(VJTAG_USER0);
+            jtag.MoveShiftIrToShiftDr();
+            var testReadData = jtag.ReadShiftDr((uint)testWriteData.Length);
+            jtag.MoveShiftDrToShiftIr();
 
+            // test終了
             Assert.IsTrue(jtag.Close());
 
         }
