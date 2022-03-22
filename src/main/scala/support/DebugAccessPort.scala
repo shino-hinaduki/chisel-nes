@@ -56,48 +56,8 @@ class DebugAccessPort extends Module {
       readDataReg      := readInfo(io.control.addr)
       readDataValidReg := true.B
     }
-  }.elsewhen(io.control.dataKind === DebugAccessDataKind.screen) {
-    // PPU Image
-    when(io.control.isWrite) {
-      readDataReg      := DontCare
-      readDataValidReg := false.B
-    }.otherwise {
-      readDataReg      := readScreen(io.control.addr)
-      readDataValidReg := true.B
-    }
-  }.elsewhen(io.control.dataKind === DebugAccessDataKind.cartridge) {
-    // Emulated Cartridge
-    when(io.control.isWrite) {
-      readDataReg      := DontCare
-      readDataValidReg := false.B
-      // TODO:
-    }.otherwise {
-      readDataReg      := readEmulateCart(io.control.addr)
-      readDataValidReg := true.B
-    }
-  }.elsewhen(io.control.dataKind === DebugAccessDataKind.cpuBusMaster) {
-    // CPU DataBus Master
-    when(io.control.isWrite) {
-      readDataReg      := DontCare
-      readDataValidReg := false.B
-      // TODO:
-    }.otherwise {
-      readDataReg      := DontCare
-      readDataValidReg := false.B
-      // TODO:
-    }
-  }.elsewhen(io.control.dataKind === DebugAccessDataKind.ppuBusMaster) {
-    // PPU DataBus Master
-    when(io.control.isWrite) {
-      readDataReg      := DontCare
-      readDataValidReg := false.B
-      // TODO:
-    }.otherwise {
-      readDataReg      := DontCare
-      readDataValidReg := false.B
-      // TODO:
-    }
   }.otherwise {
+    // TODO: 他の実装
     readDataReg      := DontCare
     readDataValidReg := false.B
   }
