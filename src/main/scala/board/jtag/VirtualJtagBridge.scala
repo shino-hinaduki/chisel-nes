@@ -59,6 +59,10 @@ class VirtualJtagBridge extends Module {
     def resetShiftCount() = {
       shiftCountReg := 0.U
     }
+    // シフト数を指定した値に設定
+    def setShiftCount(count: UInt) = {
+      shiftCountReg := count
+    }
     // シフト数をすすめる
     def incShiftCount() = {
       shiftCountReg := shiftCountReg + 1.U
@@ -80,6 +84,10 @@ class VirtualJtagBridge extends Module {
     def shiftDataInReg() = {
       dataInReg := Cat(io.vjtag.tdi, dataInReg(7, 1))
     }
+    // postDataInに値を設定する
+    def setPostDataInReg(data: UInt) = {
+      postDataInReg := data
+    }
     // dataOutRegをクリアする
     def resetDataOutReg() = {
       tdoReg        := false.B
@@ -91,12 +99,20 @@ class VirtualJtagBridge extends Module {
       tdoReg     := dataOutReg(0)
       dataOutReg := Cat(false.B, dataOutReg(7, 1))
     }
-
+    // 1bitはbypassしてtdoRegに直接セットしつつ、次1byteのデータを設定する
+    def setDataOutReg(data: UInt) = {
+      tdoReg     := data(0)
+      dataOutReg := Cat(false.B, data(7, 1)) // 1bitはBypass済
+    }
+    // preDataOutに値を設定する
+    def setPreDataOutReg(data: UInt) = {
+      preDataOutReg := data
+    }
     // ReadをDAPに投げる
     def reqReadToDap(kind: DebugAccessDataKind.Type, addr: UInt) = {
       // TODO: AsyncFIFO経由でDAPに要求を出す
     }
-    // TODO: Read応答が来たものを preDataOutRegに格納する
+    // TODO: Read応答が来たものを preDataOutRegに格納する(shiftCountReg===1.UならバラしてTDOにもセットする)
     // WriteをDAPに投げる
     def reqWriteToDap(kind: DebugAccessDataKind.Type, addr: UInt, data: UInt) = {
       // TODO: AsyncFIFO経由でDAPに要求を出す
@@ -106,63 +122,40 @@ class VirtualJtagBridge extends Module {
       // Capture_DR
     }.elsewhen(io.vjtag.virtual_state_sdr) {
       // Shift_DR
-      when(shiftCountReg === 0.U) {
-        // 0回目
-        when(irInReg.isValid) {
-          when(irInReg.isWrite) {
-            // Write: 1byte終わるまで特にイベントなし
-            incShiftCount()
-            shiftDataInReg()
-            shiftDataOutReg()
-          }.otherwise {
-            // Read: PreDataOut -> DataOutへの転送 & 初回のTDOはBypassしてPreDataOutを出す, 次回Readの発行
-            incShiftCount()
-            resetAddrOffset() // 次回Read要求を出したので進めておく
-            shiftDataInReg()
-            // PreDataOut -> dataOutReg, tdoへ転送
-            tdoReg     := preDataOutReg(0)
-            dataOutReg := Cat(false.B, preDataOutReg(7, 1)) // 1bitはBypass済
-            // 次回データ用にRead
-            reqReadToDap(irInReg.dataKind, irInReg.baseAddr + addrOffsetReg)
-            incAddrOffset() // 次のアドレスにすすめる
-          }
-        }.otherwise {
-          // Invalid: Read相当で取り扱うが、ReadせずInvalidDataを返す
-          // DataIn/DataOutは実施
-          incShiftCount()
-          shiftDataInReg()
-          // DataOut,TDO に invalidDataをセット
-          tdoReg        := invalidData(0)
-          dataOutReg    := Cat(false.B, invalidData(7, 1)) // 1bitはBypass済
-          preDataOutReg := invalidData                     // (なくても良いが念の為)
-        }
-      }.elsewhen(shiftCountReg < 6.U) {
-        // 1~6回目: 種別問わずシフトを進める
+      when(shiftCountReg < 7.U) {
+        // 0~6回目: 種別問わずシフトを進める
         incShiftCount()
         shiftDataInReg()
         shiftDataOutReg()
       }.otherwise {
-        // 7回目
+        // 7回目(tdi/tdoには8bit目のデータがあって、1byte分終わる状態)
+
+        // tdi + dataInRegでWriteDataは完成
+        val writeData = Cat(io.vjtag.tdi, dataInReg(7, 1))
+
+        // R/W/Invalidで処理が分岐
         when(irInReg.isValid) {
           when(irInReg.isWrite) {
             // Write: shiftはしておくものの、最後のTDIのデータをBypassしてデータを完成させ、Write要求を出す
-            val writeData = Cat(io.vjtag.tdi, dataInReg(7, 1))
             reqWriteToDap(irInReg.dataKind, irInReg.baseAddr + addrOffsetReg, writeData)
-            incAddrOffset() // 次のアドレスにすすめる
-            // 他のレジスタ処理
-            postDataInReg := writeData // postDataInにも記録しておく(実質デバッグ用)
-            shiftDataInReg()  // 使わないと思うが、進めておく(本cycでDataInRegが完成)
-            resetShiftCount() // 0bit目からCaptureし直し
-          }.otherwise {
-            // Read: 全bit送り出す状態。0bit目に戻るだけ
-            shiftDataInReg()
+            // Read Dataのregもとりあえず処理はしておく
             shiftDataOutReg()
-            resetShiftCount() // 0bit目の処理に戻り、次のPreDataOutに手を付ける
+          }.otherwise {
+            // Read: 次のデータをtdo/dataOutにセットしつつ、更に1byte先のRead要求を出す
+            setDataOutReg(preDataOutReg)
+            // 次回データ用にRead
+            reqReadToDap(irInReg.dataKind, irInReg.baseAddr + addrOffsetReg)
           }
+          // 共通の後処理
+          setPostDataInReg(writeData) // postDataInにも記録しておく(実質デバッグ用)
+          shiftDataInReg()            // 利用済で使わないと思うが、進めておく(本cycでDataInRegが完成)
+          resetShiftCount()           // 0bit目に戻る
+          incAddrOffset()             // R/W先は次のアドレスにすすめる
         }.otherwise {
-          // Invalid: Readに同じく
+          // Invalid: Readに同じくだが、Invalidな値の入ったpreDataOutRegを使い続ける
+          setPostDataInReg(writeData) // postDataInにも記録しておく(実質デバッグ用)
           shiftDataInReg()
-          shiftDataOutReg()
+          setDataOutReg(preDataOutReg)
           resetShiftCount() // 0bit目の処理に戻り、次のPreDataOutに手を付ける
         }
       }
@@ -190,25 +183,26 @@ class VirtualJtagBridge extends Module {
       // 初期データの準備を行う
       when(isValid) {
         when(isWrite) {
-          // Write: 1byte書くごとに発行するので何もしない
+          // Write: 1byte書くごとに発行するので何もしない, ReadできるデータにはInvalidを埋めておく
           resetAddrOffset()
           resetDataInReg()
-          resetDataOutReg()
+          setDataOutReg(invalidData)    // Read相当で取り扱うが、ReadせずInvalidDataを返す
+          setPreDataOutReg(invalidData) // 以後もこのデータを読み出す
           resetShiftCount()
         }.otherwise {
           // Read: 最初に読み出すデータを準備しておく
           resetAddrOffset()
           resetDataInReg()
           resetDataOutReg()
-          reqReadToDap(dataKind, baseAddr)
-          shiftCountReg := 1.U // 初回のReadを出すので、1byte進めておく
+          reqReadToDap(dataKind, baseAddr) // Shift-DRまでに回収して、初回のTDOをセットする想定
+          setShiftCount(1.U)               // 初回のReadを出すので、1byte進めておく
         }
       }.otherwise {
         // Invalid: dataOutRegには無効データを埋めておく
         resetAddrOffset()
         resetDataInReg()
-        dataOutReg    := invalidData
-        preDataOutReg := invalidData
+        setDataOutReg(invalidData)    // Read相当で取り扱うが、ReadせずInvalidDataを返す
+        setPreDataOutReg(invalidData) // 以後もこのデータを読み出す
         resetShiftCount()
       }
     }.otherwise {
