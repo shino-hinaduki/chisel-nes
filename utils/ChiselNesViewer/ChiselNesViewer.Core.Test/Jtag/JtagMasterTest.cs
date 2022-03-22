@@ -157,9 +157,9 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             jtag.MoveIdle();
             jtag.MoveIdleToShiftIr();
 
-            // USER1 0x000066(DataKind‚ª–¢’è‹`)
+            // USER1 0x00007f(dataKind = invalid2)
             const byte VJTAG_USER1 = 0x0e;
-            var testVirtualInst = new byte[] { 0x00, 0x00, 0x66 }.Reverse().ToArray();
+            var testVirtualInst = new byte[] { 0x00, 0x00, 0x7f }.Reverse().ToArray();
 
             jtag.WriteShiftIr(VJTAG_USER1);
             jtag.MoveShiftIrToShiftDr();
