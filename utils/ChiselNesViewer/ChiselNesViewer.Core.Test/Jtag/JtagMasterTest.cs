@@ -157,6 +157,44 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             jtag.MoveIdle();
             jtag.MoveIdleToShiftIr();
 
+            // USER1 0x000000(dataKind = invalid)
+            const byte VJTAG_USER1 = 0x0e;
+            var testVirtualInst = new byte[] { 0x00, 0x00, 0x00 }.Reverse().ToArray();
+
+            jtag.WriteShiftIr(VJTAG_USER1);
+            jtag.MoveShiftIrToShiftDr();
+            jtag.WriteShiftDr(testVirtualInst);
+            jtag.MoveShiftDrToShiftIr();
+
+            // USER0 Read 1byte
+            const byte VJTAG_USER0 = 0x0c;
+            jtag.WriteShiftIr(VJTAG_USER0);
+            jtag.MoveShiftIrToShiftDr();
+            var testReadData = jtag.ReadShiftDr(1);
+            jtag.MoveShiftDrToShiftIr();
+
+            // test終了
+            Assert.IsTrue(jtag.Close());
+
+            // 期待値確認
+            Assert.AreEqual(testReadData[0], (byte)0xa5);
+
+        }
+
+        /// <summary>
+        /// 無効な命令を投げてVirtualJtagBridge.invalidDataが読み出せるか確認する
+        /// </summary>
+        [TestMethod]
+        [DoNotParallelize]
+        public void TestInvalid2UserInst() {
+            var jtag = new JtagMaster();
+            var devices = JtagMaster.GetDevices();
+            var device = devices.First(x => x.Description == DeviceDescription);
+            Assert.IsTrue(jtag.Open(device));
+
+            jtag.MoveIdle();
+            jtag.MoveIdleToShiftIr();
+
             // USER1 0x00007f(dataKind = invalid2)
             const byte VJTAG_USER1 = 0x0e;
             var testVirtualInst = new byte[] { 0x00, 0x00, 0x7f }.Reverse().ToArray();
