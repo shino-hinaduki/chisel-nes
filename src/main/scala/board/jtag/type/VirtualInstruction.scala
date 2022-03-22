@@ -43,7 +43,7 @@ object VirtualInstruction {
     */
   def getDataKindAndIsValid(vir: UInt): (DebugAccessDataKind.Type, Bool) = {
     val (dataKind, isValid) = DebugAccessDataKind.safe(vir(DebugAccessDataKind.getWidth - 1, 0))
-    (dataKind, isValid && (dataKind =/= DebugAccessDataKind.invalid))
+    (dataKind, isValid && (dataKind =/= DebugAccessDataKind.invalid) && (dataKind =/= DebugAccessDataKind.invalid2))
   }
 
   /**

@@ -18,5 +18,6 @@ object DebugAccessDataKind extends ChiselEnum {
   val cartPrg      = Value(0x31.U)
   val cartBattt    = Value(0x32.U)
   val cartChr      = Value(0x33.U)
-  val readTest     = Value(0x7f.U)
+  val readTest     = Value(0x7e.U)
+  val invalid2     = Value(0x7f.U)
 }
