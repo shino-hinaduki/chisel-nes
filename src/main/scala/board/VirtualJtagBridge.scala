@@ -1,10 +1,10 @@
-package board.jtag
+package board
 
 import chisel3._
 import chisel3.internal.firrtl.Width
 
-import board.jtag.types.VirtualJtagIO
-import board.jtag.types.VirtualInstruction
+import board.types.VirtualJtagIO
+import board.types.VirtualInstruction
 
 import support.types.DebugAccessDataKind
 import support.types.DebugAccessIO
