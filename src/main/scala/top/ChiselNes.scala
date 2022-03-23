@@ -6,8 +6,8 @@ import chisel3.util.MuxLookup
 
 import board.BoardIO
 import board.SevenSegmentLed
-import board.VirtualJtagBridge
-import board.types.VirtualJtagIO
+import board.jtag.VirtualJtagBridge
+import board.jtag.types.VirtualJtagIO
 
 import support.DebugAccessPort
 import board.ip.virtual_jtag
