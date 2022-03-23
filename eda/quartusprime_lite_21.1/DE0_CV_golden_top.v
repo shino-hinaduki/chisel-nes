@@ -154,46 +154,8 @@ module DE0_CV_golden_top (
 );
 
 
-
-/*****************************************************************/
-// for jtag debug
-wire        tdi;
-wire        tdo;
-wire [23:0] ir_in;
-wire [23:0] ir_out;
-wire        virtual_state_cdr;
-wire        virtual_state_sdr;
-wire        virtual_state_e1dr;
-wire        virtual_state_pdr;
-wire        virtual_state_e2dr;
-wire        virtual_state_udr;
-wire        virtual_state_cir;
-wire        virtual_state_uir;
-wire        tck;
-
-virtual_jtag vjtag0 (
-		.tdi(tdi),
-		.tdo(tdo),
-		.ir_in(ir_in),
-		.ir_out(ir_out),
-		.virtual_state_cdr(virtual_state_cdr),
-		.virtual_state_sdr(virtual_state_sdr),
-		.virtual_state_e1dr(virtual_state_e1dr),
-		.virtual_state_pdr(virtual_state_pdr),
-		.virtual_state_e2dr(virtual_state_e2dr),
-		.virtual_state_udr(virtual_state_udr),
-		.virtual_state_cir(virtual_state_cir),
-		.virtual_state_uir(virtual_state_uir),
-		.tck(tck)
-	);
-	
-/*****************************************************************/
 // TODO: inout兼用ピンが未定義のwireのまま
 ChiselNes chiselNes0(
-  // System Clock
-//  .clock(clock),
-//  .reset(reset),
-
   // External Port
   .io_extPort_CLOCK_50(CLOCK_50),
   .io_extPort_CLOCK2_50(CLOCK2_50),
@@ -251,22 +213,7 @@ ChiselNes chiselNes0(
   .io_extPort_VGA_G(VGA_G),
   .io_extPort_VGA_HS(VGA_HS),
   .io_extPort_VGA_R(VGA_R),
-  .io_extPort_VGA_VS(VGA_VS),
-
-  // Virtual JTAG
-  .io_vjtag_tdi(tdi),
-  .io_vjtag_tdo(tdo),
-  .io_vjtag_ir_in(ir_in),
-  .io_vjtag_ir_out(ir_out),
-  .io_vjtag_virtual_state_cdr(virtual_state_cdr),
-  .io_vjtag_virtual_state_sdr(virtual_state_sdr),
-  .io_vjtag_virtual_state_e1dr(virtual_state_e1dr),
-  .io_vjtag_virtual_state_pdr(virtual_state_pdr),
-  .io_vjtag_virtual_state_e2dr(virtual_state_e2dr),
-  .io_vjtag_virtual_state_udr(virtual_state_udr),
-  .io_vjtag_virtual_state_cir(virtual_state_cir),
-  .io_vjtag_virtual_state_uir(virtual_state_uir),
-  .io_vjtag_tck(tck)
+  .io_extPort_VGA_VS(VGA_VS)
   );
 
 endmodule 
