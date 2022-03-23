@@ -4,7 +4,7 @@
 // MODULE: dcfifo 
 
 // ============================================================
-// File Name: async_fifo_dap_to_jtag.v
+// File Name: async_fifo_dap_to_vjtag.v
 // Megafunction Name(s):
 // 			dcfifo
 //
@@ -48,7 +48,7 @@
 //synopsys translate_off
 `timescale 1 ps / 1 ps
 //synopsys translate_on
-module  async_fifo_dap_to_jtag_a_gray2bin
+module  async_fifo_dap_to_vjtag_a_gray2bin
 	( 
 	bin,
 	gray) /* synthesis synthesis_clearbox=1 */;
@@ -74,7 +74,7 @@ module  async_fifo_dap_to_jtag_a_gray2bin
 		xor5 = (gray[5] ^ xor6),
 		xor6 = (gray[6] ^ xor7),
 		xor7 = (gray[8] ^ gray[7]);
-endmodule //async_fifo_dap_to_jtag_a_gray2bin
+endmodule //async_fifo_dap_to_vjtag_a_gray2bin
 
 
 //a_graycounter DEVICE_FAMILY="Cyclone V" PVALUE=1 WIDTH=9 aclr clock cnt_en q
@@ -85,7 +85,7 @@ endmodule //async_fifo_dap_to_jtag_a_gray2bin
 `timescale 1 ps / 1 ps
 //synopsys translate_on
 (* ALTERA_ATTRIBUTE = {"{-to counter5a[0]} POWER_UP_LEVEL=HIGH"} *)
-module  async_fifo_dap_to_jtag_a_graycounter
+module  async_fifo_dap_to_vjtag_a_graycounter
 	( 
 	aclr,
 	clock,
@@ -227,7 +227,7 @@ module  async_fifo_dap_to_jtag_a_graycounter
 		q = counter5a,
 		sclr = 1'b0,
 		updown = 1'b1;
-endmodule //async_fifo_dap_to_jtag_a_graycounter
+endmodule //async_fifo_dap_to_vjtag_a_graycounter
 
 
 //a_graycounter DEVICE_FAMILY="Cyclone V" PVALUE=1 WIDTH=9 aclr clock cnt_en q ALTERA_INTERNAL_OPTIONS=suppress_da_rule_internal=S102
@@ -238,7 +238,7 @@ endmodule //async_fifo_dap_to_jtag_a_graycounter
 `timescale 1 ps / 1 ps
 //synopsys translate_on
 (* ALTERA_ATTRIBUTE = {"suppress_da_rule_internal=S102;{-to counter8a[0]} POWER_UP_LEVEL=HIGH"} *)
-module  async_fifo_dap_to_jtag_a_graycounter1
+module  async_fifo_dap_to_vjtag_a_graycounter1
 	( 
 	aclr,
 	clock,
@@ -380,7 +380,7 @@ module  async_fifo_dap_to_jtag_a_graycounter1
 		q = counter8a,
 		sclr = 1'b0,
 		updown = 1'b1;
-endmodule //async_fifo_dap_to_jtag_a_graycounter1
+endmodule //async_fifo_dap_to_vjtag_a_graycounter1
 
 
 //altsyncram ADDRESS_ACLR_B="CLEAR1" ADDRESS_REG_B="CLOCK1" CLOCK_ENABLE_INPUT_B="BYPASS" DEVICE_FAMILY="Cyclone V" ENABLE_ECC="FALSE" OPERATION_MODE="DUAL_PORT" OUTDATA_ACLR_B="CLEAR1" OUTDATA_REG_B="CLOCK1" WIDTH_A=8 WIDTH_B=8 WIDTH_BYTEENA_A=1 WIDTH_ECCSTATUS=2 WIDTHAD_A=8 WIDTHAD_B=8 aclr1 address_a address_b addressstall_b clock0 clock1 clocken1 data_a q_b wren_a
@@ -391,7 +391,7 @@ endmodule //async_fifo_dap_to_jtag_a_graycounter1
 `timescale 1 ps / 1 ps
 //synopsys translate_on
 (* ALTERA_ATTRIBUTE = {"OPTIMIZE_POWER_DURING_SYNTHESIS=NORMAL_COMPILATION"} *)
-module  async_fifo_dap_to_jtag_altsyncram
+module  async_fifo_dap_to_vjtag_altsyncram
 	( 
 	aclr1,
 	address_a,
@@ -1011,7 +1011,7 @@ module  async_fifo_dap_to_jtag_altsyncram
 		address_a_wire = address_a,
 		address_b_wire = address_b,
 		q_b = {wire_ram_block11a_7portbdataout[0], wire_ram_block11a_6portbdataout[0], wire_ram_block11a_5portbdataout[0], wire_ram_block11a_4portbdataout[0], wire_ram_block11a_3portbdataout[0], wire_ram_block11a_2portbdataout[0], wire_ram_block11a_1portbdataout[0], wire_ram_block11a_0portbdataout[0]};
-endmodule //async_fifo_dap_to_jtag_altsyncram
+endmodule //async_fifo_dap_to_vjtag_altsyncram
 
 
 //dffpipe DELAY=2 WIDTH=1 clock clrn d q ALTERA_INTERNAL_OPTIONS=AUTO_SHIFT_REGISTER_RECOGNITION=OFF;suppress_da_rule_internal=S102
@@ -1022,7 +1022,7 @@ endmodule //async_fifo_dap_to_jtag_altsyncram
 `timescale 1 ps / 1 ps
 //synopsys translate_on
 (* ALTERA_ATTRIBUTE = {"AUTO_SHIFT_REGISTER_RECOGNITION=OFF;suppress_da_rule_internal=S102"} *)
-module  async_fifo_dap_to_jtag_dffpipe
+module  async_fifo_dap_to_vjtag_dffpipe
 	( 
 	clock,
 	clrn,
@@ -1068,7 +1068,7 @@ module  async_fifo_dap_to_jtag_dffpipe
 		prn = 1'b1,
 		q = dffe13a,
 		sclr = 1'b0;
-endmodule //async_fifo_dap_to_jtag_dffpipe
+endmodule //async_fifo_dap_to_vjtag_dffpipe
 
 
 //dffpipe DELAY=1 WIDTH=9 clock clrn d q ALTERA_INTERNAL_OPTIONS=AUTO_SHIFT_REGISTER_RECOGNITION=OFF
@@ -1079,7 +1079,7 @@ endmodule //async_fifo_dap_to_jtag_dffpipe
 `timescale 1 ps / 1 ps
 //synopsys translate_on
 (* ALTERA_ATTRIBUTE = {"AUTO_SHIFT_REGISTER_RECOGNITION=OFF"} *)
-module  async_fifo_dap_to_jtag_dffpipe1
+module  async_fifo_dap_to_vjtag_dffpipe1
 	( 
 	clock,
 	clrn,
@@ -1116,7 +1116,7 @@ module  async_fifo_dap_to_jtag_dffpipe1
 		prn = 1'b1,
 		q = dffe14a,
 		sclr = 1'b0;
-endmodule //async_fifo_dap_to_jtag_dffpipe1
+endmodule //async_fifo_dap_to_vjtag_dffpipe1
 
 
 //dffpipe DELAY=2 WIDTH=9 clock clrn d q ALTERA_INTERNAL_OPTIONS=X_ON_VIOLATION_OPTION=OFF;SYNCHRONIZER_IDENTIFICATION=FORCED_IF_ASYNCHRONOUS;PRESERVE_REGISTER=ON;DONT_MERGE_REGISTER=ON;ADV_NETLIST_OPT_ALLOWED=NEVER_ALLOW
@@ -1131,7 +1131,7 @@ endmodule //async_fifo_dap_to_jtag_dffpipe1
 `timescale 1 ps / 1 ps
 //synopsys translate_on
 (* ALTERA_ATTRIBUTE = {"AUTO_SHIFT_REGISTER_RECOGNITION=OFF"} *)
-module  async_fifo_dap_to_jtag_dffpipe12
+module  async_fifo_dap_to_vjtag_dffpipe12
 	( 
 	clock,
 	clrn,
@@ -1177,14 +1177,14 @@ module  async_fifo_dap_to_jtag_dffpipe12
 		prn = 1'b1,
 		q = dffe17a,
 		sclr = 1'b0;
-endmodule //async_fifo_dap_to_jtag_dffpipe12
+endmodule //async_fifo_dap_to_vjtag_dffpipe12
 
 //synthesis_resources = reg 18 
 //synopsys translate_off
 `timescale 1 ps / 1 ps
 //synopsys translate_on
 (* ALTERA_ATTRIBUTE = {"X_ON_VIOLATION_OPTION=OFF;SYNCHRONIZER_IDENTIFICATION=FORCED_IF_ASYNCHRONOUS;PRESERVE_REGISTER=ON;DONT_MERGE_REGISTER=ON;ADV_NETLIST_OPT_ALLOWED=NEVER_ALLOW"} *)
-module  async_fifo_dap_to_jtag_alt_synch_pipe
+module  async_fifo_dap_to_vjtag_alt_synch_pipe
 	( 
 	clock,
 	clrn,
@@ -1204,7 +1204,7 @@ module  async_fifo_dap_to_jtag_alt_synch_pipe
 
 	wire  [8:0]   wire_dffpipe15_q;
 
-	async_fifo_dap_to_jtag_dffpipe12   dffpipe15
+	async_fifo_dap_to_vjtag_dffpipe12   dffpipe15
 	( 
 	.clock(clock),
 	.clrn(clrn),
@@ -1212,7 +1212,7 @@ module  async_fifo_dap_to_jtag_alt_synch_pipe
 	.q(wire_dffpipe15_q));
 	assign
 		q = wire_dffpipe15_q;
-endmodule //async_fifo_dap_to_jtag_alt_synch_pipe
+endmodule //async_fifo_dap_to_vjtag_alt_synch_pipe
 
 
 //dffpipe DELAY=2 WIDTH=9 clock clrn d q ALTERA_INTERNAL_OPTIONS=X_ON_VIOLATION_OPTION=OFF;SYNCHRONIZER_IDENTIFICATION=FORCED_IF_ASYNCHRONOUS;PRESERVE_REGISTER=ON;DONT_MERGE_REGISTER=ON;ADV_NETLIST_OPT_ALLOWED=NEVER_ALLOW
@@ -1227,7 +1227,7 @@ endmodule //async_fifo_dap_to_jtag_alt_synch_pipe
 `timescale 1 ps / 1 ps
 //synopsys translate_on
 (* ALTERA_ATTRIBUTE = {"AUTO_SHIFT_REGISTER_RECOGNITION=OFF"} *)
-module  async_fifo_dap_to_jtag_dffpipe123
+module  async_fifo_dap_to_vjtag_dffpipe123
 	( 
 	clock,
 	clrn,
@@ -1273,14 +1273,14 @@ module  async_fifo_dap_to_jtag_dffpipe123
 		prn = 1'b1,
 		q = dffe20a,
 		sclr = 1'b0;
-endmodule //async_fifo_dap_to_jtag_dffpipe123
+endmodule //async_fifo_dap_to_vjtag_dffpipe123
 
 //synthesis_resources = reg 18 
 //synopsys translate_off
 `timescale 1 ps / 1 ps
 //synopsys translate_on
 (* ALTERA_ATTRIBUTE = {"X_ON_VIOLATION_OPTION=OFF;SYNCHRONIZER_IDENTIFICATION=FORCED_IF_ASYNCHRONOUS;PRESERVE_REGISTER=ON;DONT_MERGE_REGISTER=ON;ADV_NETLIST_OPT_ALLOWED=NEVER_ALLOW"} *)
-module  async_fifo_dap_to_jtag_alt_synch_pipe1
+module  async_fifo_dap_to_vjtag_alt_synch_pipe1
 	( 
 	clock,
 	clrn,
@@ -1300,7 +1300,7 @@ module  async_fifo_dap_to_jtag_alt_synch_pipe1
 
 	wire  [8:0]   wire_dffpipe18_q;
 
-	async_fifo_dap_to_jtag_dffpipe123   dffpipe18
+	async_fifo_dap_to_vjtag_dffpipe123   dffpipe18
 	( 
 	.clock(clock),
 	.clrn(clrn),
@@ -1308,7 +1308,7 @@ module  async_fifo_dap_to_jtag_alt_synch_pipe1
 	.q(wire_dffpipe18_q));
 	assign
 		q = wire_dffpipe18_q;
-endmodule //async_fifo_dap_to_jtag_alt_synch_pipe1
+endmodule //async_fifo_dap_to_vjtag_alt_synch_pipe1
 
 
 //lpm_add_sub DEVICE_FAMILY="Cyclone V" LPM_DIRECTION="SUB" LPM_WIDTH=9 dataa datab result
@@ -1322,7 +1322,7 @@ endmodule //async_fifo_dap_to_jtag_alt_synch_pipe1
 //synopsys translate_off
 `timescale 1 ps / 1 ps
 //synopsys translate_on
-module  async_fifo_dap_to_jtag_cmpr
+module  async_fifo_dap_to_vjtag_cmpr
 	( 
 	aeb,
 	dataa,
@@ -1350,14 +1350,14 @@ module  async_fifo_dap_to_jtag_cmpr
 		aneb_result_wire = (data_wire[0] | data_wire[1]),
 		data_wire = {datab[8], dataa[8], datab[7], dataa[7], datab[6], dataa[6], datab[5], dataa[5], datab[4], dataa[4], datab[3], dataa[3], datab[2], dataa[2], datab[1], dataa[1], datab[0], dataa[0], (data_wire[23] ^ data_wire[24]), ((data_wire[19] ^ data_wire[20]) | (data_wire[21] ^ data_wire[22])), ((data_wire[15] ^ data_wire[16]) | (data_wire[17] ^ data_wire[18])), ((data_wire[11] ^ data_wire[12]) | (data_wire[13] ^ data_wire[14])), ((data_wire[7] ^ data_wire[8]) | (data_wire[9] ^ data_wire[10])), data_wire[6], (((data_wire[2] | data_wire[3]) | data_wire[4]) | data_wire[5])},
 		eq_wire = aeb_result_wire;
-endmodule //async_fifo_dap_to_jtag_cmpr
+endmodule //async_fifo_dap_to_vjtag_cmpr
 
 //synthesis_resources = lut 10 M10K 1 reg 107 
 //synopsys translate_off
 `timescale 1 ps / 1 ps
 //synopsys translate_on
-(* ALTERA_ATTRIBUTE = {"AUTO_SHIFT_REGISTER_RECOGNITION=OFF;REMOVE_DUPLICATE_REGISTERS=OFF;SYNCHRONIZER_IDENTIFICATION=OFF;SYNCHRONIZATION_REGISTER_CHAIN_LENGTH = 2;suppress_da_rule_internal=d101;suppress_da_rule_internal=d102;suppress_da_rule_internal=d103;suppress_da_rule_internal=R105;-name CUT ON -from rdptr_g -to ws_dgrp|async_fifo_dap_to_jtag_dffpipe123:dffpipe18|dffe19a;-name SDC_STATEMENT \"set_false_path -from *rdptr_g* -to *ws_dgrp|async_fifo_dap_to_jtag_dffpipe123:dffpipe18|dffe19a* \";-name CUT ON -from delayed_wrptr_g -to rs_dgwp|async_fifo_dap_to_jtag_dffpipe12:dffpipe15|dffe16a;-name SDC_STATEMENT \"set_false_path -from *delayed_wrptr_g* -to *rs_dgwp|async_fifo_dap_to_jtag_dffpipe12:dffpipe15|dffe16a* \""} *)
-module  async_fifo_dap_to_jtag_dcfifo
+(* ALTERA_ATTRIBUTE = {"AUTO_SHIFT_REGISTER_RECOGNITION=OFF;REMOVE_DUPLICATE_REGISTERS=OFF;SYNCHRONIZER_IDENTIFICATION=OFF;SYNCHRONIZATION_REGISTER_CHAIN_LENGTH = 2;suppress_da_rule_internal=d101;suppress_da_rule_internal=d102;suppress_da_rule_internal=d103;suppress_da_rule_internal=R105;-name CUT ON -from rdptr_g -to ws_dgrp|async_fifo_dap_to_vjtag_dffpipe123:dffpipe18|dffe19a;-name SDC_STATEMENT \"set_false_path -from *rdptr_g* -to *ws_dgrp|async_fifo_dap_to_vjtag_dffpipe123:dffpipe18|dffe19a* \";-name CUT ON -from delayed_wrptr_g -to rs_dgwp|async_fifo_dap_to_vjtag_dffpipe12:dffpipe15|dffe16a;-name SDC_STATEMENT \"set_false_path -from *delayed_wrptr_g* -to *rs_dgwp|async_fifo_dap_to_vjtag_dffpipe12:dffpipe15|dffe16a* \""} *)
+module  async_fifo_dap_to_vjtag_dcfifo
 	( 
 	aclr,
 	data,
@@ -1414,27 +1414,27 @@ module  async_fifo_dap_to_jtag_dcfifo
 	wire  valid_wrreq;
 	wire  [8:0]  wrptr_gs;
 
-	async_fifo_dap_to_jtag_a_gray2bin   rdptr_g_gray2bin
+	async_fifo_dap_to_vjtag_a_gray2bin   rdptr_g_gray2bin
 	( 
 	.bin(wire_rdptr_g_gray2bin_bin),
 	.gray(rdptr_g[8:0]));
-	async_fifo_dap_to_jtag_a_gray2bin   rs_dgwp_gray2bin
+	async_fifo_dap_to_vjtag_a_gray2bin   rs_dgwp_gray2bin
 	( 
 	.bin(wire_rs_dgwp_gray2bin_bin),
 	.gray(wire_rs_dgwp_q[8:0]));
-	async_fifo_dap_to_jtag_a_graycounter   rdptr_g1p
+	async_fifo_dap_to_vjtag_a_graycounter   rdptr_g1p
 	( 
 	.aclr((~ wire_rdaclr_q)),
 	.clock(rdclk),
 	.cnt_en(valid_rdreq),
 	.q(wire_rdptr_g1p_q));
-	async_fifo_dap_to_jtag_a_graycounter1   wrptr_g1p
+	async_fifo_dap_to_vjtag_a_graycounter1   wrptr_g1p
 	( 
 	.aclr(aclr),
 	.clock(wrclk),
 	.cnt_en(valid_wrreq),
 	.q(wire_wrptr_g1p_q));
-	async_fifo_dap_to_jtag_altsyncram   fifo_ram
+	async_fifo_dap_to_vjtag_altsyncram   fifo_ram
 	( 
 	.aclr1((~ wire_rdaclr_q)),
 	.address_a(ram_address_a),
@@ -1467,31 +1467,31 @@ module  async_fifo_dap_to_jtag_dcfifo
 	always @ ( posedge wrclk or  posedge aclr)
 		if (aclr == 1'b1) wrptr_g <= 9'b0;
 		else if  (valid_wrreq == 1'b1)   wrptr_g <= wire_wrptr_g1p_q;
-	async_fifo_dap_to_jtag_dffpipe   rdaclr
+	async_fifo_dap_to_vjtag_dffpipe   rdaclr
 	( 
 	.clock(rdclk),
 	.clrn((~ aclr)),
 	.d(1'b1),
 	.q(wire_rdaclr_q));
-	async_fifo_dap_to_jtag_dffpipe1   rs_brp
+	async_fifo_dap_to_vjtag_dffpipe1   rs_brp
 	( 
 	.clock(rdclk),
 	.clrn(wire_rdaclr_q),
 	.d(wire_rdptr_g_gray2bin_bin),
 	.q(wire_rs_brp_q));
-	async_fifo_dap_to_jtag_dffpipe1   rs_bwp
+	async_fifo_dap_to_vjtag_dffpipe1   rs_bwp
 	( 
 	.clock(rdclk),
 	.clrn(wire_rdaclr_q),
 	.d(wire_rs_dgwp_gray2bin_bin),
 	.q(wire_rs_bwp_q));
-	async_fifo_dap_to_jtag_alt_synch_pipe   rs_dgwp
+	async_fifo_dap_to_vjtag_alt_synch_pipe   rs_dgwp
 	( 
 	.clock(rdclk),
 	.clrn(wire_rdaclr_q),
 	.d(delayed_wrptr_g),
 	.q(wire_rs_dgwp_q));
-	async_fifo_dap_to_jtag_alt_synch_pipe1   ws_dgrp
+	async_fifo_dap_to_vjtag_alt_synch_pipe1   ws_dgrp
 	( 
 	.clock(wrclk),
 	.clrn((~ aclr)),
@@ -1502,12 +1502,12 @@ module  async_fifo_dap_to_jtag_dcfifo
 	assign
 		wire_rdusedw_sub_dataa = wire_rs_bwp_q,
 		wire_rdusedw_sub_datab = wire_rs_brp_q;
-	async_fifo_dap_to_jtag_cmpr   rdempty_eq_comp
+	async_fifo_dap_to_vjtag_cmpr   rdempty_eq_comp
 	( 
 	.aeb(wire_rdempty_eq_comp_aeb),
 	.dataa(wire_rs_dgwp_q),
 	.datab(rdptr_g));
-	async_fifo_dap_to_jtag_cmpr   wrfull_eq_comp
+	async_fifo_dap_to_vjtag_cmpr   wrfull_eq_comp
 	( 
 	.aeb(wire_wrfull_eq_comp_aeb),
 	.dataa(wire_ws_dgrp_q),
@@ -1524,14 +1524,14 @@ module  async_fifo_dap_to_jtag_dcfifo
 		valid_wrreq = (wrreq & (~ int_wrfull)),
 		wrfull = int_wrfull,
 		wrptr_gs = {(~ wrptr_g[8]), (~ wrptr_g[7]), wrptr_g[6:0]};
-endmodule //async_fifo_dap_to_jtag_dcfifo
+endmodule //async_fifo_dap_to_vjtag_dcfifo
 //VALID FILE
 
 
 // synopsys translate_off
 `timescale 1 ps / 1 ps
 // synopsys translate_on
-module async_fifo_dap_to_jtag (
+module async_fifo_dap_to_vjtag (
 	aclr,
 	data,
 	rdclk,
@@ -1570,7 +1570,7 @@ module async_fifo_dap_to_jtag (
 	wire [7:0] rdusedw = sub_wire2[7:0];
 	wire  wrfull = sub_wire3;
 
-	async_fifo_dap_to_jtag_dcfifo	async_fifo_dap_to_jtag_dcfifo_component (
+	async_fifo_dap_to_vjtag_dcfifo	async_fifo_dap_to_vjtag_dcfifo_component (
 				.aclr (aclr),
 				.data (data),
 				.rdclk (rdclk),
@@ -1653,11 +1653,11 @@ endmodule
 // Retrieval info: CONNECT: rdempty 0 0 0 0 @rdempty 0 0 0 0
 // Retrieval info: CONNECT: rdusedw 0 0 8 0 @rdusedw 0 0 8 0
 // Retrieval info: CONNECT: wrfull 0 0 0 0 @wrfull 0 0 0 0
-// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_jtag.v TRUE
-// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_jtag.inc FALSE
-// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_jtag.cmp FALSE
-// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_jtag.bsf TRUE
-// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_jtag_inst.v TRUE
-// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_jtag_bb.v TRUE
-// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_jtag_syn.v TRUE
+// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_vjtag.v TRUE
+// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_vjtag.inc FALSE
+// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_vjtag.cmp FALSE
+// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_vjtag.bsf TRUE
+// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_vjtag_inst.v TRUE
+// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_vjtag_bb.v TRUE
+// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_vjtag_syn.v TRUE
 // Retrieval info: LIB_FILE: altera_mf

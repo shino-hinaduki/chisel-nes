@@ -1,4 +1,4 @@
-async_fifo_dap_to_jtag	async_fifo_dap_to_jtag_inst (
+async_fifo_dap_to_vjtag	async_fifo_dap_to_vjtag_inst (
 	.aclr ( aclr_sig ),
 	.data ( data_sig ),
 	.rdclk ( rdclk_sig ),

@@ -22,7 +22,7 @@ https://fpgasoftware.intel.com/eula.
 (header "symbol" (version "1.2"))
 (symbol
 	(rect 0 0 176 224)
-	(text "async_fifo_dap_to_jtag" (rect 4 0 202 19)(font "Arial" (font_size 10)))
+	(text "async_fifo_dap_to_vjtag" (rect 4 0 202 19)(font "Arial" (font_size 10)))
 	(text "inst" (rect 8 205 31 220)(font "Arial" ))
 	(port
 		(pt 0 48)

@@ -1,10 +1,10 @@
-// megafunction wizard: %FIFO%
+// megafunction wizard: %FIFO%VBB%
 // GENERATION: STANDARD
 // VERSION: WM1.0
 // MODULE: dcfifo 
 
 // ============================================================
-// File Name: async_fifo_dap_to_jtag.v
+// File Name: async_fifo_dap_to_vjtag.v
 // Megafunction Name(s):
 // 			dcfifo
 //
@@ -16,7 +16,6 @@
 //
 // 21.1.0 Build 842 10/21/2021 SJ Lite Edition
 // ************************************************************
-
 
 //Copyright (C) 2021  Intel Corporation. All rights reserved.
 //Your use of Intel Corporation's design tools, logic functions 
@@ -33,11 +32,7 @@
 //refer to the applicable agreement for further details, at
 //https://fpgasoftware.intel.com/eula.
 
-
-// synopsys translate_off
-`timescale 1 ps / 1 ps
-// synopsys translate_on
-module async_fifo_dap_to_jtag (
+module async_fifo_dap_to_vjtag (
 	aclr,
 	data,
 	rdclk,
@@ -66,46 +61,6 @@ module async_fifo_dap_to_jtag (
 `ifndef ALTERA_RESERVED_QIS
 // synopsys translate_on
 `endif
-
-	wire [7:0] sub_wire0;
-	wire  sub_wire1;
-	wire [7:0] sub_wire2;
-	wire  sub_wire3;
-	wire [7:0] q = sub_wire0[7:0];
-	wire  rdempty = sub_wire1;
-	wire [7:0] rdusedw = sub_wire2[7:0];
-	wire  wrfull = sub_wire3;
-
-	dcfifo	dcfifo_component (
-				.aclr (aclr),
-				.data (data),
-				.rdclk (rdclk),
-				.rdreq (rdreq),
-				.wrclk (wrclk),
-				.wrreq (wrreq),
-				.q (sub_wire0),
-				.rdempty (sub_wire1),
-				.rdusedw (sub_wire2),
-				.wrfull (sub_wire3),
-				.eccstatus (),
-				.rdfull (),
-				.wrempty (),
-				.wrusedw ());
-	defparam
-		dcfifo_component.intended_device_family = "Cyclone V",
-		dcfifo_component.lpm_numwords = 256,
-		dcfifo_component.lpm_showahead = "OFF",
-		dcfifo_component.lpm_type = "dcfifo",
-		dcfifo_component.lpm_width = 8,
-		dcfifo_component.lpm_widthu = 8,
-		dcfifo_component.overflow_checking = "ON",
-		dcfifo_component.rdsync_delaypipe = 4,
-		dcfifo_component.read_aclr_synch = "ON",
-		dcfifo_component.underflow_checking = "ON",
-		dcfifo_component.use_eab = "ON",
-		dcfifo_component.write_aclr_synch = "OFF",
-		dcfifo_component.wrsync_delaypipe = 4;
-
 
 endmodule
 
@@ -178,11 +133,11 @@ endmodule
 // Retrieval info: CONNECT: rdempty 0 0 0 0 @rdempty 0 0 0 0
 // Retrieval info: CONNECT: rdusedw 0 0 8 0 @rdusedw 0 0 8 0
 // Retrieval info: CONNECT: wrfull 0 0 0 0 @wrfull 0 0 0 0
-// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_jtag.v TRUE
-// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_jtag.inc FALSE
-// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_jtag.cmp FALSE
-// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_jtag.bsf TRUE
-// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_jtag_inst.v TRUE
-// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_jtag_bb.v TRUE
-// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_jtag_syn.v TRUE
+// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_vjtag.v TRUE
+// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_vjtag.inc FALSE
+// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_vjtag.cmp FALSE
+// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_vjtag.bsf TRUE
+// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_vjtag_inst.v TRUE
+// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_vjtag_bb.v TRUE
+// Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_vjtag_syn.v TRUE
 // Retrieval info: LIB_FILE: altera_mf
