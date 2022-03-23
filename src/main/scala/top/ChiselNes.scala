@@ -11,6 +11,9 @@ import board.types.VirtualJtagIO
 
 import support.DebugAccessPort
 import board.ip.virtual_jtag
+import board.ip.pll_sysclk
+import board.ip.pll_vga
+import board.ip.dpram_framebuffer
 
 /** 
  * Top Module
@@ -21,11 +24,32 @@ class ChiselNes extends RawModule {
     val extPort = new BoardIO() // TODO: inoutをどうにかして、prefixを消せる...?
   })
 
-  // Board defaultのclock/reset
+  /**********************************************************************/
+  /* Board Component & IP                                               */
+
+  // base clock/reset
   val clk50Mhz = io.extPort.CLOCK_50
   val rst      = !io.extPort.RESET_N
 
-  // Virtual JTAG & DebugAccessPort
+  // NES関連のClock
+  val pllSysClk = Module(new pll_sysclk)
+  val cpuClk    = pllSysClk.io.outclk_0 // 1.789709 MHz
+  val ppuClk    = pllSysClk.io.outclk_0 // 5.36127 MHz
+  val sysClk    = pllSysClk.io.outclk_0 // 21.616541 MHz
+  val sysRst    = !pllSysClk.io.locked
+
+  // VGA出力関連のClock
+  val pllVga      = Module(new pll_vga)
+  val vgaPixelClk = pllVga.io.outclk_0 // 25.175644 MHz
+  val vgaRst      = !pllVga.io.locked
+
+  /**********************************************************************/
+  /* VGA Output                                                         */
+  // Framebuffer, 本家仕様の通りDoubleBufferにはしない
+  // val frameBuffer = Module(new dpram_framebuffer)
+
+  /**********************************************************************/
+  /* Virtual JTAG                                                       */
   val vjtagIp           = Module(new virtual_jtag)
   val virtualJtagBridge = Module(new VirtualJtagBridge)
   virtualJtagBridge.io.rst <> rst
