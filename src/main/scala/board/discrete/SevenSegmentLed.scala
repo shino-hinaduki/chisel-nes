@@ -1,4 +1,4 @@
-package board
+package board.discrete
 
 import chisel3._
 import chisel3.util.MuxLookup

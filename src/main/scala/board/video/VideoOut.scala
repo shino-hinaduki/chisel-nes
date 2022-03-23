@@ -1,8 +1,9 @@
-package board
+package board.video
 
 import chisel3._
 import chisel3.internal.firrtl.Width
-import board.`type`.FrameBufferIO
+
+import board.video.types.FrameBufferIO
 
 /**
   * PPUからの映像出力をFrameBufferにため、FrameBufferから映像を出力する

@@ -1,4 +1,4 @@
-package board.`type`
+package board.video.types
 
 import chisel3._
 import chisel3.internal.firrtl.Width

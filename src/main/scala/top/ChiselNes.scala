@@ -5,7 +5,7 @@ import chisel3.util.Cat
 import chisel3.util.MuxLookup
 
 import board.BoardIO
-import board.SevenSegmentLed
+import board.discrete.SevenSegmentLed
 import board.jtag.VirtualJtagBridge
 import board.jtag.types.VirtualJtagIO
 
