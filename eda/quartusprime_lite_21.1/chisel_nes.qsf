@@ -489,6 +489,9 @@ set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 
 set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
 set_global_assignment -name PROJECT_IP_REGENERATION_POLICY ALWAYS_REGENERATE_IP
 set_global_assignment -name IP_SEARCH_PATHS "c:/users/user/repos/chisel-nes/eda/quartusprime_lite_21.1/virtual_jtag/synthesis"
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
+set_global_assignment -name QIP_FILE virtual_jtag/synthesis/virtual_jtag.qip
+set_global_assignment -name QIP_FILE async_fifo_vjtag_to_dap/async_fifo_vjtag_to_dap.qip
 set_global_assignment -name VERILOG_FILE virtual_jtag/synthesis/virtual_jtag.v
 set_global_assignment -name VERILOG_FILE ../../dst/ChiselNes.v
 set_global_assignment -name VERILOG_FILE DE0_CV_golden_top.v
@@ -499,4 +502,4 @@ set_global_assignment -name QIP_FILE pll_sysclk/pll_sysclk.qip
 set_global_assignment -name SIP_FILE pll_sysclk/pll_sysclk.sip
 set_global_assignment -name QIP_FILE pll_vga/pll_vga.qip
 set_global_assignment -name SIP_FILE pll_vga/pll_vga.sip
-set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
+set_global_assignment -name QIP_FILE async_fifo_dap_to_jtag/async_fifo_dap_to_jtag.qip

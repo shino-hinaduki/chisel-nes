@@ -1,4 +1,4 @@
-async_fifo_vjtag_to_dap	async_fifo_vjtag_to_dap_inst (
+async_fifo_dap_to_jtag	async_fifo_dap_to_jtag_inst (
 	.aclr ( aclr_sig ),
 	.data ( data_sig ),
 	.rdclk ( rdclk_sig ),
@@ -7,6 +7,6 @@ async_fifo_vjtag_to_dap	async_fifo_vjtag_to_dap_inst (
 	.wrreq ( wrreq_sig ),
 	.q ( q_sig ),
 	.rdempty ( rdempty_sig ),
-	.wrfull ( wrfull_sig ),
-	.wrusedw ( wrusedw_sig )
+	.rdusedw ( rdusedw_sig ),
+	.wrfull ( wrfull_sig )
 	);
