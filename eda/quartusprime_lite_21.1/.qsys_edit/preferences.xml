@@ -8,9 +8,8 @@
    <name preferredWidth="332" />
   </columns>
  </systemtable>
- <library
-   expandedCategories="Library/University Program/Audio &amp; Video/Video,Library/DSP/Video and Image Processing,Library/Basic Functions/Simulation; Debug and Verification/Simulation,Library/Interface Protocols,Library/University Program,Library/Interface Protocols/Audio &amp; Video,Library/DSP,Library/Qsys Interconnect,Library/Qsys Interconnect/Memory-Mapped Alpha,Library/Qsys Interconnect/Interrupt,Library/Basic Functions/Bridges and Adaptors,Library/Interface Protocols/Ethernet/Reference Design Components,Library,Library/University Program/Audio &amp; Video,Library/Basic Functions/On Chip Memory,Library/Basic Functions/Simulation; Debug and Verification,Project,Library/Interface Protocols/Ethernet,Library/University Program/Clock,Library/Basic Functions/Clocks; PLLs and Resets,Library/Basic Functions/Bridges and Adaptors/Memory Mapped,Library/Basic Functions/Bridges and Adaptors/Clock,Library/Basic Functions" />
- <window width="2194" height="1067" x="868" y="110" />
+ <library expandedCategories="Project,Library" />
+ <window width="1800" height="1607" x="-2700" y="-2133" />
  <generation simulation="VERILOG" />
  <hdlexample language="VERILOG" />
 </preferences>

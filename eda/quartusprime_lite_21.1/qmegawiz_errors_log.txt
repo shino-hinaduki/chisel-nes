@@ -1,0 +1,31 @@
+
+
+C:/Users/user/repos/chisel-nes/eda/quartusprime_lite_21.1/pll_sysclk/pll_sysclk.v
+
+Mar 23 03AM:24:02>: Megafunction PLL Intel FPGA IP v21.1 is not listed in any 
+wizard.lst file in the specified library path(s).Wizard launch aborted
+
+C:/Users/user/repos/chisel-nes/eda/quartusprime_lite_21.1/pll_vga/pll_vga.v
+
+Mar 23 03AM:24:10>: Megafunction PLL Intel FPGA IP v21.1 is not listed in any 
+wizard.lst file in the specified library path(s).Wizard launch aborted
+
+C:/Users/user/repos/chisel-nes/eda/quartusprime_lite_21.1/pll_sysclk/pll_sysclk.v
+
+Mar 23 03AM:24:13>: Megafunction PLL Intel FPGA IP v21.1 is not listed in any 
+wizard.lst file in the specified library path(s).Wizard launch aborted
+
+C:/Users/user/repos/chisel-nes/eda/quartusprime_lite_21.1/pll_sysclk/pll_sysclk.v
+
+Mar 23 03AM:25:30>: Megafunction PLL Intel FPGA IP v21.1 is not listed in any 
+wizard.lst file in the specified library path(s).Wizard launch aborted
+
+C:/Users/user/repos/chisel-nes/eda/quartusprime_lite_21.1/pll_vga/pll_vga.v
+
+Mar 23 03AM:27:11>: Megafunction PLL Intel FPGA IP v21.1 is not listed in any 
+wizard.lst file in the specified library path(s).Wizard launch aborted
+
+C:/Users/user/repos/chisel-nes/eda/quartusprime_lite_21.1/pll_sysclk/pll_sysclk.v
+
+Mar 23 03AM:27:16>: Megafunction PLL Intel FPGA IP v21.1 is not listed in any 
+wizard.lst file in the specified library path(s).Wizard launch aborted
