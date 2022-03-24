@@ -28,6 +28,7 @@ class Debounce(val inputWidth: Int, val averageNum: Int, val isActiveLow: Boolea
   //   (==>> で示した部分は isActiveLow = true なら反転して取り扱う)
   val historyRegs = RegInit(VecInit(Seq.fill(inputWidth)(0.U(averageNum.W))))
   val outputReg   = RegInit(UInt(inputWidth.W), initOutputData)
+  io.dataOut := outputReg
 
   // 全データ更新する
   for (i <- 0 until inputWidth) {
@@ -39,11 +40,17 @@ class Debounce(val inputWidth: Int, val averageNum: Int, val isActiveLow: Boolea
     // historyRegsのLowerから結合する
     val historyReg = historyRegs(i)
     historyReg := Cat(historyReg((averageNum - 1), 1), inData)
-
-    // outputRegにはReductionした結果を入れるが、負論理なら反転させておく
-    val outData =
-      if (isActiveLow) { ~(historyReg.andR) }
-      else { historyReg.andR }
-    outputReg(i) := outData
   }
+
+  // historyRegsからoutputRegの値を作る
+  val outputData = Cat(
+    historyRegs.reverse // CatがUpper bitからの指定なので入れ替えておく
+      .map(_.andR)      // 全部1ならtrue
+      .map(x =>
+        if (isActiveLow) { !x } // ActiveLow向けに論理反転
+        else { x }
+      )
+  )
+  outputReg := outputData
+
 }
