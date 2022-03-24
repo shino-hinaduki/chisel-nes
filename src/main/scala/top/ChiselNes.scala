@@ -14,6 +14,7 @@ import board.ip.pll_sysclk
 import board.ip.pll_vga
 import board.ip.dpram_framebuffer
 import chisel3.experimental.Analog
+import board.discrete.Debounce
 
 /** 
  * Top Module
@@ -102,6 +103,11 @@ class ChiselNes extends RawModule {
   sevenSegmentLed.io.dataIn    := numReg
 
   /**********************************************************************/
+  /* LED Array                                                          */
+  val ledArrayReg = withClockAndReset(CLOCK_50, rst) { RegInit(UInt(10.W), 0.U) }
+  LEDR := ledArrayReg
+
+  /**********************************************************************/
   /* VGA Output                                                         */
   // Framebuffer, 本家仕様の通りDoubleBufferにはしない
   // val frameBuffer = Module(new dpram_framebuffer)
@@ -115,12 +121,24 @@ class ChiselNes extends RawModule {
 
   // クロック跨いでるけどテスト回路だからいいとする...
   when(SW === 0.U) {
-    // ボードテスト回路(7segにVJTAGのVIRの値を出す)
+    //7segにカウンタの値を出す
+    withClockAndReset(CLOCK_50, rst) {
+      val counter = RegInit(UInt(64.W), 0.U)
+      counter := counter + 1.U
+      // カウンタの値そのまま
+      numReg        := (counter >> 16.U)
+      numVisibleReg := true.B
+      // 流れる感じにする
+      ledArrayReg := (1.U(10.W) << counter(23, 20))
+    }
+  }.elsewhen(SW === 1.U) {
+    // 7segにVJTAGのVIRの値を出す
     withClockAndReset(vjtagIp.io.tck, rst) {
       // ir_inの値そのまま
-      numReg := vjtagIp.io.ir_in
+      numReg        := vjtagIp.io.ir_in
+      numVisibleReg := true.B
       // VJTAGのstate
-      LEDR := Cat(
+      ledArrayReg := Cat(
         vjtagIp.io.virtual_state_cdr,
         vjtagIp.io.virtual_state_sdr,
         vjtagIp.io.virtual_state_e1dr,
@@ -134,14 +152,13 @@ class ChiselNes extends RawModule {
       )
     }
   }.otherwise {
-    // ボードテスト回路(7segにカウンタの値を出す)
+    // 7seg消灯。SWの値をそのままLEDRに出す
     withClockAndReset(CLOCK_50, rst) {
-      val counter = RegInit(UInt(64.W), 0.U)
-      counter := counter + 1.U
-      // カウンタの値そのまま
-      numReg := (counter >> 16.U)
-      // 流れる感じにする
-      LEDR := (1.U(10.W) << counter(23, 20))
+      // 消灯
+      numReg        := 0x123456.U
+      numVisibleReg := false.B
+      // SlideSWの値そのまま
+      ledArrayReg := SW
     }
   }
 
