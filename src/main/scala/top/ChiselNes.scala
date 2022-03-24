@@ -72,8 +72,6 @@ class ChiselNes extends RawModule {
 
   /**********************************************************************/
   /* Board Component & IP                                               */
-
-  // base clock/reset
   val clk50Mhz = CLOCK_50
   val rst      = !RESET_N
 
@@ -90,6 +88,20 @@ class ChiselNes extends RawModule {
   val vgaRst      = !pllVga.io.locked
 
   /**********************************************************************/
+  /* 7SEG LED                                                           */
+  val sevenSegmentLed = withClockAndReset(CLOCK_50, rst) { Module(new SevenSegmentLed()) }
+  val numVisibleReg   = withClockAndReset(CLOCK_50, rst) { RegInit(Bool(), true.B) }
+  val numReg          = withClockAndReset(CLOCK_50, rst) { RegInit(UInt(24.W), 0.U) }
+  HEX0                         := sevenSegmentLed.io.digitsOut(0)
+  HEX1                         := sevenSegmentLed.io.digitsOut(1)
+  HEX2                         := sevenSegmentLed.io.digitsOut(2)
+  HEX3                         := sevenSegmentLed.io.digitsOut(3)
+  HEX4                         := sevenSegmentLed.io.digitsOut(4)
+  HEX5                         := sevenSegmentLed.io.digitsOut(5)
+  sevenSegmentLed.io.isVisible := numVisibleReg
+  sevenSegmentLed.io.dataIn    := numReg
+
+  /**********************************************************************/
   /* VGA Output                                                         */
   // Framebuffer, 本家仕様の通りDoubleBufferにはしない
   // val frameBuffer = Module(new dpram_framebuffer)
@@ -97,7 +109,7 @@ class ChiselNes extends RawModule {
   /**********************************************************************/
   /* Virtual JTAG                                                       */
   val vjtagIp           = Module(new virtual_jtag)
-  val virtualJtagBridge = Module(new VirtualJtagBridge)
+  val virtualJtagBridge = withClockAndReset(vjtagIp.io.tck, rst) { Module(new VirtualJtagBridge) }
   virtualJtagBridge.io.rst <> rst
   virtualJtagBridge.io.vjtag <> vjtagIp.io
 
@@ -106,14 +118,7 @@ class ChiselNes extends RawModule {
     // ボードテスト回路(7segにVJTAGのVIRの値を出す)
     withClockAndReset(vjtagIp.io.tck, rst) {
       // ir_inの値そのまま
-      val digits = SevenSegmentLed.decodeNDigits(vjtagIp.io.ir_in, 6, isActiveLow = true)
-      HEX0 := digits(0)
-      HEX1 := digits(1)
-      HEX2 := digits(2)
-      HEX3 := digits(3)
-      HEX4 := digits(4)
-      HEX5 := digits(5)
-
+      numReg := vjtagIp.io.ir_in
       // VJTAGのstate
       LEDR := Cat(
         vjtagIp.io.virtual_state_cdr,
@@ -133,14 +138,10 @@ class ChiselNes extends RawModule {
     withClockAndReset(CLOCK_50, rst) {
       val counter = RegInit(UInt(64.W), 0.U)
       counter := counter + 1.U
-      LEDR    := (1.U(10.W) << counter(23, 20))
-      val digits = SevenSegmentLed.decodeNDigits(counter >> 16.U, 6, isActiveLow = true)
-      HEX0 := digits(0)
-      HEX1 := digits(1)
-      HEX2 := digits(2)
-      HEX3 := digits(3)
-      HEX4 := digits(4)
-      HEX5 := digits(5)
+      // カウンタの値そのまま
+      numReg := (counter >> 16.U)
+      // 流れる感じにする
+      LEDR := (1.U(10.W) << counter(23, 20))
     }
   }
 
