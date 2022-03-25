@@ -33,7 +33,8 @@ class VgaOut(
   val io = IO(new Bundle {
     // PPUからの映像出力を受け取る
     val ppuOut = Flipped(new PpuOutIO())
-    // trueならテスト信号を出力する
+
+    // trueならテスト信号を出力する。pixelClockに同期して読み出される
     val isDebug = Input(Bool())
     // VGA出力用のpixel clock
     val pixelClock = Input(Clock())
@@ -154,9 +155,9 @@ class VgaOut(
         (ppuConfig.topY.U <= offsetY) && (offsetY < ppuConfig.bottomY.U)
 
       when(isDrawX && isDrawY) {
-        // FBから読み出して表示するので、更にFB上の座標に変換
-        val fbX = offsetX - ppuConfig.leftX.U
-        val fbY = offsetX - ppuConfig.topY.U
+        // FBから読み出して表示するので、更にFB上の座標に変換。scaleが指定されているときは引き伸ばす
+        val fbX = (offsetX - ppuConfig.leftX.U) >> (ppuConfig.scale - 1).U
+        val fbY = (offsetY - ppuConfig.topY.U) >> (ppuConfig.scale - 1).U
         readFbAddrReg    := posToFbAddr(fbX, fbY)
         readFbEnReg      := true.B
         hsyncPrefetchReg := true.B
