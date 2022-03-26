@@ -22,16 +22,19 @@ object DebugAccessCommand {
 
   /**
     * 要求定義の補助関数群
-    * { addr 32bit, reserved 8bit, count 8bit, data 8bit, requestType 8bit}
-    * 
-    * @remark 余裕がなかったらcount/dataを兼用としてargsとしてもいいかもしれない
+    * { reserved 24bit, requestType 8bit, addr 32bit, data 32bit}
     */
   object Request {
 
     /**
       * Requst自体のサイズ
       */
-    val cmdWidth: Int = 64
+    val cmdWidth: Int = 96
+
+    /**
+    * 要求データの幅
+    */
+    val dataWidth: Int = 32
 
     /**
     * 要求アドレス幅
@@ -39,107 +42,93 @@ object DebugAccessCommand {
     val addrWidth: Int = 32
 
     /**
-    * 要求データの幅
-    */
-    val dataWidth: Int = 8
-
-    /**
     * RequestTypeの幅
     */
     val requestTypeWidth: Int = Type.getWidth
 
     /**
-    * ReadCountの幅
-    */
-    val countWidth: Int = 8
-
-    /**
       * 空き領域
       */
-    val reservedWidth: Int = 8
+    val reservedWidth: Int = 24
 
     /**
       * 要求内容から、UIntのデータを作成する
       * @param request 要求の種類
       * @param addr 要求アドレス
       * @param data データ
-      * @param count カウント(Readのみ有効. 0,1は等価に扱う)
       * @param reserved 予約
       * @return { request 8bit, addr 32bit, }
       */
-    def encode(request: Type.Type, addr: UInt, data: UInt, count: UInt, reserved: UInt = 0.U(reservedWidth.W)): UInt =
-      Cat(addr(addrWidth - 1, 0), reserved(reservedWidth - 1, 0), count(countWidth - 1, 0), data(dataWidth - 1, 0), request.asUInt(requestTypeWidth - 1, 0))
+    def encode(request: Type.Type, addr: UInt, data: UInt, reserved: UInt = 0.U(reservedWidth.W)): UInt =
+      Cat(reserved(reservedWidth - 1, 0), request.asUInt(requestTypeWidth - 1, 0), addr(addrWidth - 1, 0), data(dataWidth - 1, 0))
 
     /**
       * Write要求を作成する
       */
-    def encodeWriteReq(addr: UInt, data: UInt): UInt = encode(request = Type.write, addr = addr, data = data, count = 0.U)
+    def encodeWriteReq(addr: UInt, data: UInt): UInt = encode(request = Type.write, addr = addr, data = data)
 
     /**
       * Read要求を作成する
       */
-    def encodeReadReq(addr: UInt, count: UInt): UInt = encode(request = Type.read, addr = addr, data = 0.U, count = count)
+    def encodeReadReq(addr: UInt): UInt = encode(request = Type.read, addr = addr, data = 0.U)
 
-    /**
-      * アドレスを取り出す
-      * @param rawData encodeしたデータ
-      */
-    def getAddress(rawData: UInt): UInt = rawData(63, 32)
-
-    /**
-      * reservedの値を取り出す
-      * @param rawData encodeしたデータ
-      */
-    def getReserved(rawData: UInt): UInt = rawData(31, 24)
-
-    /**
-      * countを取り出す
-      * @param rawData encodeしたデータ
-      */
-    def getCount(rawData: UInt): UInt = rawData(23, 16)
+    val dataPosL        = 0
+    val dataPosH        = dataPosL + dataWidth - 1
+    val addrPosL        = dataPosH + 1
+    val addrPosH        = addrPosL + addrWidth - 1
+    val requestTypePosL = addrPosH + 1
+    val requestTypePosH = requestTypePosL + requestTypeWidth - 1
+    val reservedPosL    = requestTypePosH + 1
+    val reservedPosH    = reservedPosL + reservedWidth - 1
 
     /**
       * dataを取り出す
       * @param rawData encodeしたデータ
       */
-    def getData(rawData: UInt): UInt = rawData(15, 8)
+    def getData(rawData: UInt): UInt = rawData(dataPosH, dataPosL)
+
+    /**
+      * アドレスを取り出す
+      * @param rawData encodeしたデータ
+      */
+    def getAddress(rawData: UInt): UInt = rawData(addrPosH, addrPosL)
 
     /**
       * requestTypeを取り出す
       * @param rawData encodeしたデータ
       */
-    def getRequestType(rawData: UInt): (Type.Type, Bool) = Type.safe(rawData)
+    def getRequestType(rawData: UInt): (Type.Type, Bool) = Type.safe(rawData(requestTypePosH, requestTypePosL))
   }
 
   /**
     * 応答定義の補助関数群. 
-    * { data 8bit }
-    * 
-    * @ remark Readでしか使っていないのでdataだけだが、以下の具合でもいいかも 
-       { reqCount 8bit, currentCount 8bit, data 8bit, requestType 8bit}
+    * { data 32bit }
     */
   object Response {
 
     /**
       * Response自体のサイズ
       */
-    val cmdWidth: Int = 8
+    val cmdWidth: Int = 32
 
     /**
     * 要求データの幅
     */
-    val dataWidth: Int = 8
+    val dataWidth: Int = 32
 
     /**
       * 要求内容から、UIntのデータを作成する
       * @param data データ
       */
-    def encode(data: UInt): UInt = data(7, 0)
+    def encode(data: UInt): UInt = data(dataWidth - 1, 0)
+
+    val dataPosL = 0
+    val dataPosH = dataPosL + dataWidth - 1
 
     /**
       * dataを取り出す
       * @param rawData encodeしたデータ
       */
-    def getData(rawData: UInt): UInt = rawData(7, 0)
+    def getData(rawData: UInt): UInt = rawData(dataPosH, dataPosL)
   }
 }
