@@ -7,7 +7,7 @@ import chisel3._
   *
   * @param dataWidth データ幅
   */
-class AsyncFifoReadIO(val dataWidth: Int) extends Bundle {
+class AsyncFifoDequeueIO(val dataWidth: Int) extends Bundle {
 
   /**
     * Asyncronouse Clear
