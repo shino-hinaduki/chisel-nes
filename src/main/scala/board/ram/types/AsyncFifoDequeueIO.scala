@@ -27,7 +27,7 @@ class AsyncFifoDequeueIO(val dataWidth: Int) extends Bundle {
   /**
     * Read Data out
     */
-  val q = Output(UInt(64.W))
+  val q = Output(UInt(dataWidth.W))
 
   /**
     * Queue empty

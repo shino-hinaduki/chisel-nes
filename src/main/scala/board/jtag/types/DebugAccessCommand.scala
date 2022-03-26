@@ -63,7 +63,7 @@ object DebugAccessCommand {
       * @param request 要求の種類
       * @param addr 要求アドレス
       * @param data データ
-      * @param count カウント(Readのみ有効)
+      * @param count カウント(Readのみ有効. 0,1は等価に扱う)
       * @param reserved 予約
       * @return { request 8bit, addr 32bit, }
       */
