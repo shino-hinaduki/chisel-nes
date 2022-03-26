@@ -34,7 +34,7 @@
 //https://fpgasoftware.intel.com/eula.
 
 
-//dcfifo_mixed_widths DEVICE_FAMILY="Cyclone V" LPM_NUMWORDS=8 LPM_SHOWAHEAD="OFF" LPM_WIDTH=32 LPM_WIDTH_R=32 LPM_WIDTHU=3 LPM_WIDTHU_R=3 OVERFLOW_CHECKING="ON" RDSYNC_DELAYPIPE=4 READ_ACLR_SYNCH="ON" UNDERFLOW_CHECKING="ON" USE_EAB="ON" WRITE_ACLR_SYNCH="ON" WRSYNC_DELAYPIPE=4 aclr data q rdclk rdempty rdreq rdusedw wrclk wrfull wrreq INTENDED_DEVICE_FAMILY="Cyclone V" ALTERA_INTERNAL_OPTIONS=AUTO_SHIFT_REGISTER_RECOGNITION=OFF
+//dcfifo_mixed_widths DEVICE_FAMILY="Cyclone V" LPM_NUMWORDS=8 LPM_SHOWAHEAD="OFF" LPM_WIDTH=32 LPM_WIDTH_R=32 LPM_WIDTHU=3 LPM_WIDTHU_R=3 OVERFLOW_CHECKING="ON" RDSYNC_DELAYPIPE=4 READ_ACLR_SYNCH="ON" UNDERFLOW_CHECKING="ON" USE_EAB="ON" WRITE_ACLR_SYNCH="OFF" WRSYNC_DELAYPIPE=4 aclr data q rdclk rdempty rdreq rdusedw wrclk wrfull wrreq INTENDED_DEVICE_FAMILY="Cyclone V" ALTERA_INTERNAL_OPTIONS=AUTO_SHIFT_REGISTER_RECOGNITION=OFF
 //VERSION_BEGIN 21.1 cbx_a_gray2bin 2021:10:21:11:03:22:SJ cbx_a_graycounter 2021:10:21:11:03:22:SJ cbx_altdpram 2021:10:21:11:03:22:SJ cbx_altera_counter 2021:10:21:11:03:22:SJ cbx_altera_gray_counter 2021:10:21:11:03:22:SJ cbx_altera_syncram 2021:10:21:11:03:22:SJ cbx_altera_syncram_nd_impl 2021:10:21:11:03:22:SJ cbx_altsyncram 2021:10:21:11:03:22:SJ cbx_cycloneii 2021:10:21:11:03:22:SJ cbx_dcfifo 2021:10:21:11:03:22:SJ cbx_fifo_common 2021:10:21:11:03:22:SJ cbx_lpm_add_sub 2021:10:21:11:03:22:SJ cbx_lpm_compare 2021:10:21:11:03:21:SJ cbx_lpm_counter 2021:10:21:11:03:21:SJ cbx_lpm_decode 2021:10:21:11:03:21:SJ cbx_lpm_mux 2021:10:21:11:03:22:SJ cbx_mgl 2021:10:21:11:03:46:SJ cbx_nadder 2021:10:21:11:03:22:SJ cbx_scfifo 2021:10:21:11:03:22:SJ cbx_stratix 2021:10:21:11:03:22:SJ cbx_stratixii 2021:10:21:11:03:22:SJ cbx_stratixiii 2021:10:21:11:03:22:SJ cbx_stratixv 2021:10:21:11:03:22:SJ cbx_util_mgl 2021:10:21:11:03:22:SJ  VERSION_END
 // synthesis VERILOG_INPUT_VERSION VERILOG_2001
 // altera message_off 10463
@@ -2942,7 +2942,7 @@ module  async_fifo_dap_to_vjtag_cmpr
 		eq_wire = aeb_result_wire;
 endmodule //async_fifo_dap_to_vjtag_cmpr
 
-//synthesis_resources = lut 5 M10K 1 reg 50 
+//synthesis_resources = lut 5 M10K 1 reg 48 
 //synopsys translate_off
 `timescale 1 ps / 1 ps
 //synopsys translate_on
@@ -2990,7 +2990,6 @@ module  async_fifo_dap_to_vjtag_dcfifo
 	wire  [3:0]   wire_rs_brp_q;
 	wire  [3:0]   wire_rs_bwp_q;
 	wire  [3:0]   wire_rs_dgwp_q;
-	wire  [0:0]   wire_wraclr_q;
 	wire  [3:0]   wire_ws_dgrp_q;
 	wire	[3:0]	wire_rdusedw_sub_dataa;
 	wire	[3:0]	wire_rdusedw_sub_datab;
@@ -3021,7 +3020,7 @@ module  async_fifo_dap_to_vjtag_dcfifo
 	.q(wire_rdptr_g1p_q));
 	async_fifo_dap_to_vjtag_a_graycounter1   wrptr_g1p
 	( 
-	.aclr((~ wire_wraclr_q)),
+	.aclr(aclr),
 	.clock(wrclk),
 	.cnt_en(valid_wrreq),
 	.q(wire_wrptr_g1p_q));
@@ -3041,8 +3040,8 @@ module  async_fifo_dap_to_vjtag_dcfifo
 	initial
 		delayed_wrptr_g = 0;
 	// synopsys translate_on
-	always @ ( posedge wrclk or  negedge wire_wraclr_q)
-		if (wire_wraclr_q == 1'b0) delayed_wrptr_g <= 4'b0;
+	always @ ( posedge wrclk or  posedge aclr)
+		if (aclr == 1'b1) delayed_wrptr_g <= 4'b0;
 		else  delayed_wrptr_g <= wrptr_g;
 	// synopsys translate_off
 	initial
@@ -3055,8 +3054,8 @@ module  async_fifo_dap_to_vjtag_dcfifo
 	initial
 		wrptr_g = 0;
 	// synopsys translate_on
-	always @ ( posedge wrclk or  negedge wire_wraclr_q)
-		if (wire_wraclr_q == 1'b0) wrptr_g <= 4'b0;
+	always @ ( posedge wrclk or  posedge aclr)
+		if (aclr == 1'b1) wrptr_g <= 4'b0;
 		else if  (valid_wrreq == 1'b1)   wrptr_g <= wire_wrptr_g1p_q;
 	async_fifo_dap_to_vjtag_dffpipe   rdaclr
 	( 
@@ -3082,16 +3081,10 @@ module  async_fifo_dap_to_vjtag_dcfifo
 	.clrn(wire_rdaclr_q),
 	.d(delayed_wrptr_g),
 	.q(wire_rs_dgwp_q));
-	async_fifo_dap_to_vjtag_dffpipe   wraclr
-	( 
-	.clock(wrclk),
-	.clrn((~ aclr)),
-	.d(1'b1),
-	.q(wire_wraclr_q));
 	async_fifo_dap_to_vjtag_alt_synch_pipe1   ws_dgrp
 	( 
 	.clock(wrclk),
-	.clrn(wire_wraclr_q),
+	.clrn((~ aclr)),
 	.d(rdptr_g),
 	.q(wire_ws_dgrp_q));
 	assign
@@ -3118,8 +3111,8 @@ module  async_fifo_dap_to_vjtag_dcfifo
 		rdempty = int_rdempty,
 		rdusedw = {wire_rdusedw_sub_result[2:0]},
 		valid_rdreq = (rdreq & (~ (int_rdempty | (~ wire_rdaclr_q)))),
-		valid_wrreq = (wrreq & (~ (int_wrfull | (~ wire_wraclr_q)))),
-		wrfull = (int_wrfull | (~ wire_wraclr_q)),
+		valid_wrreq = (wrreq & (~ int_wrfull)),
+		wrfull = int_wrfull,
 		wrptr_gs = {(~ wrptr_g[3]), (~ wrptr_g[2]), wrptr_g[1:0]};
 endmodule //async_fifo_dap_to_vjtag_dcfifo
 //VALID FILE
@@ -3228,7 +3221,7 @@ endmodule
 // Retrieval info: CONSTANT: READ_ACLR_SYNCH STRING "ON"
 // Retrieval info: CONSTANT: UNDERFLOW_CHECKING STRING "ON"
 // Retrieval info: CONSTANT: USE_EAB STRING "ON"
-// Retrieval info: CONSTANT: WRITE_ACLR_SYNCH STRING "ON"
+// Retrieval info: CONSTANT: WRITE_ACLR_SYNCH STRING "OFF"
 // Retrieval info: CONSTANT: WRSYNC_DELAYPIPE NUMERIC "4"
 // Retrieval info: USED_PORT: aclr 0 0 0 0 INPUT GND "aclr"
 // Retrieval info: USED_PORT: data 0 0 32 0 INPUT NODEFVAL "data[31..0]"

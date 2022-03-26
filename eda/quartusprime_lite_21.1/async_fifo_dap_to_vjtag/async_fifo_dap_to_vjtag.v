@@ -103,7 +103,7 @@ module async_fifo_dap_to_vjtag (
 		dcfifo_component.read_aclr_synch = "ON",
 		dcfifo_component.underflow_checking = "ON",
 		dcfifo_component.use_eab = "ON",
-		dcfifo_component.write_aclr_synch = "ON",
+		dcfifo_component.write_aclr_synch = "OFF",
 		dcfifo_component.wrsync_delaypipe = 4;
 
 
@@ -156,7 +156,7 @@ endmodule
 // Retrieval info: CONSTANT: READ_ACLR_SYNCH STRING "ON"
 // Retrieval info: CONSTANT: UNDERFLOW_CHECKING STRING "ON"
 // Retrieval info: CONSTANT: USE_EAB STRING "ON"
-// Retrieval info: CONSTANT: WRITE_ACLR_SYNCH STRING "ON"
+// Retrieval info: CONSTANT: WRITE_ACLR_SYNCH STRING "OFF"
 // Retrieval info: CONSTANT: WRSYNC_DELAYPIPE NUMERIC "4"
 // Retrieval info: USED_PORT: aclr 0 0 0 0 INPUT GND "aclr"
 // Retrieval info: USED_PORT: data 0 0 32 0 INPUT NODEFVAL "data[31..0]"
