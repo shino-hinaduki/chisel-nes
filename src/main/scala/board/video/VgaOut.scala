@@ -1,29 +1,36 @@
 package board.video
 
 import chisel3._
+import chisel3.util.log2Up
+import chisel3.util.Cat
+import chisel3.util.switch
 import chisel3.internal.firrtl.Width
 
-import board.video.types.FrameBufferIO
 import ppu.types.PpuOutIO
-import chisel3.util.log2Up
+import board.video.types.FrameBufferIO
 import board.video.types.VgaConfig
 import board.video.types.PpuImageConfig
-import chisel3.util.Cat
 import board.video.types.VgaIO
 import board.jtag.types.DebugAccessCommand
 import board.ram.types.AsyncFifoDequeueIO
 import board.ram.types.AsyncFifoEnqueueIO
-import chisel3.util.switch
 
 /**
   * PPUからの映像出力をFrameBufferにため、FrameBufferから映像を出力する
-  * 内蔵clockはPPUからのクロックとして取り扱い、その他pixel clockが別途供給する
+  * Module自体はPPUからのクロックで駆動し、映像出力部分はio.pxelClockで供給したclockで駆動する
   * @param vgaConfig 出力設定。初期値は 640x480 60Hz
   * @param ppuConfig PPUの映像配置設定。初期値は中央に等倍
   */
 class VgaOut(
     val vgaConfig: VgaConfig = VgaConfig.minConf,
-    val ppuConfig: PpuImageConfig = PpuImageConfig(VgaConfig.minConf.width / 2, VgaConfig.minConf.height / 2, 1)
+    val ppuConfig: PpuImageConfig = PpuImageConfig(
+      centerX = VgaConfig.minConf.width / 2,
+      centerY = VgaConfig.minConf.height / 2,
+      scale = 1,
+      bgColorR = 0,
+      bgColorG = 0,
+      bgColorB = 0
+    ),
 ) extends Module {
   // FrameBufferのアクセス範囲 256 * 256 = 65536word => 16bit
   val fbAddrWidth = 16
@@ -78,27 +85,80 @@ class VgaOut(
   io.frameBuffer.ppu.rden    := ppuFbRdEnReg
   io.frameBuffer.ppu.wren    := ppuFbWrEnReg
 
+  // ppu clock domainからのR/Wは出さない
+  def fbByPpuNop() = {
+    ppuFbAddrReg := DontCare
+    ppuFbDataReg := DontCare
+    ppuFbWrEnReg := false.B
+    ppuFbRdEnReg := false.B
+  }
+  // ppu clock domainからWrite
+  def fbByPpuWrite(addr: UInt, data: UInt) = {
+    ppuFbAddrReg := addr
+    ppuFbDataReg := data
+    ppuFbWrEnReg := true.B
+    ppuFbRdEnReg := false.B
+  }
+  // ppu clock domainからRead
+  def fbByPpuRead(addr: UInt) = {
+    ppuFbAddrReg := addr
+    ppuFbDataReg := DontCare
+    ppuFbWrEnReg := false.B
+    ppuFbRdEnReg := true.B
+  }
+
   // DebugAccessReq(AsyncFIFO) -> DPRAM
   val debugAccessReqDequeueReg = RegInit(Bool(), false.B)
-  val debugAccessReqCountReg   = RegInit(UInt(DebugAccessCommand.Request.countWidth.W), 0.U) // BurstRead時は規定回数を満たすまでDequeueしない
   io.debugAccessReq.aclr  := false.B
   io.debugAccessReq.rdclk := clock
   io.debugAccessReq.rdreq := debugAccessReqDequeueReg
 
-  // Burst Read情報をクリア
-  def clearDequeueStatus() = {
+  // Dequeueしない
+  def debugReqNop() = {
     debugAccessReqDequeueReg := false.B
-    debugAccessReqCountReg   := 0.U
   }
   // Dequeueする
-  def setDequeue() = {
+  def debugReqDequeue() = {
     debugAccessReqDequeueReg := true.B
-    debugAccessReqCountReg   := 0.U
   }
-  // Dequeueはしないが、カウントをすすめる
-  def incDequeueCount() = {
-    debugAccessReqDequeueReg := false.B
-    debugAccessReqCountReg   := debugAccessReqCountReg + 1.U
+
+  // Debug AccessはPPUのDataWriteより優先される
+  when(!io.debugAccessReq.rdempty) {
+    // 命令をデコードして、Read/WriteをDPRAMに投げる
+    val addr               = DebugAccessCommand.Request.getAddress(io.debugAccessReq.q)
+    val data               = DebugAccessCommand.Request.getData(io.debugAccessReq.q)
+    val (reqType, isValid) = DebugAccessCommand.Request.getRequestType(io.debugAccessReq.q)
+
+    when(isValid) {
+      when(reqType === DebugAccessCommand.Type.read) {
+        // Read & Dequeue
+        fbByPpuRead(addr)
+        debugReqDequeue()
+      }.elsewhen(reqType === DebugAccessCommand.Type.write) {
+        // Write & Dequeue
+        fbByPpuWrite(addr, data)
+        debugReqDequeue()
+      }.otherwise {
+        // 未対応、Dequeueだけ実施
+        fbByPpuNop()
+        debugReqDequeue()
+      }
+    }.otherwise {
+      // Dequeuだけ実施
+      fbByPpuNop()
+      debugReqDequeue()
+    }
+  }.elsewhen(io.ppuVideoOut.valid) {
+    // PPUが出力している現在の値をDPRAMへWrite
+    val addr = posToFbAddr(io.ppuVideoOut.x, io.ppuVideoOut.y)
+    val data = rgbToFbData(io.ppuVideoOut.r, io.ppuVideoOut.g, io.ppuVideoOut.b)
+    fbByPpuWrite(addr, data)
+    // 処理してないのでDequeueしない
+    debugReqNop()
+  }.otherwise {
+    // 要求は出さない, 処理してないのでDequeueしない
+    fbByPpuNop()
+    debugReqNop()
   }
 
   // DPRAM -> DebugAccessResp(AsyncFIFO)
@@ -109,66 +169,31 @@ class VgaOut(
   io.debugAccessResp.data  := debugAccessRespDataReg
   io.debugAccessResp.wrreq := debugAccessRespEnqueueReg
 
-  // Debug AccessはPPUのDataWriteより優先される
-  when(!io.debugAccessReq.rdempty) {
-    // 命令をデコードして、Read/WriteをDPRAMに投げる
-    val addr               = DebugAccessCommand.Request.getAddress(io.debugAccessReq.q)
-    val (x, y)             = fbAddrToPos(addr) // 上位16bitは無視
-    val (reqType, isValid) = DebugAccessCommand.Request.getRequestType(io.debugAccessReq.q)
-
-    // Dequeueしておく
-    debugAccessReqDequeueReg := true.B
-  }.elsewhen(io.ppuVideoOut.valid) {
-    // 毎cycチェックして、DPRAMへの書き込み信号を作る
-    ppuFbAddrReg := posToFbAddr(io.ppuVideoOut.x, io.ppuVideoOut.y)
-    when(io.ppuVideoOut.visible) {
-      ppuFbDataReg := rgbToFbData(io.ppuVideoOut.r, io.ppuVideoOut.g, io.ppuVideoOut.b)
-    }.otherwise {
-      ppuFbDataReg := rgbToFbData(0.U, 0.U, 0.U)
-    }
-    ppuFbWrEnReg := true.B
-    ppuFbRdEnReg := false.B
-    // 処理してないのでDequeueしない
-    clearDequeueStatus()
-  }.otherwise {
-    ppuFbAddrReg := DontCare
-    ppuFbDataReg := DontCare
-    ppuFbWrEnReg := false.B
-    ppuFbRdEnReg := false.B
-    // 処理してないのでDequeueしない
-    clearDequeueStatus()
+  // Enqueueしない
+  def debugRespNop() = {
+    debugAccessRespDataReg    := DontCare
+    debugAccessRespEnqueueReg := false.B
+  }
+  // Enqueueする
+  def debugRespEnqueue(data: UInt) = {
+    debugAccessRespDataReg    := data
+    debugAccessRespEnqueueReg := false.B
   }
 
   // 本cycでReadしていたら、その結果をEnqueueする
+  when(ppuFbRdEnReg && !io.debugAccessResp.wrfull) {
+    // 応答をQueueに乗せる
+    val data = DebugAccessCommand.Response.encode(io.frameBuffer.ppu.q)
+    debugRespEnqueue(data)
+  }.otherwise {
+    // 応答しない。QueueFullなら結果は捨てる
+    debugRespNop()
+  }
 
   /*********************************************************************/
   /* DualPort RAM -> VGA out                                           */
   withClockAndReset(io.pixelClock, io.pixelClockReset) {
-    // Dual Port RAM読み出し用
-    val vgaFbAddrReg = RegInit(UInt(fbAddrWidth.W), 0.U)
-    val vgaFbEnReg   = RegInit(Bool(), false.B)
-    io.frameBuffer.vga.address := vgaFbAddrReg
-    io.frameBuffer.vga.clock   := io.pixelClock
-    io.frameBuffer.vga.data    := DontCare // Pixel Clock DomainからはWriteはしない
-    io.frameBuffer.vga.rden    := vgaFbEnReg
-    io.frameBuffer.vga.wren    := false.B  // Writeはしない
-    // DPRAM読み出し要求と同じタイミングでセットして使う
-    val hsyncPrefetchReg = RegInit(Bool(), false.B)
-    val vsyncPrefetchReg = RegInit(Bool(), false.B)
-
-    // VGA信号
-    val rOutReg  = RegInit(UInt(channelDataWidth.W), 0.U)
-    val gOutReg  = RegInit(UInt(channelDataWidth.W), 0.U)
-    val bOutReg  = RegInit(UInt(channelDataWidth.W), 0.U)
-    val hsyncReg = RegInit(Bool(), true.B)
-    val vsyncReg = RegInit(Bool(), true.B)
-    io.vgaOut.r     := rOutReg
-    io.vgaOut.g     := gOutReg
-    io.vgaOut.b     := bOutReg
-    io.vgaOut.hsync := hsyncReg
-    io.vgaOut.vsync := vsyncReg
-
-    // カウント最大値とそのbit幅
+    // VGAタイミング制御用カウント
     val xCounterMax   = vgaConfig.hsync.counterMax
     val xCounterWidth = vgaConfig.hsync.counterWidth
     val yCounterMax   = vgaConfig.vsync.counterMax
@@ -179,16 +204,43 @@ class VgaOut(
     val yCounter = RegInit(UInt(yCounterWidth.W), 0.U)
 
     // Xカウント -> Yカウント
-    when(xCounter < xCounterMax.U) {
+    when(xCounter < (xCounterMax - 1).U) {
       xCounter := xCounter + 1.U
     }.otherwise {
       xCounter := 0.U
       // Xが1順したらYを足す
-      when(yCounter < yCounterMax.U) {
+      when(yCounter < (yCounterMax - 1).U) {
         yCounter := yCounter + 1.U
       }.otherwise {
         yCounter := 0.U
       }
+    }
+
+    // Dual Port RAM読み出し用
+    val vgaFbAddrReg = RegInit(UInt(fbAddrWidth.W), 0.U)
+    val vgaFbRdEnReg = RegInit(Bool(), false.B)
+    io.frameBuffer.vga.address := vgaFbAddrReg
+    io.frameBuffer.vga.clock   := io.pixelClock
+    io.frameBuffer.vga.data    := DontCare // Pixel Clock DomainからはWriteはしない
+    io.frameBuffer.vga.rden    := vgaFbRdEnReg
+    io.frameBuffer.vga.wren    := false.B  // Writeはしない
+    // DPRAM読み出し要求と同じタイミングでセットして使う
+    val hsyncPrefetchReg = RegInit(Bool(), true.B) // active low
+    val vsyncPrefetchReg = RegInit(Bool(), true.B) // active low
+
+    // vga clock domainからのR/Wは出さない
+    def fbByVgaNop(isNeedHsync: Bool, isNeedVSync: Bool) = {
+      vgaFbAddrReg     := DontCare
+      vgaFbRdEnReg     := false.B
+      hsyncPrefetchReg := !isNeedHsync // activeLowなのでPrefetch regに入れる時点で論理を戻す
+      vsyncPrefetchReg := !isNeedVSync // activeLowなのでPrefetch regに入れる時点で論理を戻す
+    }
+    // vga clock domainからReadしつつ、HSYNC,VSYNC要否も同じタイミングで保持
+    def fbByVgaRead(addr: UInt, isNeedHsync: Bool, isNneedVSync: Bool) = {
+      vgaFbAddrReg     := addr
+      vgaFbRdEnReg     := true.B
+      hsyncPrefetchReg := !isNeedHsync  // activeLowなのでPrefetch regに入れる時点で論理を戻す
+      vsyncPrefetchReg := !isNneedVSync // activeLowなのでPrefetch regに入れる時点で論理を戻す
     }
 
     // X,Y位置を確認して, DPRAMの読み出しを行う
@@ -196,10 +248,6 @@ class VgaOut(
       (vgaConfig.hsync.activeVideoStart.U <= xCounter) && (xCounter < vgaConfig.hsync.activeVideoEnd.U)
     val isActiveY =
       (vgaConfig.vsync.activeVideoStart.U <= yCounter) && (yCounter < vgaConfig.vsync.activeVideoEnd.U)
-    val isSyncX =
-      (vgaConfig.hsync.syncStart.U <= xCounter) && (xCounter < vgaConfig.hsync.syncEnd.U)
-    val isSyncY =
-      (vgaConfig.vsync.syncStart.U <= yCounter) && (yCounter < vgaConfig.vsync.syncEnd.U)
 
     when(isActiveX && isActiveY) {
       // 有効な領域なので座標を取得する
@@ -214,51 +262,66 @@ class VgaOut(
 
       when(isDrawX && isDrawY) {
         // FBから読み出して表示するので、更にFB上の座標に変換。scaleが指定されているときは引き伸ばす
-        val fbX = (offsetX - ppuConfig.leftX.U) >> (ppuConfig.scale - 1).U
-        val fbY = (offsetY - ppuConfig.topY.U) >> (ppuConfig.scale - 1).U
-        vgaFbAddrReg     := posToFbAddr(fbX, fbY)
-        vgaFbEnReg       := true.B
-        hsyncPrefetchReg := true.B
-        vsyncPrefetchReg := true.B
+        val fbX  = (offsetX - ppuConfig.leftX.U) >> (ppuConfig.scale - 1).U
+        val fbY  = (offsetY - ppuConfig.topY.U) >> (ppuConfig.scale - 1).U
+        val addr = posToFbAddr(fbX, fbY)
+
+        fbByVgaRead(addr, false.B, false.B) // ActiveVideo内なのでSync不要
       }.otherwise {
         // 画面範囲にはあるが、FB範囲外
-        vgaFbAddrReg     := posToFbAddr(0.U, 0.U)
-        vgaFbEnReg       := false.B // DPRAMからは読み出さない
-        hsyncPrefetchReg := true.B
-        vsyncPrefetchReg := true.B
+        fbByVgaNop(false.B, false.B) // ActiveVideo内なのでSync不要
       }
     }.otherwise {
       // 有効な領域ではない。Front/Back PorchもしくはSync
-      vgaFbAddrReg     := posToFbAddr(0.U, 0.U)
-      vgaFbEnReg       := false.B
-      hsyncPrefetchReg := !isSyncX // SyncはActiveLowなので注意
-      vsyncPrefetchReg := !isSyncY // SyncはActiveLowなので注意
+      val isNeedHSync =
+        (vgaConfig.hsync.syncStart.U <= xCounter) && (xCounter < vgaConfig.hsync.syncEnd.U)
+      val isNeedVSync =
+        (vgaConfig.vsync.syncStart.U <= yCounter) && (yCounter < vgaConfig.vsync.syncEnd.U)
+
+      fbByVgaNop(isNeedHSync, isNeedVSync)
+    }
+
+    // VGA信号生成
+    val rOutReg  = RegInit(UInt(channelDataWidth.W), 0.U)
+    val gOutReg  = RegInit(UInt(channelDataWidth.W), 0.U)
+    val bOutReg  = RegInit(UInt(channelDataWidth.W), 0.U)
+    val hsyncReg = RegInit(Bool(), true.B) // active low
+    val vsyncReg = RegInit(Bool(), true.B) // active low
+    io.vgaOut.r     := rOutReg
+    io.vgaOut.g     := gOutReg
+    io.vgaOut.b     := bOutReg
+    io.vgaOut.hsync := hsyncReg
+    io.vgaOut.vsync := vsyncReg
+    // ビデオ出力信号を設定する
+    def setVideoOut(r: UInt, g: UInt, b: UInt, hsync: Bool, vsync: Bool) = {
+      rOutReg  := r
+      gOutReg  := g
+      bOutReg  := b
+      hsyncReg := hsync
+      vsyncReg := vsync
     }
 
     // 現在の読み出し結果から出力信号を決定する
-    when(vgaFbEnReg) {
+    when(vgaFbRdEnReg) {
+      // Active Video Area
       when(io.isDebug) {
         // デバッグ用に読み出しアドレスからパターンを作る
         val (x, y) = fbAddrToPos(vgaFbAddrReg)
-        rOutReg := x
-        gOutReg := y
-        bOutReg := (x >> 1) + y
+        setVideoOut(x, y, (x >> 1) + y, true.B, true.B) // ActiveAreaなのでtrue固定
       }.otherwise {
         // 有効なデータを読みだした後
         val (r, g, b) = fbDataToRgb(io.frameBuffer.vga.q)
-        rOutReg := r
-        gOutReg := g
-        bOutReg := b
+        setVideoOut(r, g, b, true.B, true.B) // ActiveAreaなのでtrue固定
       }
-      // Active Areaなのでtrue固定
-      hsyncReg := true.B
-      vsyncReg := true.B
     }.otherwise {
-      rOutReg  := 0.U // ActiveAreaでもFB外のケースがあるので黒にしておく
-      gOutReg  := 0.U // ActiveAreaでもFB外のケースがあるので黒にしておく
-      bOutReg  := 0.U // ActiveAreaでもFB外のケースがあるので黒にしておく
-      hsyncReg := hsyncPrefetchReg
-      vsyncReg := vsyncPrefetchReg
+      // FrontPorch, BackPorch, Sync。ActiveVideoだがFB範囲外の場合。最後のケースに備えて背景色を見せる
+      setVideoOut(
+        ppuConfig.bgColorR.U(channelDataWidth.W),
+        ppuConfig.bgColorG.U(channelDataWidth.W),
+        ppuConfig.bgColorB.U(channelDataWidth.W),
+        hsyncPrefetchReg,
+        vsyncPrefetchReg
+      )
     }
   }
 }

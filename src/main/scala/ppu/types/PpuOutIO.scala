@@ -8,8 +8,6 @@ import chisel3._
 class PpuOutIO extends Bundle {
   // falseの場合は書き込まない
   val valid = Output(Bool())
-  // falseの場合はAll Zeroを書く
-  val visible = Output(Bool())
   // 現在のPixelのX座標
   val x = Output(UInt(8.W))
   // 現在のPixelのy座標

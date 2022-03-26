@@ -7,11 +7,17 @@ package board.video.types
   * @param centerX 中心X座標
   * @param centerY 中心Y座標
   * @param scale 拡大率
+  * @param bgColorR 範囲外の色
+  * @param bgColorG 範囲外の色
+  * @param bgColorB 範囲外の色
   */
 case class PpuImageConfig(
     centerX: Int,
     centerY: Int,
     scale: Int,
+    bgColorR: Int,
+    bgColorG: Int,
+    bgColorB: Int,
 ) {
 
   /**
