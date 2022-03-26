@@ -10,11 +10,6 @@ import chisel3._
 class AsyncFifoDequeueIO(val dataWidth: Int) extends Bundle {
 
   /**
-    * Asyncronouse Clear
-    */
-  val aclr = Input(Bool())
-
-  /**
     * Read Clock
     */
   val rdclk = Input(Clock())

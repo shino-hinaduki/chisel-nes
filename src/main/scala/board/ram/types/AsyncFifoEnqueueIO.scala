@@ -10,11 +10,6 @@ import chisel3._
 class AsyncFifoEnqueueIO(val dataWidth: Int) extends Bundle {
 
   /**
-    * Asyncronouse Clear
-    */
-  val aclr = Input(Bool())
-
-  /**
     * Write Data in
     */
   val data = Input(UInt(dataWidth.W))

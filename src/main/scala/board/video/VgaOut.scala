@@ -109,7 +109,6 @@ class VgaOut(
 
   // DebugAccessReq(AsyncFIFO) -> DPRAM
   val debugAccessReqDequeueReg = RegInit(Bool(), false.B)
-  io.debugAccessReq.aclr  := false.B
   io.debugAccessReq.rdclk := clock
   io.debugAccessReq.rdreq := debugAccessReqDequeueReg
 
@@ -164,7 +163,6 @@ class VgaOut(
   // DPRAM -> DebugAccessResp(AsyncFIFO)
   val debugAccessRespDataReg    = RegInit(UInt(DebugAccessCommand.Response.cmdWidth.W), 0.U)
   val debugAccessRespEnqueueReg = RegInit(Bool(), false.B)
-  io.debugAccessResp.aclr  := false.B
   io.debugAccessResp.wrclk := clock
   io.debugAccessResp.data  := debugAccessRespDataReg
   io.debugAccessResp.wrreq := debugAccessRespEnqueueReg
