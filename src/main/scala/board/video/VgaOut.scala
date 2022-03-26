@@ -41,7 +41,7 @@ class VgaOut(
     // pixelClock DomainのReset
     val pixelClockReset = Input(Reset())
     // FrameBufferとの接続, _aがPPU, _bがVGAとして扱う
-    val frameBuffer = new FrameBufferIO(fbAddrWidth.W, fbDataWidth.W)
+    val fb = new FrameBufferIO(fbAddrWidth, fbDataWidth)
     // 映像出力
     val vgaOut = new VgaIO(fbDataWidth)
   })
@@ -62,11 +62,11 @@ class VgaOut(
   val writeFbAddrReg = RegInit(UInt(fbAddrWidth.W), 0.U)
   val writeFbDataReg = RegInit(UInt(fbDataWidth.W), 0.U)
   val writeFbEnReg   = RegInit(Bool(), false.B)
-  io.frameBuffer.address_a := writeFbAddrReg
-  io.frameBuffer.clock_a   := clock   // VgaOut自体のClockはPPU Clockで駆動する
-  io.frameBuffer.data_a    := writeFbDataReg
-  io.frameBuffer.rden_a    := false.B // Readはしない
-  io.frameBuffer.wren_a    := writeFbEnReg
+  io.fb.ppu.address := writeFbAddrReg
+  io.fb.ppu.clock   := clock   // VgaOut自体のClockはPPU Clockで駆動する
+  io.fb.ppu.data    := writeFbDataReg
+  io.fb.ppu.rden    := false.B // Readはしない
+  io.fb.ppu.wren    := writeFbEnReg
 
   // 毎cycチェックして、DPRAMへの書き込み信号を作る
   when(io.ppuOut.valid) {
@@ -89,11 +89,11 @@ class VgaOut(
     // Dual Port RAM読み出し用
     val readFbAddrReg = RegInit(UInt(fbAddrWidth.W), 0.U)
     val readFbEnReg   = RegInit(Bool(), false.B)
-    io.frameBuffer.address_b := readFbAddrReg
-    io.frameBuffer.clock_b   := io.pixelClock
-    io.frameBuffer.data_b    := DontCare // Pixel Clock DomainからはWriteはしない
-    io.frameBuffer.rden_b    := readFbEnReg
-    io.frameBuffer.wren_b    := false.B  // Writeはしない
+    io.fb.vga.address := readFbAddrReg
+    io.fb.vga.clock   := io.pixelClock
+    io.fb.vga.data    := DontCare // Pixel Clock DomainからはWriteはしない
+    io.fb.vga.rden    := readFbEnReg
+    io.fb.vga.wren    := false.B  // Writeはしない
     // DPRAM読み出し要求と同じタイミングでセットして使う
     val hsyncPrefetchReg = RegInit(Bool(), false.B)
     val vsyncPrefetchReg = RegInit(Bool(), false.B)
@@ -187,7 +187,7 @@ class VgaOut(
         bOutReg := (x >> 1) + y
       }.otherwise {
         // 有効なデータを読みだした後
-        val (r, g, b) = fbDataToRgb(io.frameBuffer.q_b)
+        val (r, g, b) = fbDataToRgb(io.fb.vga.q)
         rOutReg := r
         gOutReg := g
         bOutReg := b

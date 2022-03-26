@@ -13,7 +13,7 @@ class RamIO(val addrWidth: Int, val dataWidth: Int) extends Bundle {
   /**
       * Access Addr
       */
-  val addr = Input(UInt(addrWidth.W))
+  val address = Input(UInt(addrWidth.W))
 
   /**
     * Access Clock
