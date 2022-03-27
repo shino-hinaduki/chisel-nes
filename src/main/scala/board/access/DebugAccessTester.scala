@@ -19,7 +19,7 @@ object TestMode extends ChiselEnum {
   */
 class DebugAccessTester(val counterWidth: Int = 32) extends Module {
   // このアドレスへのWriteはTestMode切り替えとみなす
-  val modeOffset = 0x55555555.U
+  val modeOffset = 0x00005555.U
   // 適切なモードを指定せずにReadした場合の値
   val invalidData = 0x01234567.U
 
