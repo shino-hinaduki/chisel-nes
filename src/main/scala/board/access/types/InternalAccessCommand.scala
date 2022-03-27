@@ -53,7 +53,7 @@ object InternalAccessCommand {
       * @return { request 8bit, offset 24bit, data 32bit }
       */
     def encode(request: Type.Type, offset: UInt, data: UInt): UInt =
-      Cat(request.asUInt(requestTypeWidth - 1, 0), offset(offsetWidth - 1, 0), data(dataWidth - 1, 0))
+      Cat(request.asUInt, offset(offsetWidth - 1, 0), data(dataWidth - 1, 0))
 
     /**
       * Write要求を作成する

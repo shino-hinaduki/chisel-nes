@@ -25,24 +25,24 @@ object VirtualInstruction {
   val totalWidth = 24
   // Offset指定可能なビット幅
   val baseOffsetWidth = 16
+  // isWriteのビット幅
+  val isWriteWidth = 1
+  // AccessTargetのビット幅
+  val accessTargetWidth = 7
 
   /**
   * DAPのアクセス対象
   */
   object AccessTarget extends ChiselEnum {
-    val invalid      = Value(0x00.U)
-    val info         = Value(0x01.U)
-    val debug        = Value(0x02.U)
-    val cpuBusMaster = Value(0x03.U)
-    val ppuBusMaster = Value(0x04.U)
-    val frameBuffer  = Value(0x10.U)
-    val audio        = Value(0x20.U)
-    val cartInfo     = Value(0x30.U)
-    val cartPrg      = Value(0x31.U)
-    val cartBatt     = Value(0x32.U)
-    val cartChr      = Value(0x33.U)
-    val readTest     = Value(0x7e.U)
-    val invalid2     = Value(0x7f.U)
+    val accessTest   = Value(0x00.U)
+    val cpu          = Value(0x01.U)
+    val ppu          = Value(0x02.U)
+    val apu          = Value(0x03.U)
+    val cart         = Value(0x04.U)
+    val frameBuffer  = Value(0x05.U)
+    val cpuBusMaster = Value(0x06.U)
+    val ppuBusMaster = Value(0x07.U)
+    val audio        = Value(0x08.U)
   }
 
   /**
@@ -60,13 +60,13 @@ object VirtualInstruction {
   def getIsWrite(vir: UInt): Bool = vir(7)
 
   /**
-    * VIRをParseしてaccessTargetとIsValidを取得する。IsValidはaccessTargetがInvalid指定だった場合でもfalseになる
+    * VIRをParseしてaccessTargetとIsValidを取得する
     * @param vir Virtual IRの値
     * @return accessTarget, IsValid
     */
   def getaccessTargetAndIsValid(vir: UInt): (AccessTarget.Type, Bool) = {
     val (accessTarget, isValid) = AccessTarget.safe(vir(AccessTarget.getWidth - 1, 0))
-    (accessTarget, isValid && (accessTarget =/= AccessTarget.invalid) && (accessTarget =/= AccessTarget.invalid2))
+    (accessTarget, isValid)
   }
 
   /**
@@ -94,7 +94,7 @@ object VirtualInstruction {
     dst.raw          := 0.U(totalWidth.W)
     dst.baseOffset   := 0.U(baseOffsetWidth.W)
     dst.isWrite      := false.B
-    dst.accessTarget := AccessTarget.invalid
+    dst.accessTarget := AccessTarget.accessTest
     dst.isValid      := false.B
   }
 }

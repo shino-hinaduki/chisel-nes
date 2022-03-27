@@ -13,10 +13,10 @@ class InternalAccessCommandMasterIO extends Bundle {
   /**
     * 要求Queue
     */
-  val req = new AsyncFifoEnqueueIO(InternalAccessCommand.Request.cmdWidth)
+  val req = Flipped(new AsyncFifoEnqueueIO(InternalAccessCommand.Request.cmdWidth))
 
   /**
     * 応答Queue
     */
-  val resp = new AsyncFifoDequeueIO(InternalAccessCommand.Response.cmdWidth)
+  val resp = Flipped(new AsyncFifoDequeueIO(InternalAccessCommand.Response.cmdWidth))
 }

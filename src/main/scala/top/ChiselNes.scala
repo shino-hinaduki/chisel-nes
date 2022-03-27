@@ -14,6 +14,7 @@ import board.ip.pll_sysclk
 import board.ip.pll_vga
 import board.ip.dpram_framebuffer
 import board.discrete.Debounce
+import board.jtag.types.VirtualInstruction
 
 /** 
  * Top Module
@@ -117,6 +118,15 @@ class ChiselNes extends RawModule {
   val virtualJtagBridge = withClockAndReset(vjtagIp.io.tck, reset) { Module(new VirtualJtagBridge) }
   virtualJtagBridge.io.reset <> reset
   virtualJtagBridge.io.vjtag <> vjtagIp.io
+  virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.accessTest.litValue.toInt) <> DontCare
+  virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.cpu.litValue.toInt) <> DontCare
+  virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.ppu.litValue.toInt) <> DontCare
+  virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.apu.litValue.toInt) <> DontCare
+  virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.cart.litValue.toInt) <> DontCare
+  virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.frameBuffer.litValue.toInt) <> DontCare
+  virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.cpuBusMaster.litValue.toInt) <> DontCare
+  virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.ppuBusMaster.litValue.toInt) <> DontCare
+  virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.audio.litValue.toInt) <> DontCare
 
   // クロック跨いでるけどテスト回路だからいいとする...
   when(SW === 0.U) {
