@@ -22,14 +22,14 @@ object DebugAccessCommand {
 
   /**
     * 要求定義の補助関数群
-    * { reserved 24bit, requestType 8bit, addr 32bit, data 32bit}
+    * { requestType 8bit, offset 24bit, data 32bit}
     */
   object Request {
 
     /**
       * Requst自体のサイズ
       */
-    val cmdWidth: Int = 96
+    val cmdWidth: Int = 64
 
     /**
     * 要求データの幅
@@ -39,7 +39,7 @@ object DebugAccessCommand {
     /**
     * 要求アドレス幅
     */
-    val addrWidth: Int = 32
+    val offsetWidth: Int = 24
 
     /**
     * RequestTypeの幅
@@ -47,39 +47,31 @@ object DebugAccessCommand {
     val requestTypeWidth: Int = Type.getWidth
 
     /**
-      * 空き領域
-      */
-    val reservedWidth: Int = 24
-
-    /**
       * 要求内容から、UIntのデータを作成する
       * @param request 要求の種類
-      * @param addr 要求アドレス
+      * @param offset 要求アドレス
       * @param data データ
-      * @param reserved 予約
-      * @return { request 8bit, addr 32bit, }
+      * @return { request 8bit, offset 32bit, }
       */
-    def encode(request: Type.Type, addr: UInt, data: UInt, reserved: UInt = 0.U(reservedWidth.W)): UInt =
-      Cat(reserved(reservedWidth - 1, 0), request.asUInt(requestTypeWidth - 1, 0), addr(addrWidth - 1, 0), data(dataWidth - 1, 0))
+    def encode(request: Type.Type, offset: UInt, data: UInt): UInt =
+      Cat(request.asUInt(requestTypeWidth - 1, 0), offset(offsetWidth - 1, 0), data(dataWidth - 1, 0))
 
     /**
       * Write要求を作成する
       */
-    def encodeWriteReq(addr: UInt, data: UInt): UInt = encode(request = Type.write, addr = addr, data = data)
+    def encodeWriteReq(offset: UInt, data: UInt): UInt = encode(request = Type.write, offset = offset, data = data)
 
     /**
       * Read要求を作成する
       */
-    def encodeReadReq(addr: UInt): UInt = encode(request = Type.read, addr = addr, data = 0.U)
+    def encodeReadReq(offset: UInt): UInt = encode(request = Type.read, offset = offset, data = 0.U)
 
     val dataPosL        = 0
     val dataPosH        = dataPosL + dataWidth - 1
-    val addrPosL        = dataPosH + 1
-    val addrPosH        = addrPosL + addrWidth - 1
-    val requestTypePosL = addrPosH + 1
+    val offsetPosL      = dataPosH + 1
+    val offsetPosH      = offsetPosL + offsetWidth - 1
+    val requestTypePosL = offsetPosH + 1
     val requestTypePosH = requestTypePosL + requestTypeWidth - 1
-    val reservedPosL    = requestTypePosH + 1
-    val reservedPosH    = reservedPosL + reservedWidth - 1
 
     /**
       * dataを取り出す
@@ -91,7 +83,7 @@ object DebugAccessCommand {
       * アドレスを取り出す
       * @param rawData encodeしたデータ
       */
-    def getAddress(rawData: UInt): UInt = rawData(addrPosH, addrPosL)
+    def getOffset(rawData: UInt): UInt = rawData(offsetPosH, offsetPosL)
 
     /**
       * requestTypeを取り出す

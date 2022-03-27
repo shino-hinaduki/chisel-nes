@@ -90,12 +90,12 @@ https://fpgasoftware.intel.com/eula.
 	(port
 		(pt 176 152)
 		(output)
-		(text "rdusedw[2..0]" (rect 0 0 92 16)(font "Arial" (font_size 8)))
-		(text "rdusedw[2..0]" (rect 79 144 155 159)(font "Arial" (font_size 8)))
+		(text "rdusedw[1..0]" (rect 0 0 92 16)(font "Arial" (font_size 8)))
+		(text "rdusedw[1..0]" (rect 79 144 155 159)(font "Arial" (font_size 8)))
 		(line (pt 176 152)(pt 160 152)(line_width 3))
 	)
 	(drawing
-		(text "32 bits x 8 words" (rect 67 170 224 354)(font "Arial" ))
+		(text "32 bits x 4 words" (rect 67 170 224 354)(font "Arial" ))
 		(line (pt 16 100)(pt 160 100))
 		(line (pt 16 164)(pt 160 164))
 		(line (pt 16 32)(pt 160 32))

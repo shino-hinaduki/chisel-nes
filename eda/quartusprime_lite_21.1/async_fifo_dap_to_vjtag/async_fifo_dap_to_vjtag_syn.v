@@ -34,14 +34,14 @@
 //https://fpgasoftware.intel.com/eula.
 
 
-//dcfifo_mixed_widths DEVICE_FAMILY="Cyclone V" LPM_NUMWORDS=8 LPM_SHOWAHEAD="OFF" LPM_WIDTH=32 LPM_WIDTH_R=32 LPM_WIDTHU=3 LPM_WIDTHU_R=3 OVERFLOW_CHECKING="ON" RDSYNC_DELAYPIPE=4 READ_ACLR_SYNCH="ON" UNDERFLOW_CHECKING="ON" USE_EAB="ON" WRITE_ACLR_SYNCH="OFF" WRSYNC_DELAYPIPE=4 aclr data q rdclk rdempty rdreq rdusedw wrclk wrfull wrreq INTENDED_DEVICE_FAMILY="Cyclone V" ALTERA_INTERNAL_OPTIONS=AUTO_SHIFT_REGISTER_RECOGNITION=OFF
+//dcfifo_mixed_widths DEVICE_FAMILY="Cyclone V" LPM_NUMWORDS=4 LPM_SHOWAHEAD="OFF" LPM_WIDTH=32 LPM_WIDTH_R=32 LPM_WIDTHU=2 LPM_WIDTHU_R=2 OVERFLOW_CHECKING="ON" RDSYNC_DELAYPIPE=4 READ_ACLR_SYNCH="ON" UNDERFLOW_CHECKING="ON" USE_EAB="ON" WRITE_ACLR_SYNCH="OFF" WRSYNC_DELAYPIPE=4 aclr data q rdclk rdempty rdreq rdusedw wrclk wrfull wrreq INTENDED_DEVICE_FAMILY="Cyclone V" ALTERA_INTERNAL_OPTIONS=AUTO_SHIFT_REGISTER_RECOGNITION=OFF
 //VERSION_BEGIN 21.1 cbx_a_gray2bin 2021:10:21:11:03:22:SJ cbx_a_graycounter 2021:10:21:11:03:22:SJ cbx_altdpram 2021:10:21:11:03:22:SJ cbx_altera_counter 2021:10:21:11:03:22:SJ cbx_altera_gray_counter 2021:10:21:11:03:22:SJ cbx_altera_syncram 2021:10:21:11:03:22:SJ cbx_altera_syncram_nd_impl 2021:10:21:11:03:22:SJ cbx_altsyncram 2021:10:21:11:03:22:SJ cbx_cycloneii 2021:10:21:11:03:22:SJ cbx_dcfifo 2021:10:21:11:03:22:SJ cbx_fifo_common 2021:10:21:11:03:22:SJ cbx_lpm_add_sub 2021:10:21:11:03:22:SJ cbx_lpm_compare 2021:10:21:11:03:21:SJ cbx_lpm_counter 2021:10:21:11:03:21:SJ cbx_lpm_decode 2021:10:21:11:03:21:SJ cbx_lpm_mux 2021:10:21:11:03:22:SJ cbx_mgl 2021:10:21:11:03:46:SJ cbx_nadder 2021:10:21:11:03:22:SJ cbx_scfifo 2021:10:21:11:03:22:SJ cbx_stratix 2021:10:21:11:03:22:SJ cbx_stratixii 2021:10:21:11:03:22:SJ cbx_stratixiii 2021:10:21:11:03:22:SJ cbx_stratixv 2021:10:21:11:03:22:SJ cbx_util_mgl 2021:10:21:11:03:22:SJ  VERSION_END
 // synthesis VERILOG_INPUT_VERSION VERILOG_2001
 // altera message_off 10463
 
 
 
-//a_gray2bin device_family="Cyclone V" WIDTH=4 bin gray
+//a_gray2bin device_family="Cyclone V" WIDTH=3 bin gray
 //VERSION_BEGIN 21.1 cbx_a_gray2bin 2021:10:21:11:03:22:SJ cbx_mgl 2021:10:21:11:03:46:SJ  VERSION_END
 
 //synthesis_resources = 
@@ -52,25 +52,23 @@ module  async_fifo_dap_to_vjtag_a_gray2bin
 	( 
 	bin,
 	gray) /* synthesis synthesis_clearbox=1 */;
-	output   [3:0]  bin;
-	input   [3:0]  gray;
+	output   [2:0]  bin;
+	input   [2:0]  gray;
 
 	wire  xor0;
 	wire  xor1;
-	wire  xor2;
 
 	assign
-		bin = {gray[3], xor2, xor1, xor0},
+		bin = {gray[2], xor1, xor0},
 		xor0 = (gray[0] ^ xor1),
-		xor1 = (gray[1] ^ xor2),
-		xor2 = (gray[3] ^ gray[2]);
+		xor1 = (gray[2] ^ gray[1]);
 endmodule //async_fifo_dap_to_vjtag_a_gray2bin
 
 
-//a_graycounter DEVICE_FAMILY="Cyclone V" PVALUE=1 WIDTH=4 aclr clock cnt_en q
+//a_graycounter DEVICE_FAMILY="Cyclone V" PVALUE=1 WIDTH=3 aclr clock cnt_en q
 //VERSION_BEGIN 21.1 cbx_a_gray2bin 2021:10:21:11:03:22:SJ cbx_a_graycounter 2021:10:21:11:03:22:SJ cbx_cycloneii 2021:10:21:11:03:22:SJ cbx_mgl 2021:10:21:11:03:46:SJ cbx_stratix 2021:10:21:11:03:22:SJ cbx_stratixii 2021:10:21:11:03:22:SJ  VERSION_END
 
-//synthesis_resources = reg 5 
+//synthesis_resources = reg 4 
 //synopsys translate_off
 `timescale 1 ps / 1 ps
 //synopsys translate_on
@@ -84,7 +82,7 @@ module  async_fifo_dap_to_vjtag_a_graycounter
 	input   aclr;
 	input   clock;
 	input   cnt_en;
-	output   [3:0]  q;
+	output   [2:0]  q;
 `ifndef ALTERA_RESERVED_QIS
 // synopsys translate_off
 `endif
@@ -94,10 +92,10 @@ module  async_fifo_dap_to_vjtag_a_graycounter
 // synopsys translate_on
 `endif
 
-	reg	[3:0]	counter5a;
+	reg	[2:0]	counter5a;
 	(* ALTERA_ATTRIBUTE = {"POWER_UP_LEVEL=LOW"} *)
 	reg	parity6;
-	wire  [3:0]  cntr_cout;
+	wire  [2:0]  cntr_cout;
 	wire  parity_cout;
 	wire sclr;
 	wire updown;
@@ -128,16 +126,7 @@ module  async_fifo_dap_to_vjtag_a_graycounter
 		if (aclr == 1'b1) counter5a[2:2] <= 1'b0;
 		else
 			if (sclr == 1'b1) counter5a[2:2] <= 1'b0;
-			else  counter5a[2:2] <= (counter5a[2:2] ^ (counter5a[1:1] & cntr_cout[1]));
-	// synopsys translate_off
-	initial
-		counter5a[3:3] = 0;
-	// synopsys translate_on
-	always @ ( posedge clock or  posedge aclr)
-		if (aclr == 1'b1) counter5a[3:3] <= 1'b0;
-		else
-			if (sclr == 1'b1) counter5a[3:3] <= 1'b0;
-			else  counter5a[3:3] <= (counter5a[3:3] ^ cntr_cout[2]);
+			else  counter5a[2:2] <= (counter5a[2:2] ^ cntr_cout[1]);
 	// synopsys translate_off
 	initial
 		parity6 = 0;
@@ -146,9 +135,9 @@ module  async_fifo_dap_to_vjtag_a_graycounter
 		if (aclr == 1'b1) parity6 <= 1'b0;
 		else
 			if (sclr == 1'b1) parity6 <= 1'b0;
-			else  parity6 <= ((cnt_en & (((counter5a[0] ^ counter5a[1]) ^ counter5a[2]) ^ counter5a[3])) | ((~ cnt_en) & parity6));
+			else  parity6 <= ((cnt_en & ((counter5a[0] ^ counter5a[1]) ^ counter5a[2])) | ((~ cnt_en) & parity6));
 	assign
-		cntr_cout = {1'b0, (cntr_cout[1] & (~ counter5a[1:1])), (cntr_cout[0] & (~ counter5a[0:0])), (cnt_en & parity_cout)},
+		cntr_cout = {1'b0, (cntr_cout[0] & (~ counter5a[0:0])), (cnt_en & parity_cout)},
 		parity_cout = ((parity6 ^ updown) & cnt_en),
 		q = counter5a,
 		sclr = 1'b0,
@@ -156,10 +145,10 @@ module  async_fifo_dap_to_vjtag_a_graycounter
 endmodule //async_fifo_dap_to_vjtag_a_graycounter
 
 
-//a_graycounter DEVICE_FAMILY="Cyclone V" PVALUE=1 WIDTH=4 aclr clock cnt_en q ALTERA_INTERNAL_OPTIONS=suppress_da_rule_internal=S102
+//a_graycounter DEVICE_FAMILY="Cyclone V" PVALUE=1 WIDTH=3 aclr clock cnt_en q ALTERA_INTERNAL_OPTIONS=suppress_da_rule_internal=S102
 //VERSION_BEGIN 21.1 cbx_a_gray2bin 2021:10:21:11:03:22:SJ cbx_a_graycounter 2021:10:21:11:03:22:SJ cbx_cycloneii 2021:10:21:11:03:22:SJ cbx_mgl 2021:10:21:11:03:46:SJ cbx_stratix 2021:10:21:11:03:22:SJ cbx_stratixii 2021:10:21:11:03:22:SJ  VERSION_END
 
-//synthesis_resources = reg 5 
+//synthesis_resources = reg 4 
 //synopsys translate_off
 `timescale 1 ps / 1 ps
 //synopsys translate_on
@@ -173,7 +162,7 @@ module  async_fifo_dap_to_vjtag_a_graycounter1
 	input   aclr;
 	input   clock;
 	input   cnt_en;
-	output   [3:0]  q;
+	output   [2:0]  q;
 `ifndef ALTERA_RESERVED_QIS
 // synopsys translate_off
 `endif
@@ -183,10 +172,10 @@ module  async_fifo_dap_to_vjtag_a_graycounter1
 // synopsys translate_on
 `endif
 
-	reg	[3:0]	counter7a;
+	reg	[2:0]	counter7a;
 	(* ALTERA_ATTRIBUTE = {"POWER_UP_LEVEL=LOW"} *)
 	reg	parity8;
-	wire  [3:0]  cntr_cout;
+	wire  [2:0]  cntr_cout;
 	wire  parity_cout;
 	wire sclr;
 	wire updown;
@@ -217,16 +206,7 @@ module  async_fifo_dap_to_vjtag_a_graycounter1
 		if (aclr == 1'b1) counter7a[2:2] <= 1'b0;
 		else
 			if (sclr == 1'b1) counter7a[2:2] <= 1'b0;
-			else  counter7a[2:2] <= (counter7a[2:2] ^ (counter7a[1:1] & cntr_cout[1]));
-	// synopsys translate_off
-	initial
-		counter7a[3:3] = 0;
-	// synopsys translate_on
-	always @ ( posedge clock or  posedge aclr)
-		if (aclr == 1'b1) counter7a[3:3] <= 1'b0;
-		else
-			if (sclr == 1'b1) counter7a[3:3] <= 1'b0;
-			else  counter7a[3:3] <= (counter7a[3:3] ^ cntr_cout[2]);
+			else  counter7a[2:2] <= (counter7a[2:2] ^ cntr_cout[1]);
 	// synopsys translate_off
 	initial
 		parity8 = 0;
@@ -235,9 +215,9 @@ module  async_fifo_dap_to_vjtag_a_graycounter1
 		if (aclr == 1'b1) parity8 <= 1'b0;
 		else
 			if (sclr == 1'b1) parity8 <= 1'b0;
-			else  parity8 <= ((cnt_en & (((counter7a[0] ^ counter7a[1]) ^ counter7a[2]) ^ counter7a[3])) | ((~ cnt_en) & parity8));
+			else  parity8 <= ((cnt_en & ((counter7a[0] ^ counter7a[1]) ^ counter7a[2])) | ((~ cnt_en) & parity8));
 	assign
-		cntr_cout = {1'b0, (cntr_cout[1] & (~ counter7a[1:1])), (cntr_cout[0] & (~ counter7a[0:0])), (cnt_en & parity_cout)},
+		cntr_cout = {1'b0, (cntr_cout[0] & (~ counter7a[0:0])), (cnt_en & parity_cout)},
 		parity_cout = ((parity8 ^ updown) & cnt_en),
 		q = counter7a,
 		sclr = 1'b0,
@@ -245,7 +225,7 @@ module  async_fifo_dap_to_vjtag_a_graycounter1
 endmodule //async_fifo_dap_to_vjtag_a_graycounter1
 
 
-//altsyncram ADDRESS_ACLR_B="CLEAR1" ADDRESS_REG_B="CLOCK1" CLOCK_ENABLE_INPUT_B="BYPASS" DEVICE_FAMILY="Cyclone V" ENABLE_ECC="FALSE" OPERATION_MODE="DUAL_PORT" OUTDATA_ACLR_B="CLEAR1" OUTDATA_REG_B="CLOCK1" WIDTH_A=32 WIDTH_B=32 WIDTH_BYTEENA_A=1 WIDTH_ECCSTATUS=2 WIDTHAD_A=3 WIDTHAD_B=3 aclr1 address_a address_b addressstall_b clock0 clock1 clocken1 data_a q_b wren_a
+//altsyncram ADDRESS_ACLR_B="CLEAR1" ADDRESS_REG_B="CLOCK1" CLOCK_ENABLE_INPUT_B="BYPASS" DEVICE_FAMILY="Cyclone V" ENABLE_ECC="FALSE" OPERATION_MODE="DUAL_PORT" OUTDATA_ACLR_B="CLEAR1" OUTDATA_REG_B="CLOCK1" WIDTH_A=32 WIDTH_B=32 WIDTH_BYTEENA_A=1 WIDTH_ECCSTATUS=2 WIDTHAD_A=2 WIDTHAD_B=2 aclr1 address_a address_b addressstall_b clock0 clock1 clocken1 data_a q_b wren_a
 //VERSION_BEGIN 21.1 cbx_altera_syncram_nd_impl 2021:10:21:11:03:22:SJ cbx_altsyncram 2021:10:21:11:03:22:SJ cbx_cycloneii 2021:10:21:11:03:22:SJ cbx_lpm_add_sub 2021:10:21:11:03:22:SJ cbx_lpm_compare 2021:10:21:11:03:21:SJ cbx_lpm_decode 2021:10:21:11:03:21:SJ cbx_lpm_mux 2021:10:21:11:03:22:SJ cbx_mgl 2021:10:21:11:03:46:SJ cbx_nadder 2021:10:21:11:03:22:SJ cbx_stratix 2021:10:21:11:03:22:SJ cbx_stratixii 2021:10:21:11:03:22:SJ cbx_stratixiii 2021:10:21:11:03:22:SJ cbx_stratixv 2021:10:21:11:03:22:SJ cbx_util_mgl 2021:10:21:11:03:22:SJ  VERSION_END
 
 //synthesis_resources = M10K 1 
@@ -266,8 +246,8 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	q_b,
 	wren_a) /* synthesis synthesis_clearbox=1 */;
 	input   aclr1;
-	input   [2:0]  address_a;
-	input   [2:0]  address_b;
+	input   [1:0]  address_a;
+	input   [1:0]  address_b;
 	input   addressstall_b;
 	input   clock0;
 	input   clock1;
@@ -279,7 +259,7 @@ module  async_fifo_dap_to_vjtag_altsyncram
 // synopsys translate_off
 `endif
 	tri0   aclr1;
-	tri1   [2:0]  address_b;
+	tri1   [1:0]  address_b;
 	tri0   addressstall_b;
 	tri1   clock0;
 	tri1   clock1;
@@ -322,8 +302,8 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	wire  [0:0]   wire_ram_block9a_29portbdataout;
 	wire  [0:0]   wire_ram_block9a_30portbdataout;
 	wire  [0:0]   wire_ram_block9a_31portbdataout;
-	wire  [2:0]  address_a_wire;
-	wire  [2:0]  address_b_wire;
+	wire  [1:0]  address_a_wire;
+	wire  [1:0]  address_b_wire;
 
 	cyclonev_ram_block   ram_block9a_0
 	( 
@@ -333,11 +313,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[0]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_0portbdataout[0:0]),
 	.portbre(1'b1)
@@ -375,23 +355,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_0.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_0.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_0.operation_mode = "dual_port",
-		ram_block9a_0.port_a_address_width = 3,
+		ram_block9a_0.port_a_address_width = 2,
 		ram_block9a_0.port_a_data_width = 1,
 		ram_block9a_0.port_a_first_address = 0,
 		ram_block9a_0.port_a_first_bit_number = 0,
-		ram_block9a_0.port_a_last_address = 7,
-		ram_block9a_0.port_a_logical_ram_depth = 8,
+		ram_block9a_0.port_a_last_address = 3,
+		ram_block9a_0.port_a_logical_ram_depth = 4,
 		ram_block9a_0.port_a_logical_ram_width = 32,
 		ram_block9a_0.port_b_address_clear = "clear1",
 		ram_block9a_0.port_b_address_clock = "clock1",
-		ram_block9a_0.port_b_address_width = 3,
+		ram_block9a_0.port_b_address_width = 2,
 		ram_block9a_0.port_b_data_out_clear = "clear1",
 		ram_block9a_0.port_b_data_out_clock = "clock1",
 		ram_block9a_0.port_b_data_width = 1,
 		ram_block9a_0.port_b_first_address = 0,
 		ram_block9a_0.port_b_first_bit_number = 0,
-		ram_block9a_0.port_b_last_address = 7,
-		ram_block9a_0.port_b_logical_ram_depth = 8,
+		ram_block9a_0.port_b_last_address = 3,
+		ram_block9a_0.port_b_logical_ram_depth = 4,
 		ram_block9a_0.port_b_logical_ram_width = 32,
 		ram_block9a_0.port_b_read_enable_clock = "clock1",
 		ram_block9a_0.ram_block_type = "AUTO",
@@ -404,11 +384,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[1]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_1portbdataout[0:0]),
 	.portbre(1'b1)
@@ -446,23 +426,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_1.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_1.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_1.operation_mode = "dual_port",
-		ram_block9a_1.port_a_address_width = 3,
+		ram_block9a_1.port_a_address_width = 2,
 		ram_block9a_1.port_a_data_width = 1,
 		ram_block9a_1.port_a_first_address = 0,
 		ram_block9a_1.port_a_first_bit_number = 1,
-		ram_block9a_1.port_a_last_address = 7,
-		ram_block9a_1.port_a_logical_ram_depth = 8,
+		ram_block9a_1.port_a_last_address = 3,
+		ram_block9a_1.port_a_logical_ram_depth = 4,
 		ram_block9a_1.port_a_logical_ram_width = 32,
 		ram_block9a_1.port_b_address_clear = "clear1",
 		ram_block9a_1.port_b_address_clock = "clock1",
-		ram_block9a_1.port_b_address_width = 3,
+		ram_block9a_1.port_b_address_width = 2,
 		ram_block9a_1.port_b_data_out_clear = "clear1",
 		ram_block9a_1.port_b_data_out_clock = "clock1",
 		ram_block9a_1.port_b_data_width = 1,
 		ram_block9a_1.port_b_first_address = 0,
 		ram_block9a_1.port_b_first_bit_number = 1,
-		ram_block9a_1.port_b_last_address = 7,
-		ram_block9a_1.port_b_logical_ram_depth = 8,
+		ram_block9a_1.port_b_last_address = 3,
+		ram_block9a_1.port_b_logical_ram_depth = 4,
 		ram_block9a_1.port_b_logical_ram_width = 32,
 		ram_block9a_1.port_b_read_enable_clock = "clock1",
 		ram_block9a_1.ram_block_type = "AUTO",
@@ -475,11 +455,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[2]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_2portbdataout[0:0]),
 	.portbre(1'b1)
@@ -517,23 +497,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_2.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_2.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_2.operation_mode = "dual_port",
-		ram_block9a_2.port_a_address_width = 3,
+		ram_block9a_2.port_a_address_width = 2,
 		ram_block9a_2.port_a_data_width = 1,
 		ram_block9a_2.port_a_first_address = 0,
 		ram_block9a_2.port_a_first_bit_number = 2,
-		ram_block9a_2.port_a_last_address = 7,
-		ram_block9a_2.port_a_logical_ram_depth = 8,
+		ram_block9a_2.port_a_last_address = 3,
+		ram_block9a_2.port_a_logical_ram_depth = 4,
 		ram_block9a_2.port_a_logical_ram_width = 32,
 		ram_block9a_2.port_b_address_clear = "clear1",
 		ram_block9a_2.port_b_address_clock = "clock1",
-		ram_block9a_2.port_b_address_width = 3,
+		ram_block9a_2.port_b_address_width = 2,
 		ram_block9a_2.port_b_data_out_clear = "clear1",
 		ram_block9a_2.port_b_data_out_clock = "clock1",
 		ram_block9a_2.port_b_data_width = 1,
 		ram_block9a_2.port_b_first_address = 0,
 		ram_block9a_2.port_b_first_bit_number = 2,
-		ram_block9a_2.port_b_last_address = 7,
-		ram_block9a_2.port_b_logical_ram_depth = 8,
+		ram_block9a_2.port_b_last_address = 3,
+		ram_block9a_2.port_b_logical_ram_depth = 4,
 		ram_block9a_2.port_b_logical_ram_width = 32,
 		ram_block9a_2.port_b_read_enable_clock = "clock1",
 		ram_block9a_2.ram_block_type = "AUTO",
@@ -546,11 +526,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[3]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_3portbdataout[0:0]),
 	.portbre(1'b1)
@@ -588,23 +568,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_3.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_3.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_3.operation_mode = "dual_port",
-		ram_block9a_3.port_a_address_width = 3,
+		ram_block9a_3.port_a_address_width = 2,
 		ram_block9a_3.port_a_data_width = 1,
 		ram_block9a_3.port_a_first_address = 0,
 		ram_block9a_3.port_a_first_bit_number = 3,
-		ram_block9a_3.port_a_last_address = 7,
-		ram_block9a_3.port_a_logical_ram_depth = 8,
+		ram_block9a_3.port_a_last_address = 3,
+		ram_block9a_3.port_a_logical_ram_depth = 4,
 		ram_block9a_3.port_a_logical_ram_width = 32,
 		ram_block9a_3.port_b_address_clear = "clear1",
 		ram_block9a_3.port_b_address_clock = "clock1",
-		ram_block9a_3.port_b_address_width = 3,
+		ram_block9a_3.port_b_address_width = 2,
 		ram_block9a_3.port_b_data_out_clear = "clear1",
 		ram_block9a_3.port_b_data_out_clock = "clock1",
 		ram_block9a_3.port_b_data_width = 1,
 		ram_block9a_3.port_b_first_address = 0,
 		ram_block9a_3.port_b_first_bit_number = 3,
-		ram_block9a_3.port_b_last_address = 7,
-		ram_block9a_3.port_b_logical_ram_depth = 8,
+		ram_block9a_3.port_b_last_address = 3,
+		ram_block9a_3.port_b_logical_ram_depth = 4,
 		ram_block9a_3.port_b_logical_ram_width = 32,
 		ram_block9a_3.port_b_read_enable_clock = "clock1",
 		ram_block9a_3.ram_block_type = "AUTO",
@@ -617,11 +597,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[4]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_4portbdataout[0:0]),
 	.portbre(1'b1)
@@ -659,23 +639,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_4.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_4.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_4.operation_mode = "dual_port",
-		ram_block9a_4.port_a_address_width = 3,
+		ram_block9a_4.port_a_address_width = 2,
 		ram_block9a_4.port_a_data_width = 1,
 		ram_block9a_4.port_a_first_address = 0,
 		ram_block9a_4.port_a_first_bit_number = 4,
-		ram_block9a_4.port_a_last_address = 7,
-		ram_block9a_4.port_a_logical_ram_depth = 8,
+		ram_block9a_4.port_a_last_address = 3,
+		ram_block9a_4.port_a_logical_ram_depth = 4,
 		ram_block9a_4.port_a_logical_ram_width = 32,
 		ram_block9a_4.port_b_address_clear = "clear1",
 		ram_block9a_4.port_b_address_clock = "clock1",
-		ram_block9a_4.port_b_address_width = 3,
+		ram_block9a_4.port_b_address_width = 2,
 		ram_block9a_4.port_b_data_out_clear = "clear1",
 		ram_block9a_4.port_b_data_out_clock = "clock1",
 		ram_block9a_4.port_b_data_width = 1,
 		ram_block9a_4.port_b_first_address = 0,
 		ram_block9a_4.port_b_first_bit_number = 4,
-		ram_block9a_4.port_b_last_address = 7,
-		ram_block9a_4.port_b_logical_ram_depth = 8,
+		ram_block9a_4.port_b_last_address = 3,
+		ram_block9a_4.port_b_logical_ram_depth = 4,
 		ram_block9a_4.port_b_logical_ram_width = 32,
 		ram_block9a_4.port_b_read_enable_clock = "clock1",
 		ram_block9a_4.ram_block_type = "AUTO",
@@ -688,11 +668,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[5]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_5portbdataout[0:0]),
 	.portbre(1'b1)
@@ -730,23 +710,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_5.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_5.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_5.operation_mode = "dual_port",
-		ram_block9a_5.port_a_address_width = 3,
+		ram_block9a_5.port_a_address_width = 2,
 		ram_block9a_5.port_a_data_width = 1,
 		ram_block9a_5.port_a_first_address = 0,
 		ram_block9a_5.port_a_first_bit_number = 5,
-		ram_block9a_5.port_a_last_address = 7,
-		ram_block9a_5.port_a_logical_ram_depth = 8,
+		ram_block9a_5.port_a_last_address = 3,
+		ram_block9a_5.port_a_logical_ram_depth = 4,
 		ram_block9a_5.port_a_logical_ram_width = 32,
 		ram_block9a_5.port_b_address_clear = "clear1",
 		ram_block9a_5.port_b_address_clock = "clock1",
-		ram_block9a_5.port_b_address_width = 3,
+		ram_block9a_5.port_b_address_width = 2,
 		ram_block9a_5.port_b_data_out_clear = "clear1",
 		ram_block9a_5.port_b_data_out_clock = "clock1",
 		ram_block9a_5.port_b_data_width = 1,
 		ram_block9a_5.port_b_first_address = 0,
 		ram_block9a_5.port_b_first_bit_number = 5,
-		ram_block9a_5.port_b_last_address = 7,
-		ram_block9a_5.port_b_logical_ram_depth = 8,
+		ram_block9a_5.port_b_last_address = 3,
+		ram_block9a_5.port_b_logical_ram_depth = 4,
 		ram_block9a_5.port_b_logical_ram_width = 32,
 		ram_block9a_5.port_b_read_enable_clock = "clock1",
 		ram_block9a_5.ram_block_type = "AUTO",
@@ -759,11 +739,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[6]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_6portbdataout[0:0]),
 	.portbre(1'b1)
@@ -801,23 +781,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_6.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_6.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_6.operation_mode = "dual_port",
-		ram_block9a_6.port_a_address_width = 3,
+		ram_block9a_6.port_a_address_width = 2,
 		ram_block9a_6.port_a_data_width = 1,
 		ram_block9a_6.port_a_first_address = 0,
 		ram_block9a_6.port_a_first_bit_number = 6,
-		ram_block9a_6.port_a_last_address = 7,
-		ram_block9a_6.port_a_logical_ram_depth = 8,
+		ram_block9a_6.port_a_last_address = 3,
+		ram_block9a_6.port_a_logical_ram_depth = 4,
 		ram_block9a_6.port_a_logical_ram_width = 32,
 		ram_block9a_6.port_b_address_clear = "clear1",
 		ram_block9a_6.port_b_address_clock = "clock1",
-		ram_block9a_6.port_b_address_width = 3,
+		ram_block9a_6.port_b_address_width = 2,
 		ram_block9a_6.port_b_data_out_clear = "clear1",
 		ram_block9a_6.port_b_data_out_clock = "clock1",
 		ram_block9a_6.port_b_data_width = 1,
 		ram_block9a_6.port_b_first_address = 0,
 		ram_block9a_6.port_b_first_bit_number = 6,
-		ram_block9a_6.port_b_last_address = 7,
-		ram_block9a_6.port_b_logical_ram_depth = 8,
+		ram_block9a_6.port_b_last_address = 3,
+		ram_block9a_6.port_b_logical_ram_depth = 4,
 		ram_block9a_6.port_b_logical_ram_width = 32,
 		ram_block9a_6.port_b_read_enable_clock = "clock1",
 		ram_block9a_6.ram_block_type = "AUTO",
@@ -830,11 +810,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[7]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_7portbdataout[0:0]),
 	.portbre(1'b1)
@@ -872,23 +852,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_7.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_7.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_7.operation_mode = "dual_port",
-		ram_block9a_7.port_a_address_width = 3,
+		ram_block9a_7.port_a_address_width = 2,
 		ram_block9a_7.port_a_data_width = 1,
 		ram_block9a_7.port_a_first_address = 0,
 		ram_block9a_7.port_a_first_bit_number = 7,
-		ram_block9a_7.port_a_last_address = 7,
-		ram_block9a_7.port_a_logical_ram_depth = 8,
+		ram_block9a_7.port_a_last_address = 3,
+		ram_block9a_7.port_a_logical_ram_depth = 4,
 		ram_block9a_7.port_a_logical_ram_width = 32,
 		ram_block9a_7.port_b_address_clear = "clear1",
 		ram_block9a_7.port_b_address_clock = "clock1",
-		ram_block9a_7.port_b_address_width = 3,
+		ram_block9a_7.port_b_address_width = 2,
 		ram_block9a_7.port_b_data_out_clear = "clear1",
 		ram_block9a_7.port_b_data_out_clock = "clock1",
 		ram_block9a_7.port_b_data_width = 1,
 		ram_block9a_7.port_b_first_address = 0,
 		ram_block9a_7.port_b_first_bit_number = 7,
-		ram_block9a_7.port_b_last_address = 7,
-		ram_block9a_7.port_b_logical_ram_depth = 8,
+		ram_block9a_7.port_b_last_address = 3,
+		ram_block9a_7.port_b_logical_ram_depth = 4,
 		ram_block9a_7.port_b_logical_ram_width = 32,
 		ram_block9a_7.port_b_read_enable_clock = "clock1",
 		ram_block9a_7.ram_block_type = "AUTO",
@@ -901,11 +881,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[8]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_8portbdataout[0:0]),
 	.portbre(1'b1)
@@ -943,23 +923,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_8.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_8.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_8.operation_mode = "dual_port",
-		ram_block9a_8.port_a_address_width = 3,
+		ram_block9a_8.port_a_address_width = 2,
 		ram_block9a_8.port_a_data_width = 1,
 		ram_block9a_8.port_a_first_address = 0,
 		ram_block9a_8.port_a_first_bit_number = 8,
-		ram_block9a_8.port_a_last_address = 7,
-		ram_block9a_8.port_a_logical_ram_depth = 8,
+		ram_block9a_8.port_a_last_address = 3,
+		ram_block9a_8.port_a_logical_ram_depth = 4,
 		ram_block9a_8.port_a_logical_ram_width = 32,
 		ram_block9a_8.port_b_address_clear = "clear1",
 		ram_block9a_8.port_b_address_clock = "clock1",
-		ram_block9a_8.port_b_address_width = 3,
+		ram_block9a_8.port_b_address_width = 2,
 		ram_block9a_8.port_b_data_out_clear = "clear1",
 		ram_block9a_8.port_b_data_out_clock = "clock1",
 		ram_block9a_8.port_b_data_width = 1,
 		ram_block9a_8.port_b_first_address = 0,
 		ram_block9a_8.port_b_first_bit_number = 8,
-		ram_block9a_8.port_b_last_address = 7,
-		ram_block9a_8.port_b_logical_ram_depth = 8,
+		ram_block9a_8.port_b_last_address = 3,
+		ram_block9a_8.port_b_logical_ram_depth = 4,
 		ram_block9a_8.port_b_logical_ram_width = 32,
 		ram_block9a_8.port_b_read_enable_clock = "clock1",
 		ram_block9a_8.ram_block_type = "AUTO",
@@ -972,11 +952,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[9]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_9portbdataout[0:0]),
 	.portbre(1'b1)
@@ -1014,23 +994,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_9.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_9.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_9.operation_mode = "dual_port",
-		ram_block9a_9.port_a_address_width = 3,
+		ram_block9a_9.port_a_address_width = 2,
 		ram_block9a_9.port_a_data_width = 1,
 		ram_block9a_9.port_a_first_address = 0,
 		ram_block9a_9.port_a_first_bit_number = 9,
-		ram_block9a_9.port_a_last_address = 7,
-		ram_block9a_9.port_a_logical_ram_depth = 8,
+		ram_block9a_9.port_a_last_address = 3,
+		ram_block9a_9.port_a_logical_ram_depth = 4,
 		ram_block9a_9.port_a_logical_ram_width = 32,
 		ram_block9a_9.port_b_address_clear = "clear1",
 		ram_block9a_9.port_b_address_clock = "clock1",
-		ram_block9a_9.port_b_address_width = 3,
+		ram_block9a_9.port_b_address_width = 2,
 		ram_block9a_9.port_b_data_out_clear = "clear1",
 		ram_block9a_9.port_b_data_out_clock = "clock1",
 		ram_block9a_9.port_b_data_width = 1,
 		ram_block9a_9.port_b_first_address = 0,
 		ram_block9a_9.port_b_first_bit_number = 9,
-		ram_block9a_9.port_b_last_address = 7,
-		ram_block9a_9.port_b_logical_ram_depth = 8,
+		ram_block9a_9.port_b_last_address = 3,
+		ram_block9a_9.port_b_logical_ram_depth = 4,
 		ram_block9a_9.port_b_logical_ram_width = 32,
 		ram_block9a_9.port_b_read_enable_clock = "clock1",
 		ram_block9a_9.ram_block_type = "AUTO",
@@ -1043,11 +1023,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[10]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_10portbdataout[0:0]),
 	.portbre(1'b1)
@@ -1085,23 +1065,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_10.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_10.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_10.operation_mode = "dual_port",
-		ram_block9a_10.port_a_address_width = 3,
+		ram_block9a_10.port_a_address_width = 2,
 		ram_block9a_10.port_a_data_width = 1,
 		ram_block9a_10.port_a_first_address = 0,
 		ram_block9a_10.port_a_first_bit_number = 10,
-		ram_block9a_10.port_a_last_address = 7,
-		ram_block9a_10.port_a_logical_ram_depth = 8,
+		ram_block9a_10.port_a_last_address = 3,
+		ram_block9a_10.port_a_logical_ram_depth = 4,
 		ram_block9a_10.port_a_logical_ram_width = 32,
 		ram_block9a_10.port_b_address_clear = "clear1",
 		ram_block9a_10.port_b_address_clock = "clock1",
-		ram_block9a_10.port_b_address_width = 3,
+		ram_block9a_10.port_b_address_width = 2,
 		ram_block9a_10.port_b_data_out_clear = "clear1",
 		ram_block9a_10.port_b_data_out_clock = "clock1",
 		ram_block9a_10.port_b_data_width = 1,
 		ram_block9a_10.port_b_first_address = 0,
 		ram_block9a_10.port_b_first_bit_number = 10,
-		ram_block9a_10.port_b_last_address = 7,
-		ram_block9a_10.port_b_logical_ram_depth = 8,
+		ram_block9a_10.port_b_last_address = 3,
+		ram_block9a_10.port_b_logical_ram_depth = 4,
 		ram_block9a_10.port_b_logical_ram_width = 32,
 		ram_block9a_10.port_b_read_enable_clock = "clock1",
 		ram_block9a_10.ram_block_type = "AUTO",
@@ -1114,11 +1094,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[11]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_11portbdataout[0:0]),
 	.portbre(1'b1)
@@ -1156,23 +1136,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_11.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_11.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_11.operation_mode = "dual_port",
-		ram_block9a_11.port_a_address_width = 3,
+		ram_block9a_11.port_a_address_width = 2,
 		ram_block9a_11.port_a_data_width = 1,
 		ram_block9a_11.port_a_first_address = 0,
 		ram_block9a_11.port_a_first_bit_number = 11,
-		ram_block9a_11.port_a_last_address = 7,
-		ram_block9a_11.port_a_logical_ram_depth = 8,
+		ram_block9a_11.port_a_last_address = 3,
+		ram_block9a_11.port_a_logical_ram_depth = 4,
 		ram_block9a_11.port_a_logical_ram_width = 32,
 		ram_block9a_11.port_b_address_clear = "clear1",
 		ram_block9a_11.port_b_address_clock = "clock1",
-		ram_block9a_11.port_b_address_width = 3,
+		ram_block9a_11.port_b_address_width = 2,
 		ram_block9a_11.port_b_data_out_clear = "clear1",
 		ram_block9a_11.port_b_data_out_clock = "clock1",
 		ram_block9a_11.port_b_data_width = 1,
 		ram_block9a_11.port_b_first_address = 0,
 		ram_block9a_11.port_b_first_bit_number = 11,
-		ram_block9a_11.port_b_last_address = 7,
-		ram_block9a_11.port_b_logical_ram_depth = 8,
+		ram_block9a_11.port_b_last_address = 3,
+		ram_block9a_11.port_b_logical_ram_depth = 4,
 		ram_block9a_11.port_b_logical_ram_width = 32,
 		ram_block9a_11.port_b_read_enable_clock = "clock1",
 		ram_block9a_11.ram_block_type = "AUTO",
@@ -1185,11 +1165,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[12]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_12portbdataout[0:0]),
 	.portbre(1'b1)
@@ -1227,23 +1207,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_12.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_12.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_12.operation_mode = "dual_port",
-		ram_block9a_12.port_a_address_width = 3,
+		ram_block9a_12.port_a_address_width = 2,
 		ram_block9a_12.port_a_data_width = 1,
 		ram_block9a_12.port_a_first_address = 0,
 		ram_block9a_12.port_a_first_bit_number = 12,
-		ram_block9a_12.port_a_last_address = 7,
-		ram_block9a_12.port_a_logical_ram_depth = 8,
+		ram_block9a_12.port_a_last_address = 3,
+		ram_block9a_12.port_a_logical_ram_depth = 4,
 		ram_block9a_12.port_a_logical_ram_width = 32,
 		ram_block9a_12.port_b_address_clear = "clear1",
 		ram_block9a_12.port_b_address_clock = "clock1",
-		ram_block9a_12.port_b_address_width = 3,
+		ram_block9a_12.port_b_address_width = 2,
 		ram_block9a_12.port_b_data_out_clear = "clear1",
 		ram_block9a_12.port_b_data_out_clock = "clock1",
 		ram_block9a_12.port_b_data_width = 1,
 		ram_block9a_12.port_b_first_address = 0,
 		ram_block9a_12.port_b_first_bit_number = 12,
-		ram_block9a_12.port_b_last_address = 7,
-		ram_block9a_12.port_b_logical_ram_depth = 8,
+		ram_block9a_12.port_b_last_address = 3,
+		ram_block9a_12.port_b_logical_ram_depth = 4,
 		ram_block9a_12.port_b_logical_ram_width = 32,
 		ram_block9a_12.port_b_read_enable_clock = "clock1",
 		ram_block9a_12.ram_block_type = "AUTO",
@@ -1256,11 +1236,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[13]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_13portbdataout[0:0]),
 	.portbre(1'b1)
@@ -1298,23 +1278,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_13.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_13.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_13.operation_mode = "dual_port",
-		ram_block9a_13.port_a_address_width = 3,
+		ram_block9a_13.port_a_address_width = 2,
 		ram_block9a_13.port_a_data_width = 1,
 		ram_block9a_13.port_a_first_address = 0,
 		ram_block9a_13.port_a_first_bit_number = 13,
-		ram_block9a_13.port_a_last_address = 7,
-		ram_block9a_13.port_a_logical_ram_depth = 8,
+		ram_block9a_13.port_a_last_address = 3,
+		ram_block9a_13.port_a_logical_ram_depth = 4,
 		ram_block9a_13.port_a_logical_ram_width = 32,
 		ram_block9a_13.port_b_address_clear = "clear1",
 		ram_block9a_13.port_b_address_clock = "clock1",
-		ram_block9a_13.port_b_address_width = 3,
+		ram_block9a_13.port_b_address_width = 2,
 		ram_block9a_13.port_b_data_out_clear = "clear1",
 		ram_block9a_13.port_b_data_out_clock = "clock1",
 		ram_block9a_13.port_b_data_width = 1,
 		ram_block9a_13.port_b_first_address = 0,
 		ram_block9a_13.port_b_first_bit_number = 13,
-		ram_block9a_13.port_b_last_address = 7,
-		ram_block9a_13.port_b_logical_ram_depth = 8,
+		ram_block9a_13.port_b_last_address = 3,
+		ram_block9a_13.port_b_logical_ram_depth = 4,
 		ram_block9a_13.port_b_logical_ram_width = 32,
 		ram_block9a_13.port_b_read_enable_clock = "clock1",
 		ram_block9a_13.ram_block_type = "AUTO",
@@ -1327,11 +1307,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[14]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_14portbdataout[0:0]),
 	.portbre(1'b1)
@@ -1369,23 +1349,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_14.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_14.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_14.operation_mode = "dual_port",
-		ram_block9a_14.port_a_address_width = 3,
+		ram_block9a_14.port_a_address_width = 2,
 		ram_block9a_14.port_a_data_width = 1,
 		ram_block9a_14.port_a_first_address = 0,
 		ram_block9a_14.port_a_first_bit_number = 14,
-		ram_block9a_14.port_a_last_address = 7,
-		ram_block9a_14.port_a_logical_ram_depth = 8,
+		ram_block9a_14.port_a_last_address = 3,
+		ram_block9a_14.port_a_logical_ram_depth = 4,
 		ram_block9a_14.port_a_logical_ram_width = 32,
 		ram_block9a_14.port_b_address_clear = "clear1",
 		ram_block9a_14.port_b_address_clock = "clock1",
-		ram_block9a_14.port_b_address_width = 3,
+		ram_block9a_14.port_b_address_width = 2,
 		ram_block9a_14.port_b_data_out_clear = "clear1",
 		ram_block9a_14.port_b_data_out_clock = "clock1",
 		ram_block9a_14.port_b_data_width = 1,
 		ram_block9a_14.port_b_first_address = 0,
 		ram_block9a_14.port_b_first_bit_number = 14,
-		ram_block9a_14.port_b_last_address = 7,
-		ram_block9a_14.port_b_logical_ram_depth = 8,
+		ram_block9a_14.port_b_last_address = 3,
+		ram_block9a_14.port_b_logical_ram_depth = 4,
 		ram_block9a_14.port_b_logical_ram_width = 32,
 		ram_block9a_14.port_b_read_enable_clock = "clock1",
 		ram_block9a_14.ram_block_type = "AUTO",
@@ -1398,11 +1378,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[15]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_15portbdataout[0:0]),
 	.portbre(1'b1)
@@ -1440,23 +1420,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_15.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_15.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_15.operation_mode = "dual_port",
-		ram_block9a_15.port_a_address_width = 3,
+		ram_block9a_15.port_a_address_width = 2,
 		ram_block9a_15.port_a_data_width = 1,
 		ram_block9a_15.port_a_first_address = 0,
 		ram_block9a_15.port_a_first_bit_number = 15,
-		ram_block9a_15.port_a_last_address = 7,
-		ram_block9a_15.port_a_logical_ram_depth = 8,
+		ram_block9a_15.port_a_last_address = 3,
+		ram_block9a_15.port_a_logical_ram_depth = 4,
 		ram_block9a_15.port_a_logical_ram_width = 32,
 		ram_block9a_15.port_b_address_clear = "clear1",
 		ram_block9a_15.port_b_address_clock = "clock1",
-		ram_block9a_15.port_b_address_width = 3,
+		ram_block9a_15.port_b_address_width = 2,
 		ram_block9a_15.port_b_data_out_clear = "clear1",
 		ram_block9a_15.port_b_data_out_clock = "clock1",
 		ram_block9a_15.port_b_data_width = 1,
 		ram_block9a_15.port_b_first_address = 0,
 		ram_block9a_15.port_b_first_bit_number = 15,
-		ram_block9a_15.port_b_last_address = 7,
-		ram_block9a_15.port_b_logical_ram_depth = 8,
+		ram_block9a_15.port_b_last_address = 3,
+		ram_block9a_15.port_b_logical_ram_depth = 4,
 		ram_block9a_15.port_b_logical_ram_width = 32,
 		ram_block9a_15.port_b_read_enable_clock = "clock1",
 		ram_block9a_15.ram_block_type = "AUTO",
@@ -1469,11 +1449,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[16]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_16portbdataout[0:0]),
 	.portbre(1'b1)
@@ -1511,23 +1491,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_16.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_16.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_16.operation_mode = "dual_port",
-		ram_block9a_16.port_a_address_width = 3,
+		ram_block9a_16.port_a_address_width = 2,
 		ram_block9a_16.port_a_data_width = 1,
 		ram_block9a_16.port_a_first_address = 0,
 		ram_block9a_16.port_a_first_bit_number = 16,
-		ram_block9a_16.port_a_last_address = 7,
-		ram_block9a_16.port_a_logical_ram_depth = 8,
+		ram_block9a_16.port_a_last_address = 3,
+		ram_block9a_16.port_a_logical_ram_depth = 4,
 		ram_block9a_16.port_a_logical_ram_width = 32,
 		ram_block9a_16.port_b_address_clear = "clear1",
 		ram_block9a_16.port_b_address_clock = "clock1",
-		ram_block9a_16.port_b_address_width = 3,
+		ram_block9a_16.port_b_address_width = 2,
 		ram_block9a_16.port_b_data_out_clear = "clear1",
 		ram_block9a_16.port_b_data_out_clock = "clock1",
 		ram_block9a_16.port_b_data_width = 1,
 		ram_block9a_16.port_b_first_address = 0,
 		ram_block9a_16.port_b_first_bit_number = 16,
-		ram_block9a_16.port_b_last_address = 7,
-		ram_block9a_16.port_b_logical_ram_depth = 8,
+		ram_block9a_16.port_b_last_address = 3,
+		ram_block9a_16.port_b_logical_ram_depth = 4,
 		ram_block9a_16.port_b_logical_ram_width = 32,
 		ram_block9a_16.port_b_read_enable_clock = "clock1",
 		ram_block9a_16.ram_block_type = "AUTO",
@@ -1540,11 +1520,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[17]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_17portbdataout[0:0]),
 	.portbre(1'b1)
@@ -1582,23 +1562,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_17.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_17.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_17.operation_mode = "dual_port",
-		ram_block9a_17.port_a_address_width = 3,
+		ram_block9a_17.port_a_address_width = 2,
 		ram_block9a_17.port_a_data_width = 1,
 		ram_block9a_17.port_a_first_address = 0,
 		ram_block9a_17.port_a_first_bit_number = 17,
-		ram_block9a_17.port_a_last_address = 7,
-		ram_block9a_17.port_a_logical_ram_depth = 8,
+		ram_block9a_17.port_a_last_address = 3,
+		ram_block9a_17.port_a_logical_ram_depth = 4,
 		ram_block9a_17.port_a_logical_ram_width = 32,
 		ram_block9a_17.port_b_address_clear = "clear1",
 		ram_block9a_17.port_b_address_clock = "clock1",
-		ram_block9a_17.port_b_address_width = 3,
+		ram_block9a_17.port_b_address_width = 2,
 		ram_block9a_17.port_b_data_out_clear = "clear1",
 		ram_block9a_17.port_b_data_out_clock = "clock1",
 		ram_block9a_17.port_b_data_width = 1,
 		ram_block9a_17.port_b_first_address = 0,
 		ram_block9a_17.port_b_first_bit_number = 17,
-		ram_block9a_17.port_b_last_address = 7,
-		ram_block9a_17.port_b_logical_ram_depth = 8,
+		ram_block9a_17.port_b_last_address = 3,
+		ram_block9a_17.port_b_logical_ram_depth = 4,
 		ram_block9a_17.port_b_logical_ram_width = 32,
 		ram_block9a_17.port_b_read_enable_clock = "clock1",
 		ram_block9a_17.ram_block_type = "AUTO",
@@ -1611,11 +1591,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[18]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_18portbdataout[0:0]),
 	.portbre(1'b1)
@@ -1653,23 +1633,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_18.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_18.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_18.operation_mode = "dual_port",
-		ram_block9a_18.port_a_address_width = 3,
+		ram_block9a_18.port_a_address_width = 2,
 		ram_block9a_18.port_a_data_width = 1,
 		ram_block9a_18.port_a_first_address = 0,
 		ram_block9a_18.port_a_first_bit_number = 18,
-		ram_block9a_18.port_a_last_address = 7,
-		ram_block9a_18.port_a_logical_ram_depth = 8,
+		ram_block9a_18.port_a_last_address = 3,
+		ram_block9a_18.port_a_logical_ram_depth = 4,
 		ram_block9a_18.port_a_logical_ram_width = 32,
 		ram_block9a_18.port_b_address_clear = "clear1",
 		ram_block9a_18.port_b_address_clock = "clock1",
-		ram_block9a_18.port_b_address_width = 3,
+		ram_block9a_18.port_b_address_width = 2,
 		ram_block9a_18.port_b_data_out_clear = "clear1",
 		ram_block9a_18.port_b_data_out_clock = "clock1",
 		ram_block9a_18.port_b_data_width = 1,
 		ram_block9a_18.port_b_first_address = 0,
 		ram_block9a_18.port_b_first_bit_number = 18,
-		ram_block9a_18.port_b_last_address = 7,
-		ram_block9a_18.port_b_logical_ram_depth = 8,
+		ram_block9a_18.port_b_last_address = 3,
+		ram_block9a_18.port_b_logical_ram_depth = 4,
 		ram_block9a_18.port_b_logical_ram_width = 32,
 		ram_block9a_18.port_b_read_enable_clock = "clock1",
 		ram_block9a_18.ram_block_type = "AUTO",
@@ -1682,11 +1662,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[19]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_19portbdataout[0:0]),
 	.portbre(1'b1)
@@ -1724,23 +1704,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_19.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_19.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_19.operation_mode = "dual_port",
-		ram_block9a_19.port_a_address_width = 3,
+		ram_block9a_19.port_a_address_width = 2,
 		ram_block9a_19.port_a_data_width = 1,
 		ram_block9a_19.port_a_first_address = 0,
 		ram_block9a_19.port_a_first_bit_number = 19,
-		ram_block9a_19.port_a_last_address = 7,
-		ram_block9a_19.port_a_logical_ram_depth = 8,
+		ram_block9a_19.port_a_last_address = 3,
+		ram_block9a_19.port_a_logical_ram_depth = 4,
 		ram_block9a_19.port_a_logical_ram_width = 32,
 		ram_block9a_19.port_b_address_clear = "clear1",
 		ram_block9a_19.port_b_address_clock = "clock1",
-		ram_block9a_19.port_b_address_width = 3,
+		ram_block9a_19.port_b_address_width = 2,
 		ram_block9a_19.port_b_data_out_clear = "clear1",
 		ram_block9a_19.port_b_data_out_clock = "clock1",
 		ram_block9a_19.port_b_data_width = 1,
 		ram_block9a_19.port_b_first_address = 0,
 		ram_block9a_19.port_b_first_bit_number = 19,
-		ram_block9a_19.port_b_last_address = 7,
-		ram_block9a_19.port_b_logical_ram_depth = 8,
+		ram_block9a_19.port_b_last_address = 3,
+		ram_block9a_19.port_b_logical_ram_depth = 4,
 		ram_block9a_19.port_b_logical_ram_width = 32,
 		ram_block9a_19.port_b_read_enable_clock = "clock1",
 		ram_block9a_19.ram_block_type = "AUTO",
@@ -1753,11 +1733,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[20]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_20portbdataout[0:0]),
 	.portbre(1'b1)
@@ -1795,23 +1775,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_20.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_20.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_20.operation_mode = "dual_port",
-		ram_block9a_20.port_a_address_width = 3,
+		ram_block9a_20.port_a_address_width = 2,
 		ram_block9a_20.port_a_data_width = 1,
 		ram_block9a_20.port_a_first_address = 0,
 		ram_block9a_20.port_a_first_bit_number = 20,
-		ram_block9a_20.port_a_last_address = 7,
-		ram_block9a_20.port_a_logical_ram_depth = 8,
+		ram_block9a_20.port_a_last_address = 3,
+		ram_block9a_20.port_a_logical_ram_depth = 4,
 		ram_block9a_20.port_a_logical_ram_width = 32,
 		ram_block9a_20.port_b_address_clear = "clear1",
 		ram_block9a_20.port_b_address_clock = "clock1",
-		ram_block9a_20.port_b_address_width = 3,
+		ram_block9a_20.port_b_address_width = 2,
 		ram_block9a_20.port_b_data_out_clear = "clear1",
 		ram_block9a_20.port_b_data_out_clock = "clock1",
 		ram_block9a_20.port_b_data_width = 1,
 		ram_block9a_20.port_b_first_address = 0,
 		ram_block9a_20.port_b_first_bit_number = 20,
-		ram_block9a_20.port_b_last_address = 7,
-		ram_block9a_20.port_b_logical_ram_depth = 8,
+		ram_block9a_20.port_b_last_address = 3,
+		ram_block9a_20.port_b_logical_ram_depth = 4,
 		ram_block9a_20.port_b_logical_ram_width = 32,
 		ram_block9a_20.port_b_read_enable_clock = "clock1",
 		ram_block9a_20.ram_block_type = "AUTO",
@@ -1824,11 +1804,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[21]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_21portbdataout[0:0]),
 	.portbre(1'b1)
@@ -1866,23 +1846,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_21.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_21.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_21.operation_mode = "dual_port",
-		ram_block9a_21.port_a_address_width = 3,
+		ram_block9a_21.port_a_address_width = 2,
 		ram_block9a_21.port_a_data_width = 1,
 		ram_block9a_21.port_a_first_address = 0,
 		ram_block9a_21.port_a_first_bit_number = 21,
-		ram_block9a_21.port_a_last_address = 7,
-		ram_block9a_21.port_a_logical_ram_depth = 8,
+		ram_block9a_21.port_a_last_address = 3,
+		ram_block9a_21.port_a_logical_ram_depth = 4,
 		ram_block9a_21.port_a_logical_ram_width = 32,
 		ram_block9a_21.port_b_address_clear = "clear1",
 		ram_block9a_21.port_b_address_clock = "clock1",
-		ram_block9a_21.port_b_address_width = 3,
+		ram_block9a_21.port_b_address_width = 2,
 		ram_block9a_21.port_b_data_out_clear = "clear1",
 		ram_block9a_21.port_b_data_out_clock = "clock1",
 		ram_block9a_21.port_b_data_width = 1,
 		ram_block9a_21.port_b_first_address = 0,
 		ram_block9a_21.port_b_first_bit_number = 21,
-		ram_block9a_21.port_b_last_address = 7,
-		ram_block9a_21.port_b_logical_ram_depth = 8,
+		ram_block9a_21.port_b_last_address = 3,
+		ram_block9a_21.port_b_logical_ram_depth = 4,
 		ram_block9a_21.port_b_logical_ram_width = 32,
 		ram_block9a_21.port_b_read_enable_clock = "clock1",
 		ram_block9a_21.ram_block_type = "AUTO",
@@ -1895,11 +1875,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[22]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_22portbdataout[0:0]),
 	.portbre(1'b1)
@@ -1937,23 +1917,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_22.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_22.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_22.operation_mode = "dual_port",
-		ram_block9a_22.port_a_address_width = 3,
+		ram_block9a_22.port_a_address_width = 2,
 		ram_block9a_22.port_a_data_width = 1,
 		ram_block9a_22.port_a_first_address = 0,
 		ram_block9a_22.port_a_first_bit_number = 22,
-		ram_block9a_22.port_a_last_address = 7,
-		ram_block9a_22.port_a_logical_ram_depth = 8,
+		ram_block9a_22.port_a_last_address = 3,
+		ram_block9a_22.port_a_logical_ram_depth = 4,
 		ram_block9a_22.port_a_logical_ram_width = 32,
 		ram_block9a_22.port_b_address_clear = "clear1",
 		ram_block9a_22.port_b_address_clock = "clock1",
-		ram_block9a_22.port_b_address_width = 3,
+		ram_block9a_22.port_b_address_width = 2,
 		ram_block9a_22.port_b_data_out_clear = "clear1",
 		ram_block9a_22.port_b_data_out_clock = "clock1",
 		ram_block9a_22.port_b_data_width = 1,
 		ram_block9a_22.port_b_first_address = 0,
 		ram_block9a_22.port_b_first_bit_number = 22,
-		ram_block9a_22.port_b_last_address = 7,
-		ram_block9a_22.port_b_logical_ram_depth = 8,
+		ram_block9a_22.port_b_last_address = 3,
+		ram_block9a_22.port_b_logical_ram_depth = 4,
 		ram_block9a_22.port_b_logical_ram_width = 32,
 		ram_block9a_22.port_b_read_enable_clock = "clock1",
 		ram_block9a_22.ram_block_type = "AUTO",
@@ -1966,11 +1946,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[23]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_23portbdataout[0:0]),
 	.portbre(1'b1)
@@ -2008,23 +1988,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_23.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_23.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_23.operation_mode = "dual_port",
-		ram_block9a_23.port_a_address_width = 3,
+		ram_block9a_23.port_a_address_width = 2,
 		ram_block9a_23.port_a_data_width = 1,
 		ram_block9a_23.port_a_first_address = 0,
 		ram_block9a_23.port_a_first_bit_number = 23,
-		ram_block9a_23.port_a_last_address = 7,
-		ram_block9a_23.port_a_logical_ram_depth = 8,
+		ram_block9a_23.port_a_last_address = 3,
+		ram_block9a_23.port_a_logical_ram_depth = 4,
 		ram_block9a_23.port_a_logical_ram_width = 32,
 		ram_block9a_23.port_b_address_clear = "clear1",
 		ram_block9a_23.port_b_address_clock = "clock1",
-		ram_block9a_23.port_b_address_width = 3,
+		ram_block9a_23.port_b_address_width = 2,
 		ram_block9a_23.port_b_data_out_clear = "clear1",
 		ram_block9a_23.port_b_data_out_clock = "clock1",
 		ram_block9a_23.port_b_data_width = 1,
 		ram_block9a_23.port_b_first_address = 0,
 		ram_block9a_23.port_b_first_bit_number = 23,
-		ram_block9a_23.port_b_last_address = 7,
-		ram_block9a_23.port_b_logical_ram_depth = 8,
+		ram_block9a_23.port_b_last_address = 3,
+		ram_block9a_23.port_b_logical_ram_depth = 4,
 		ram_block9a_23.port_b_logical_ram_width = 32,
 		ram_block9a_23.port_b_read_enable_clock = "clock1",
 		ram_block9a_23.ram_block_type = "AUTO",
@@ -2037,11 +2017,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[24]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_24portbdataout[0:0]),
 	.portbre(1'b1)
@@ -2079,23 +2059,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_24.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_24.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_24.operation_mode = "dual_port",
-		ram_block9a_24.port_a_address_width = 3,
+		ram_block9a_24.port_a_address_width = 2,
 		ram_block9a_24.port_a_data_width = 1,
 		ram_block9a_24.port_a_first_address = 0,
 		ram_block9a_24.port_a_first_bit_number = 24,
-		ram_block9a_24.port_a_last_address = 7,
-		ram_block9a_24.port_a_logical_ram_depth = 8,
+		ram_block9a_24.port_a_last_address = 3,
+		ram_block9a_24.port_a_logical_ram_depth = 4,
 		ram_block9a_24.port_a_logical_ram_width = 32,
 		ram_block9a_24.port_b_address_clear = "clear1",
 		ram_block9a_24.port_b_address_clock = "clock1",
-		ram_block9a_24.port_b_address_width = 3,
+		ram_block9a_24.port_b_address_width = 2,
 		ram_block9a_24.port_b_data_out_clear = "clear1",
 		ram_block9a_24.port_b_data_out_clock = "clock1",
 		ram_block9a_24.port_b_data_width = 1,
 		ram_block9a_24.port_b_first_address = 0,
 		ram_block9a_24.port_b_first_bit_number = 24,
-		ram_block9a_24.port_b_last_address = 7,
-		ram_block9a_24.port_b_logical_ram_depth = 8,
+		ram_block9a_24.port_b_last_address = 3,
+		ram_block9a_24.port_b_logical_ram_depth = 4,
 		ram_block9a_24.port_b_logical_ram_width = 32,
 		ram_block9a_24.port_b_read_enable_clock = "clock1",
 		ram_block9a_24.ram_block_type = "AUTO",
@@ -2108,11 +2088,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[25]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_25portbdataout[0:0]),
 	.portbre(1'b1)
@@ -2150,23 +2130,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_25.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_25.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_25.operation_mode = "dual_port",
-		ram_block9a_25.port_a_address_width = 3,
+		ram_block9a_25.port_a_address_width = 2,
 		ram_block9a_25.port_a_data_width = 1,
 		ram_block9a_25.port_a_first_address = 0,
 		ram_block9a_25.port_a_first_bit_number = 25,
-		ram_block9a_25.port_a_last_address = 7,
-		ram_block9a_25.port_a_logical_ram_depth = 8,
+		ram_block9a_25.port_a_last_address = 3,
+		ram_block9a_25.port_a_logical_ram_depth = 4,
 		ram_block9a_25.port_a_logical_ram_width = 32,
 		ram_block9a_25.port_b_address_clear = "clear1",
 		ram_block9a_25.port_b_address_clock = "clock1",
-		ram_block9a_25.port_b_address_width = 3,
+		ram_block9a_25.port_b_address_width = 2,
 		ram_block9a_25.port_b_data_out_clear = "clear1",
 		ram_block9a_25.port_b_data_out_clock = "clock1",
 		ram_block9a_25.port_b_data_width = 1,
 		ram_block9a_25.port_b_first_address = 0,
 		ram_block9a_25.port_b_first_bit_number = 25,
-		ram_block9a_25.port_b_last_address = 7,
-		ram_block9a_25.port_b_logical_ram_depth = 8,
+		ram_block9a_25.port_b_last_address = 3,
+		ram_block9a_25.port_b_logical_ram_depth = 4,
 		ram_block9a_25.port_b_logical_ram_width = 32,
 		ram_block9a_25.port_b_read_enable_clock = "clock1",
 		ram_block9a_25.ram_block_type = "AUTO",
@@ -2179,11 +2159,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[26]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_26portbdataout[0:0]),
 	.portbre(1'b1)
@@ -2221,23 +2201,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_26.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_26.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_26.operation_mode = "dual_port",
-		ram_block9a_26.port_a_address_width = 3,
+		ram_block9a_26.port_a_address_width = 2,
 		ram_block9a_26.port_a_data_width = 1,
 		ram_block9a_26.port_a_first_address = 0,
 		ram_block9a_26.port_a_first_bit_number = 26,
-		ram_block9a_26.port_a_last_address = 7,
-		ram_block9a_26.port_a_logical_ram_depth = 8,
+		ram_block9a_26.port_a_last_address = 3,
+		ram_block9a_26.port_a_logical_ram_depth = 4,
 		ram_block9a_26.port_a_logical_ram_width = 32,
 		ram_block9a_26.port_b_address_clear = "clear1",
 		ram_block9a_26.port_b_address_clock = "clock1",
-		ram_block9a_26.port_b_address_width = 3,
+		ram_block9a_26.port_b_address_width = 2,
 		ram_block9a_26.port_b_data_out_clear = "clear1",
 		ram_block9a_26.port_b_data_out_clock = "clock1",
 		ram_block9a_26.port_b_data_width = 1,
 		ram_block9a_26.port_b_first_address = 0,
 		ram_block9a_26.port_b_first_bit_number = 26,
-		ram_block9a_26.port_b_last_address = 7,
-		ram_block9a_26.port_b_logical_ram_depth = 8,
+		ram_block9a_26.port_b_last_address = 3,
+		ram_block9a_26.port_b_logical_ram_depth = 4,
 		ram_block9a_26.port_b_logical_ram_width = 32,
 		ram_block9a_26.port_b_read_enable_clock = "clock1",
 		ram_block9a_26.ram_block_type = "AUTO",
@@ -2250,11 +2230,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[27]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_27portbdataout[0:0]),
 	.portbre(1'b1)
@@ -2292,23 +2272,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_27.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_27.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_27.operation_mode = "dual_port",
-		ram_block9a_27.port_a_address_width = 3,
+		ram_block9a_27.port_a_address_width = 2,
 		ram_block9a_27.port_a_data_width = 1,
 		ram_block9a_27.port_a_first_address = 0,
 		ram_block9a_27.port_a_first_bit_number = 27,
-		ram_block9a_27.port_a_last_address = 7,
-		ram_block9a_27.port_a_logical_ram_depth = 8,
+		ram_block9a_27.port_a_last_address = 3,
+		ram_block9a_27.port_a_logical_ram_depth = 4,
 		ram_block9a_27.port_a_logical_ram_width = 32,
 		ram_block9a_27.port_b_address_clear = "clear1",
 		ram_block9a_27.port_b_address_clock = "clock1",
-		ram_block9a_27.port_b_address_width = 3,
+		ram_block9a_27.port_b_address_width = 2,
 		ram_block9a_27.port_b_data_out_clear = "clear1",
 		ram_block9a_27.port_b_data_out_clock = "clock1",
 		ram_block9a_27.port_b_data_width = 1,
 		ram_block9a_27.port_b_first_address = 0,
 		ram_block9a_27.port_b_first_bit_number = 27,
-		ram_block9a_27.port_b_last_address = 7,
-		ram_block9a_27.port_b_logical_ram_depth = 8,
+		ram_block9a_27.port_b_last_address = 3,
+		ram_block9a_27.port_b_logical_ram_depth = 4,
 		ram_block9a_27.port_b_logical_ram_width = 32,
 		ram_block9a_27.port_b_read_enable_clock = "clock1",
 		ram_block9a_27.ram_block_type = "AUTO",
@@ -2321,11 +2301,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[28]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_28portbdataout[0:0]),
 	.portbre(1'b1)
@@ -2363,23 +2343,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_28.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_28.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_28.operation_mode = "dual_port",
-		ram_block9a_28.port_a_address_width = 3,
+		ram_block9a_28.port_a_address_width = 2,
 		ram_block9a_28.port_a_data_width = 1,
 		ram_block9a_28.port_a_first_address = 0,
 		ram_block9a_28.port_a_first_bit_number = 28,
-		ram_block9a_28.port_a_last_address = 7,
-		ram_block9a_28.port_a_logical_ram_depth = 8,
+		ram_block9a_28.port_a_last_address = 3,
+		ram_block9a_28.port_a_logical_ram_depth = 4,
 		ram_block9a_28.port_a_logical_ram_width = 32,
 		ram_block9a_28.port_b_address_clear = "clear1",
 		ram_block9a_28.port_b_address_clock = "clock1",
-		ram_block9a_28.port_b_address_width = 3,
+		ram_block9a_28.port_b_address_width = 2,
 		ram_block9a_28.port_b_data_out_clear = "clear1",
 		ram_block9a_28.port_b_data_out_clock = "clock1",
 		ram_block9a_28.port_b_data_width = 1,
 		ram_block9a_28.port_b_first_address = 0,
 		ram_block9a_28.port_b_first_bit_number = 28,
-		ram_block9a_28.port_b_last_address = 7,
-		ram_block9a_28.port_b_logical_ram_depth = 8,
+		ram_block9a_28.port_b_last_address = 3,
+		ram_block9a_28.port_b_logical_ram_depth = 4,
 		ram_block9a_28.port_b_logical_ram_width = 32,
 		ram_block9a_28.port_b_read_enable_clock = "clock1",
 		ram_block9a_28.ram_block_type = "AUTO",
@@ -2392,11 +2372,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[29]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_29portbdataout[0:0]),
 	.portbre(1'b1)
@@ -2434,23 +2414,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_29.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_29.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_29.operation_mode = "dual_port",
-		ram_block9a_29.port_a_address_width = 3,
+		ram_block9a_29.port_a_address_width = 2,
 		ram_block9a_29.port_a_data_width = 1,
 		ram_block9a_29.port_a_first_address = 0,
 		ram_block9a_29.port_a_first_bit_number = 29,
-		ram_block9a_29.port_a_last_address = 7,
-		ram_block9a_29.port_a_logical_ram_depth = 8,
+		ram_block9a_29.port_a_last_address = 3,
+		ram_block9a_29.port_a_logical_ram_depth = 4,
 		ram_block9a_29.port_a_logical_ram_width = 32,
 		ram_block9a_29.port_b_address_clear = "clear1",
 		ram_block9a_29.port_b_address_clock = "clock1",
-		ram_block9a_29.port_b_address_width = 3,
+		ram_block9a_29.port_b_address_width = 2,
 		ram_block9a_29.port_b_data_out_clear = "clear1",
 		ram_block9a_29.port_b_data_out_clock = "clock1",
 		ram_block9a_29.port_b_data_width = 1,
 		ram_block9a_29.port_b_first_address = 0,
 		ram_block9a_29.port_b_first_bit_number = 29,
-		ram_block9a_29.port_b_last_address = 7,
-		ram_block9a_29.port_b_logical_ram_depth = 8,
+		ram_block9a_29.port_b_last_address = 3,
+		ram_block9a_29.port_b_logical_ram_depth = 4,
 		ram_block9a_29.port_b_logical_ram_width = 32,
 		ram_block9a_29.port_b_read_enable_clock = "clock1",
 		ram_block9a_29.ram_block_type = "AUTO",
@@ -2463,11 +2443,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[30]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_30portbdataout[0:0]),
 	.portbre(1'b1)
@@ -2505,23 +2485,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_30.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_30.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_30.operation_mode = "dual_port",
-		ram_block9a_30.port_a_address_width = 3,
+		ram_block9a_30.port_a_address_width = 2,
 		ram_block9a_30.port_a_data_width = 1,
 		ram_block9a_30.port_a_first_address = 0,
 		ram_block9a_30.port_a_first_bit_number = 30,
-		ram_block9a_30.port_a_last_address = 7,
-		ram_block9a_30.port_a_logical_ram_depth = 8,
+		ram_block9a_30.port_a_last_address = 3,
+		ram_block9a_30.port_a_logical_ram_depth = 4,
 		ram_block9a_30.port_a_logical_ram_width = 32,
 		ram_block9a_30.port_b_address_clear = "clear1",
 		ram_block9a_30.port_b_address_clock = "clock1",
-		ram_block9a_30.port_b_address_width = 3,
+		ram_block9a_30.port_b_address_width = 2,
 		ram_block9a_30.port_b_data_out_clear = "clear1",
 		ram_block9a_30.port_b_data_out_clock = "clock1",
 		ram_block9a_30.port_b_data_width = 1,
 		ram_block9a_30.port_b_first_address = 0,
 		ram_block9a_30.port_b_first_bit_number = 30,
-		ram_block9a_30.port_b_last_address = 7,
-		ram_block9a_30.port_b_logical_ram_depth = 8,
+		ram_block9a_30.port_b_last_address = 3,
+		ram_block9a_30.port_b_logical_ram_depth = 4,
 		ram_block9a_30.port_b_logical_ram_width = 32,
 		ram_block9a_30.port_b_read_enable_clock = "clock1",
 		ram_block9a_30.ram_block_type = "AUTO",
@@ -2534,11 +2514,11 @@ module  async_fifo_dap_to_vjtag_altsyncram
 	.dftout(),
 	.eccstatus(),
 	.ena1(clocken1),
-	.portaaddr({address_a_wire[2:0]}),
+	.portaaddr({address_a_wire[1:0]}),
 	.portadatain({data_a[31]}),
 	.portadataout(),
 	.portawe(wren_a),
-	.portbaddr({address_b_wire[2:0]}),
+	.portbaddr({address_b_wire[1:0]}),
 	.portbaddrstall(addressstall_b),
 	.portbdataout(wire_ram_block9a_31portbdataout[0:0]),
 	.portbre(1'b1)
@@ -2576,23 +2556,23 @@ module  async_fifo_dap_to_vjtag_altsyncram
 		ram_block9a_31.logical_ram_name = "ALTSYNCRAM",
 		ram_block9a_31.mixed_port_feed_through_mode = "dont_care",
 		ram_block9a_31.operation_mode = "dual_port",
-		ram_block9a_31.port_a_address_width = 3,
+		ram_block9a_31.port_a_address_width = 2,
 		ram_block9a_31.port_a_data_width = 1,
 		ram_block9a_31.port_a_first_address = 0,
 		ram_block9a_31.port_a_first_bit_number = 31,
-		ram_block9a_31.port_a_last_address = 7,
-		ram_block9a_31.port_a_logical_ram_depth = 8,
+		ram_block9a_31.port_a_last_address = 3,
+		ram_block9a_31.port_a_logical_ram_depth = 4,
 		ram_block9a_31.port_a_logical_ram_width = 32,
 		ram_block9a_31.port_b_address_clear = "clear1",
 		ram_block9a_31.port_b_address_clock = "clock1",
-		ram_block9a_31.port_b_address_width = 3,
+		ram_block9a_31.port_b_address_width = 2,
 		ram_block9a_31.port_b_data_out_clear = "clear1",
 		ram_block9a_31.port_b_data_out_clock = "clock1",
 		ram_block9a_31.port_b_data_width = 1,
 		ram_block9a_31.port_b_first_address = 0,
 		ram_block9a_31.port_b_first_bit_number = 31,
-		ram_block9a_31.port_b_last_address = 7,
-		ram_block9a_31.port_b_logical_ram_depth = 8,
+		ram_block9a_31.port_b_last_address = 3,
+		ram_block9a_31.port_b_logical_ram_depth = 4,
 		ram_block9a_31.port_b_logical_ram_width = 32,
 		ram_block9a_31.port_b_read_enable_clock = "clock1",
 		ram_block9a_31.ram_block_type = "AUTO",
@@ -2661,10 +2641,10 @@ module  async_fifo_dap_to_vjtag_dffpipe
 endmodule //async_fifo_dap_to_vjtag_dffpipe
 
 
-//dffpipe DELAY=1 WIDTH=4 clock clrn d q ALTERA_INTERNAL_OPTIONS=AUTO_SHIFT_REGISTER_RECOGNITION=OFF
+//dffpipe DELAY=1 WIDTH=3 clock clrn d q ALTERA_INTERNAL_OPTIONS=AUTO_SHIFT_REGISTER_RECOGNITION=OFF
 //VERSION_BEGIN 21.1 cbx_mgl 2021:10:21:11:03:46:SJ cbx_stratixii 2021:10:21:11:03:22:SJ cbx_util_mgl 2021:10:21:11:03:22:SJ  VERSION_END
 
-//synthesis_resources = reg 4 
+//synthesis_resources = reg 3 
 //synopsys translate_off
 `timescale 1 ps / 1 ps
 //synopsys translate_on
@@ -2677,8 +2657,8 @@ module  async_fifo_dap_to_vjtag_dffpipe1
 	q) /* synthesis synthesis_clearbox=1 */;
 	input   clock;
 	input   clrn;
-	input   [3:0]  d;
-	output   [3:0]  q;
+	input   [2:0]  d;
+	output   [2:0]  q;
 `ifndef ALTERA_RESERVED_QIS
 // synopsys translate_off
 `endif
@@ -2688,7 +2668,7 @@ module  async_fifo_dap_to_vjtag_dffpipe1
 // synopsys translate_on
 `endif
 
-	reg	[3:0]	dffe12a;
+	reg	[2:0]	dffe12a;
 	wire ena;
 	wire prn;
 	wire sclr;
@@ -2698,9 +2678,9 @@ module  async_fifo_dap_to_vjtag_dffpipe1
 		dffe12a = 0;
 	// synopsys translate_on
 	always @ ( posedge clock or  negedge prn or  negedge clrn)
-		if (prn == 1'b0) dffe12a <= {4{1'b1}};
-		else if (clrn == 1'b0) dffe12a <= 4'b0;
-		else if  (ena == 1'b1)   dffe12a <= (d & {4{(~ sclr)}});
+		if (prn == 1'b0) dffe12a <= {3{1'b1}};
+		else if (clrn == 1'b0) dffe12a <= 3'b0;
+		else if  (ena == 1'b1)   dffe12a <= (d & {3{(~ sclr)}});
 	assign
 		ena = 1'b1,
 		prn = 1'b1,
@@ -2709,14 +2689,14 @@ module  async_fifo_dap_to_vjtag_dffpipe1
 endmodule //async_fifo_dap_to_vjtag_dffpipe1
 
 
-//dffpipe DELAY=2 WIDTH=4 clock clrn d q ALTERA_INTERNAL_OPTIONS=X_ON_VIOLATION_OPTION=OFF;SYNCHRONIZER_IDENTIFICATION=FORCED_IF_ASYNCHRONOUS;PRESERVE_REGISTER=ON;DONT_MERGE_REGISTER=ON;ADV_NETLIST_OPT_ALLOWED=NEVER_ALLOW
+//dffpipe DELAY=2 WIDTH=3 clock clrn d q ALTERA_INTERNAL_OPTIONS=X_ON_VIOLATION_OPTION=OFF;SYNCHRONIZER_IDENTIFICATION=FORCED_IF_ASYNCHRONOUS;PRESERVE_REGISTER=ON;DONT_MERGE_REGISTER=ON;ADV_NETLIST_OPT_ALLOWED=NEVER_ALLOW
 //VERSION_BEGIN 21.1 cbx_a_gray2bin 2021:10:21:11:03:22:SJ cbx_a_graycounter 2021:10:21:11:03:22:SJ cbx_altdpram 2021:10:21:11:03:22:SJ cbx_altera_counter 2021:10:21:11:03:22:SJ cbx_altera_gray_counter 2021:10:21:11:03:22:SJ cbx_altera_syncram 2021:10:21:11:03:22:SJ cbx_altera_syncram_nd_impl 2021:10:21:11:03:22:SJ cbx_altsyncram 2021:10:21:11:03:22:SJ cbx_cycloneii 2021:10:21:11:03:22:SJ cbx_dcfifo 2021:10:21:11:03:22:SJ cbx_fifo_common 2021:10:21:11:03:22:SJ cbx_lpm_add_sub 2021:10:21:11:03:22:SJ cbx_lpm_compare 2021:10:21:11:03:21:SJ cbx_lpm_counter 2021:10:21:11:03:21:SJ cbx_lpm_decode 2021:10:21:11:03:21:SJ cbx_lpm_mux 2021:10:21:11:03:22:SJ cbx_mgl 2021:10:21:11:03:46:SJ cbx_nadder 2021:10:21:11:03:22:SJ cbx_scfifo 2021:10:21:11:03:22:SJ cbx_stratix 2021:10:21:11:03:22:SJ cbx_stratixii 2021:10:21:11:03:22:SJ cbx_stratixiii 2021:10:21:11:03:22:SJ cbx_stratixv 2021:10:21:11:03:22:SJ cbx_util_mgl 2021:10:21:11:03:22:SJ  VERSION_END
 
 
-//dffpipe DELAY=2 WIDTH=4 clock clrn d q ALTERA_INTERNAL_OPTIONS=AUTO_SHIFT_REGISTER_RECOGNITION=OFF
+//dffpipe DELAY=2 WIDTH=3 clock clrn d q ALTERA_INTERNAL_OPTIONS=AUTO_SHIFT_REGISTER_RECOGNITION=OFF
 //VERSION_BEGIN 21.1 cbx_mgl 2021:10:21:11:03:46:SJ cbx_stratixii 2021:10:21:11:03:22:SJ cbx_util_mgl 2021:10:21:11:03:22:SJ  VERSION_END
 
-//synthesis_resources = reg 8 
+//synthesis_resources = reg 6 
 //synopsys translate_off
 `timescale 1 ps / 1 ps
 //synopsys translate_on
@@ -2729,8 +2709,8 @@ module  async_fifo_dap_to_vjtag_dffpipe12
 	q) /* synthesis synthesis_clearbox=1 */;
 	input   clock;
 	input   clrn;
-	input   [3:0]  d;
-	output   [3:0]  q;
+	input   [2:0]  d;
+	output   [2:0]  q;
 `ifndef ALTERA_RESERVED_QIS
 // synopsys translate_off
 `endif
@@ -2740,8 +2720,8 @@ module  async_fifo_dap_to_vjtag_dffpipe12
 // synopsys translate_on
 `endif
 
-	reg	[3:0]	dffe14a;
-	reg	[3:0]	dffe15a;
+	reg	[2:0]	dffe14a;
+	reg	[2:0]	dffe15a;
 	wire ena;
 	wire prn;
 	wire sclr;
@@ -2751,17 +2731,17 @@ module  async_fifo_dap_to_vjtag_dffpipe12
 		dffe14a = 0;
 	// synopsys translate_on
 	always @ ( posedge clock or  negedge prn or  negedge clrn)
-		if (prn == 1'b0) dffe14a <= {4{1'b1}};
-		else if (clrn == 1'b0) dffe14a <= 4'b0;
-		else if  (ena == 1'b1)   dffe14a <= (d & {4{(~ sclr)}});
+		if (prn == 1'b0) dffe14a <= {3{1'b1}};
+		else if (clrn == 1'b0) dffe14a <= 3'b0;
+		else if  (ena == 1'b1)   dffe14a <= (d & {3{(~ sclr)}});
 	// synopsys translate_off
 	initial
 		dffe15a = 0;
 	// synopsys translate_on
 	always @ ( posedge clock or  negedge prn or  negedge clrn)
-		if (prn == 1'b0) dffe15a <= {4{1'b1}};
-		else if (clrn == 1'b0) dffe15a <= 4'b0;
-		else if  (ena == 1'b1)   dffe15a <= (dffe14a & {4{(~ sclr)}});
+		if (prn == 1'b0) dffe15a <= {3{1'b1}};
+		else if (clrn == 1'b0) dffe15a <= 3'b0;
+		else if  (ena == 1'b1)   dffe15a <= (dffe14a & {3{(~ sclr)}});
 	assign
 		ena = 1'b1,
 		prn = 1'b1,
@@ -2769,7 +2749,7 @@ module  async_fifo_dap_to_vjtag_dffpipe12
 		sclr = 1'b0;
 endmodule //async_fifo_dap_to_vjtag_dffpipe12
 
-//synthesis_resources = reg 8 
+//synthesis_resources = reg 6 
 //synopsys translate_off
 `timescale 1 ps / 1 ps
 //synopsys translate_on
@@ -2782,8 +2762,8 @@ module  async_fifo_dap_to_vjtag_alt_synch_pipe
 	q) /* synthesis synthesis_clearbox=1 */;
 	input   clock;
 	input   clrn;
-	input   [3:0]  d;
-	output   [3:0]  q;
+	input   [2:0]  d;
+	output   [2:0]  q;
 `ifndef ALTERA_RESERVED_QIS
 // synopsys translate_off
 `endif
@@ -2792,7 +2772,7 @@ module  async_fifo_dap_to_vjtag_alt_synch_pipe
 // synopsys translate_on
 `endif
 
-	wire  [3:0]   wire_dffpipe13_q;
+	wire  [2:0]   wire_dffpipe13_q;
 
 	async_fifo_dap_to_vjtag_dffpipe12   dffpipe13
 	( 
@@ -2805,14 +2785,14 @@ module  async_fifo_dap_to_vjtag_alt_synch_pipe
 endmodule //async_fifo_dap_to_vjtag_alt_synch_pipe
 
 
-//dffpipe DELAY=2 WIDTH=4 clock clrn d q ALTERA_INTERNAL_OPTIONS=X_ON_VIOLATION_OPTION=OFF;SYNCHRONIZER_IDENTIFICATION=FORCED_IF_ASYNCHRONOUS;PRESERVE_REGISTER=ON;DONT_MERGE_REGISTER=ON;ADV_NETLIST_OPT_ALLOWED=NEVER_ALLOW
+//dffpipe DELAY=2 WIDTH=3 clock clrn d q ALTERA_INTERNAL_OPTIONS=X_ON_VIOLATION_OPTION=OFF;SYNCHRONIZER_IDENTIFICATION=FORCED_IF_ASYNCHRONOUS;PRESERVE_REGISTER=ON;DONT_MERGE_REGISTER=ON;ADV_NETLIST_OPT_ALLOWED=NEVER_ALLOW
 //VERSION_BEGIN 21.1 cbx_a_gray2bin 2021:10:21:11:03:22:SJ cbx_a_graycounter 2021:10:21:11:03:22:SJ cbx_altdpram 2021:10:21:11:03:22:SJ cbx_altera_counter 2021:10:21:11:03:22:SJ cbx_altera_gray_counter 2021:10:21:11:03:22:SJ cbx_altera_syncram 2021:10:21:11:03:22:SJ cbx_altera_syncram_nd_impl 2021:10:21:11:03:22:SJ cbx_altsyncram 2021:10:21:11:03:22:SJ cbx_cycloneii 2021:10:21:11:03:22:SJ cbx_dcfifo 2021:10:21:11:03:22:SJ cbx_fifo_common 2021:10:21:11:03:22:SJ cbx_lpm_add_sub 2021:10:21:11:03:22:SJ cbx_lpm_compare 2021:10:21:11:03:21:SJ cbx_lpm_counter 2021:10:21:11:03:21:SJ cbx_lpm_decode 2021:10:21:11:03:21:SJ cbx_lpm_mux 2021:10:21:11:03:22:SJ cbx_mgl 2021:10:21:11:03:46:SJ cbx_nadder 2021:10:21:11:03:22:SJ cbx_scfifo 2021:10:21:11:03:22:SJ cbx_stratix 2021:10:21:11:03:22:SJ cbx_stratixii 2021:10:21:11:03:22:SJ cbx_stratixiii 2021:10:21:11:03:22:SJ cbx_stratixv 2021:10:21:11:03:22:SJ cbx_util_mgl 2021:10:21:11:03:22:SJ  VERSION_END
 
 
-//dffpipe DELAY=2 WIDTH=4 clock clrn d q ALTERA_INTERNAL_OPTIONS=AUTO_SHIFT_REGISTER_RECOGNITION=OFF
+//dffpipe DELAY=2 WIDTH=3 clock clrn d q ALTERA_INTERNAL_OPTIONS=AUTO_SHIFT_REGISTER_RECOGNITION=OFF
 //VERSION_BEGIN 21.1 cbx_mgl 2021:10:21:11:03:46:SJ cbx_stratixii 2021:10:21:11:03:22:SJ cbx_util_mgl 2021:10:21:11:03:22:SJ  VERSION_END
 
-//synthesis_resources = reg 8 
+//synthesis_resources = reg 6 
 //synopsys translate_off
 `timescale 1 ps / 1 ps
 //synopsys translate_on
@@ -2825,8 +2805,8 @@ module  async_fifo_dap_to_vjtag_dffpipe123
 	q) /* synthesis synthesis_clearbox=1 */;
 	input   clock;
 	input   clrn;
-	input   [3:0]  d;
-	output   [3:0]  q;
+	input   [2:0]  d;
+	output   [2:0]  q;
 `ifndef ALTERA_RESERVED_QIS
 // synopsys translate_off
 `endif
@@ -2836,8 +2816,8 @@ module  async_fifo_dap_to_vjtag_dffpipe123
 // synopsys translate_on
 `endif
 
-	reg	[3:0]	dffe17a;
-	reg	[3:0]	dffe18a;
+	reg	[2:0]	dffe17a;
+	reg	[2:0]	dffe18a;
 	wire ena;
 	wire prn;
 	wire sclr;
@@ -2847,17 +2827,17 @@ module  async_fifo_dap_to_vjtag_dffpipe123
 		dffe17a = 0;
 	// synopsys translate_on
 	always @ ( posedge clock or  negedge prn or  negedge clrn)
-		if (prn == 1'b0) dffe17a <= {4{1'b1}};
-		else if (clrn == 1'b0) dffe17a <= 4'b0;
-		else if  (ena == 1'b1)   dffe17a <= (d & {4{(~ sclr)}});
+		if (prn == 1'b0) dffe17a <= {3{1'b1}};
+		else if (clrn == 1'b0) dffe17a <= 3'b0;
+		else if  (ena == 1'b1)   dffe17a <= (d & {3{(~ sclr)}});
 	// synopsys translate_off
 	initial
 		dffe18a = 0;
 	// synopsys translate_on
 	always @ ( posedge clock or  negedge prn or  negedge clrn)
-		if (prn == 1'b0) dffe18a <= {4{1'b1}};
-		else if (clrn == 1'b0) dffe18a <= 4'b0;
-		else if  (ena == 1'b1)   dffe18a <= (dffe17a & {4{(~ sclr)}});
+		if (prn == 1'b0) dffe18a <= {3{1'b1}};
+		else if (clrn == 1'b0) dffe18a <= 3'b0;
+		else if  (ena == 1'b1)   dffe18a <= (dffe17a & {3{(~ sclr)}});
 	assign
 		ena = 1'b1,
 		prn = 1'b1,
@@ -2865,7 +2845,7 @@ module  async_fifo_dap_to_vjtag_dffpipe123
 		sclr = 1'b0;
 endmodule //async_fifo_dap_to_vjtag_dffpipe123
 
-//synthesis_resources = reg 8 
+//synthesis_resources = reg 6 
 //synopsys translate_off
 `timescale 1 ps / 1 ps
 //synopsys translate_on
@@ -2878,8 +2858,8 @@ module  async_fifo_dap_to_vjtag_alt_synch_pipe1
 	q) /* synthesis synthesis_clearbox=1 */;
 	input   clock;
 	input   clrn;
-	input   [3:0]  d;
-	output   [3:0]  q;
+	input   [2:0]  d;
+	output   [2:0]  q;
 `ifndef ALTERA_RESERVED_QIS
 // synopsys translate_off
 `endif
@@ -2888,7 +2868,7 @@ module  async_fifo_dap_to_vjtag_alt_synch_pipe1
 // synopsys translate_on
 `endif
 
-	wire  [3:0]   wire_dffpipe16_q;
+	wire  [2:0]   wire_dffpipe16_q;
 
 	async_fifo_dap_to_vjtag_dffpipe123   dffpipe16
 	( 
@@ -2901,11 +2881,11 @@ module  async_fifo_dap_to_vjtag_alt_synch_pipe1
 endmodule //async_fifo_dap_to_vjtag_alt_synch_pipe1
 
 
-//lpm_add_sub DEVICE_FAMILY="Cyclone V" LPM_DIRECTION="SUB" LPM_WIDTH=4 dataa datab result
+//lpm_add_sub DEVICE_FAMILY="Cyclone V" LPM_DIRECTION="SUB" LPM_WIDTH=3 dataa datab result
 //VERSION_BEGIN 21.1 cbx_cycloneii 2021:10:21:11:03:22:SJ cbx_lpm_add_sub 2021:10:21:11:03:22:SJ cbx_mgl 2021:10:21:11:03:46:SJ cbx_nadder 2021:10:21:11:03:22:SJ cbx_stratix 2021:10:21:11:03:22:SJ cbx_stratixii 2021:10:21:11:03:22:SJ  VERSION_END
 
 
-//lpm_compare DEVICE_FAMILY="Cyclone V" LPM_WIDTH=4 aeb dataa datab
+//lpm_compare DEVICE_FAMILY="Cyclone V" LPM_WIDTH=3 aeb dataa datab
 //VERSION_BEGIN 21.1 cbx_cycloneii 2021:10:21:11:03:22:SJ cbx_lpm_add_sub 2021:10:21:11:03:22:SJ cbx_lpm_compare 2021:10:21:11:03:21:SJ cbx_mgl 2021:10:21:11:03:46:SJ cbx_nadder 2021:10:21:11:03:22:SJ cbx_stratix 2021:10:21:11:03:22:SJ cbx_stratixii 2021:10:21:11:03:22:SJ  VERSION_END
 
 //synthesis_resources = 
@@ -2918,31 +2898,31 @@ module  async_fifo_dap_to_vjtag_cmpr
 	dataa,
 	datab) /* synthesis synthesis_clearbox=1 */;
 	output   aeb;
-	input   [3:0]  dataa;
-	input   [3:0]  datab;
+	input   [2:0]  dataa;
+	input   [2:0]  datab;
 `ifndef ALTERA_RESERVED_QIS
 // synopsys translate_off
 `endif
-	tri0   [3:0]  dataa;
-	tri0   [3:0]  datab;
+	tri0   [2:0]  dataa;
+	tri0   [2:0]  datab;
 `ifndef ALTERA_RESERVED_QIS
 // synopsys translate_on
 `endif
 
 	wire  [0:0]  aeb_result_wire;
 	wire  [0:0]  aneb_result_wire;
-	wire  [9:0]  data_wire;
+	wire  [7:0]  data_wire;
 	wire  eq_wire;
 
 	assign
 		aeb = eq_wire,
 		aeb_result_wire = (~ aneb_result_wire),
 		aneb_result_wire = (data_wire[0] | data_wire[1]),
-		data_wire = {datab[3], dataa[3], datab[2], dataa[2], datab[1], dataa[1], datab[0], dataa[0], ((data_wire[6] ^ data_wire[7]) | (data_wire[8] ^ data_wire[9])), ((data_wire[2] ^ data_wire[3]) | (data_wire[4] ^ data_wire[5]))},
+		data_wire = {datab[2], dataa[2], datab[1], dataa[1], datab[0], dataa[0], (data_wire[6] ^ data_wire[7]), ((data_wire[2] ^ data_wire[3]) | (data_wire[4] ^ data_wire[5]))},
 		eq_wire = aeb_result_wire;
 endmodule //async_fifo_dap_to_vjtag_cmpr
 
-//synthesis_resources = lut 5 M10K 1 reg 48 
+//synthesis_resources = lut 4 M10K 1 reg 37 
 //synopsys translate_off
 `timescale 1 ps / 1 ps
 //synopsys translate_on
@@ -2965,7 +2945,7 @@ module  async_fifo_dap_to_vjtag_dcfifo
 	input   rdclk;
 	output   rdempty;
 	input   rdreq;
-	output   [2:0]  rdusedw;
+	output   [1:0]  rdusedw;
 	input   wrclk;
 	output   wrfull;
 	input   wrreq;
@@ -2977,41 +2957,41 @@ module  async_fifo_dap_to_vjtag_dcfifo
 // synopsys translate_on
 `endif
 
-	wire  [3:0]   wire_rdptr_g_gray2bin_bin;
-	wire  [3:0]   wire_rs_dgwp_gray2bin_bin;
-	wire  [3:0]   wire_rdptr_g1p_q;
-	wire  [3:0]   wire_wrptr_g1p_q;
+	wire  [2:0]   wire_rdptr_g_gray2bin_bin;
+	wire  [2:0]   wire_rs_dgwp_gray2bin_bin;
+	wire  [2:0]   wire_rdptr_g1p_q;
+	wire  [2:0]   wire_wrptr_g1p_q;
 	wire  [31:0]   wire_fifo_ram_q_b;
-	reg	[3:0]	delayed_wrptr_g;
-	reg	[3:0]	rdptr_g;
+	reg	[2:0]	delayed_wrptr_g;
+	reg	[2:0]	rdptr_g;
 	(* ALTERA_ATTRIBUTE = {"suppress_da_rule_internal=S102;POWER_UP_LEVEL=LOW"} *)
-	reg	[3:0]	wrptr_g;
+	reg	[2:0]	wrptr_g;
 	wire  [0:0]   wire_rdaclr_q;
-	wire  [3:0]   wire_rs_brp_q;
-	wire  [3:0]   wire_rs_bwp_q;
-	wire  [3:0]   wire_rs_dgwp_q;
-	wire  [3:0]   wire_ws_dgrp_q;
-	wire	[3:0]	wire_rdusedw_sub_dataa;
-	wire	[3:0]	wire_rdusedw_sub_datab;
-	wire	[3:0]	wire_rdusedw_sub_result;
+	wire  [2:0]   wire_rs_brp_q;
+	wire  [2:0]   wire_rs_bwp_q;
+	wire  [2:0]   wire_rs_dgwp_q;
+	wire  [2:0]   wire_ws_dgrp_q;
+	wire	[2:0]	wire_rdusedw_sub_dataa;
+	wire	[2:0]	wire_rdusedw_sub_datab;
+	wire	[2:0]	wire_rdusedw_sub_result;
 	wire  wire_rdempty_eq_comp_aeb;
 	wire  wire_wrfull_eq_comp_aeb;
 	wire  int_rdempty;
 	wire  int_wrfull;
-	wire  [2:0]  ram_address_a;
-	wire  [2:0]  ram_address_b;
+	wire  [1:0]  ram_address_a;
+	wire  [1:0]  ram_address_b;
 	wire  valid_rdreq;
 	wire  valid_wrreq;
-	wire  [3:0]  wrptr_gs;
+	wire  [2:0]  wrptr_gs;
 
 	async_fifo_dap_to_vjtag_a_gray2bin   rdptr_g_gray2bin
 	( 
 	.bin(wire_rdptr_g_gray2bin_bin),
-	.gray(rdptr_g[3:0]));
+	.gray(rdptr_g[2:0]));
 	async_fifo_dap_to_vjtag_a_gray2bin   rs_dgwp_gray2bin
 	( 
 	.bin(wire_rs_dgwp_gray2bin_bin),
-	.gray(wire_rs_dgwp_q[3:0]));
+	.gray(wire_rs_dgwp_q[2:0]));
 	async_fifo_dap_to_vjtag_a_graycounter   rdptr_g1p
 	( 
 	.aclr((~ wire_rdaclr_q)),
@@ -3041,21 +3021,21 @@ module  async_fifo_dap_to_vjtag_dcfifo
 		delayed_wrptr_g = 0;
 	// synopsys translate_on
 	always @ ( posedge wrclk or  posedge aclr)
-		if (aclr == 1'b1) delayed_wrptr_g <= 4'b0;
+		if (aclr == 1'b1) delayed_wrptr_g <= 3'b0;
 		else  delayed_wrptr_g <= wrptr_g;
 	// synopsys translate_off
 	initial
 		rdptr_g = 0;
 	// synopsys translate_on
 	always @ ( posedge rdclk or  negedge wire_rdaclr_q)
-		if (wire_rdaclr_q == 1'b0) rdptr_g <= 4'b0;
+		if (wire_rdaclr_q == 1'b0) rdptr_g <= 3'b0;
 		else if  (valid_rdreq == 1'b1)   rdptr_g <= wire_rdptr_g1p_q;
 	// synopsys translate_off
 	initial
 		wrptr_g = 0;
 	// synopsys translate_on
 	always @ ( posedge wrclk or  posedge aclr)
-		if (aclr == 1'b1) wrptr_g <= 4'b0;
+		if (aclr == 1'b1) wrptr_g <= 3'b0;
 		else if  (valid_wrreq == 1'b1)   wrptr_g <= wire_wrptr_g1p_q;
 	async_fifo_dap_to_vjtag_dffpipe   rdaclr
 	( 
@@ -3106,14 +3086,14 @@ module  async_fifo_dap_to_vjtag_dcfifo
 		int_rdempty = wire_rdempty_eq_comp_aeb,
 		int_wrfull = wire_wrfull_eq_comp_aeb,
 		q = wire_fifo_ram_q_b,
-		ram_address_a = {(wrptr_g[3] ^ wrptr_g[2]), wrptr_g[1:0]},
-		ram_address_b = {(wire_rdptr_g1p_q[3] ^ wire_rdptr_g1p_q[2]), wire_rdptr_g1p_q[1:0]},
+		ram_address_a = {(wrptr_g[2] ^ wrptr_g[1]), wrptr_g[0]},
+		ram_address_b = {(wire_rdptr_g1p_q[2] ^ wire_rdptr_g1p_q[1]), wire_rdptr_g1p_q[0]},
 		rdempty = int_rdempty,
-		rdusedw = {wire_rdusedw_sub_result[2:0]},
+		rdusedw = {wire_rdusedw_sub_result[1:0]},
 		valid_rdreq = (rdreq & (~ (int_rdempty | (~ wire_rdaclr_q)))),
 		valid_wrreq = (wrreq & (~ int_wrfull)),
 		wrfull = int_wrfull,
-		wrptr_gs = {(~ wrptr_g[3]), (~ wrptr_g[2]), wrptr_g[1:0]};
+		wrptr_gs = {(~ wrptr_g[2]), (~ wrptr_g[1]), wrptr_g[0]};
 endmodule //async_fifo_dap_to_vjtag_dcfifo
 //VALID FILE
 
@@ -3141,7 +3121,7 @@ module async_fifo_dap_to_vjtag (
 	input	  wrreq;
 	output	[31:0]  q;
 	output	  rdempty;
-	output	[2:0]  rdusedw;
+	output	[1:0]  rdusedw;
 	output	  wrfull;
 `ifndef ALTERA_RESERVED_QIS
 // synopsys translate_off
@@ -3153,11 +3133,11 @@ module async_fifo_dap_to_vjtag (
 
 	wire [31:0] sub_wire0;
 	wire  sub_wire1;
-	wire [2:0] sub_wire2;
+	wire [1:0] sub_wire2;
 	wire  sub_wire3;
 	wire [31:0] q = sub_wire0[31:0];
 	wire  rdempty = sub_wire1;
-	wire [2:0] rdusedw = sub_wire2[2:0];
+	wire [1:0] rdusedw = sub_wire2[1:0];
 	wire  wrfull = sub_wire3;
 
 	async_fifo_dap_to_vjtag_dcfifo	async_fifo_dap_to_vjtag_dcfifo_component (
@@ -3183,7 +3163,7 @@ endmodule
 // Retrieval info: PRIVATE: AlmostFullThr NUMERIC "-1"
 // Retrieval info: PRIVATE: CLOCKS_ARE_SYNCHRONIZED NUMERIC "0"
 // Retrieval info: PRIVATE: Clock NUMERIC "4"
-// Retrieval info: PRIVATE: Depth NUMERIC "8"
+// Retrieval info: PRIVATE: Depth NUMERIC "4"
 // Retrieval info: PRIVATE: Empty NUMERIC "1"
 // Retrieval info: PRIVATE: Full NUMERIC "1"
 // Retrieval info: PRIVATE: INTENDED_DEVICE_FAMILY STRING "Cyclone V"
@@ -3211,11 +3191,11 @@ endmodule
 // Retrieval info: PRIVATE: wsUsedW NUMERIC "0"
 // Retrieval info: LIBRARY: altera_mf altera_mf.altera_mf_components.all
 // Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "Cyclone V"
-// Retrieval info: CONSTANT: LPM_NUMWORDS NUMERIC "8"
+// Retrieval info: CONSTANT: LPM_NUMWORDS NUMERIC "4"
 // Retrieval info: CONSTANT: LPM_SHOWAHEAD STRING "OFF"
 // Retrieval info: CONSTANT: LPM_TYPE STRING "dcfifo"
 // Retrieval info: CONSTANT: LPM_WIDTH NUMERIC "32"
-// Retrieval info: CONSTANT: LPM_WIDTHU NUMERIC "3"
+// Retrieval info: CONSTANT: LPM_WIDTHU NUMERIC "2"
 // Retrieval info: CONSTANT: OVERFLOW_CHECKING STRING "ON"
 // Retrieval info: CONSTANT: RDSYNC_DELAYPIPE NUMERIC "4"
 // Retrieval info: CONSTANT: READ_ACLR_SYNCH STRING "ON"
@@ -3229,7 +3209,7 @@ endmodule
 // Retrieval info: USED_PORT: rdclk 0 0 0 0 INPUT NODEFVAL "rdclk"
 // Retrieval info: USED_PORT: rdempty 0 0 0 0 OUTPUT NODEFVAL "rdempty"
 // Retrieval info: USED_PORT: rdreq 0 0 0 0 INPUT NODEFVAL "rdreq"
-// Retrieval info: USED_PORT: rdusedw 0 0 3 0 OUTPUT NODEFVAL "rdusedw[2..0]"
+// Retrieval info: USED_PORT: rdusedw 0 0 2 0 OUTPUT NODEFVAL "rdusedw[1..0]"
 // Retrieval info: USED_PORT: wrclk 0 0 0 0 INPUT NODEFVAL "wrclk"
 // Retrieval info: USED_PORT: wrfull 0 0 0 0 OUTPUT NODEFVAL "wrfull"
 // Retrieval info: USED_PORT: wrreq 0 0 0 0 INPUT NODEFVAL "wrreq"
@@ -3241,7 +3221,7 @@ endmodule
 // Retrieval info: CONNECT: @wrreq 0 0 0 0 wrreq 0 0 0 0
 // Retrieval info: CONNECT: q 0 0 32 0 @q 0 0 32 0
 // Retrieval info: CONNECT: rdempty 0 0 0 0 @rdempty 0 0 0 0
-// Retrieval info: CONNECT: rdusedw 0 0 3 0 @rdusedw 0 0 3 0
+// Retrieval info: CONNECT: rdusedw 0 0 2 0 @rdusedw 0 0 2 0
 // Retrieval info: CONNECT: wrfull 0 0 0 0 @wrfull 0 0 0 0
 // Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_vjtag.v TRUE
 // Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_dap_to_vjtag.inc FALSE

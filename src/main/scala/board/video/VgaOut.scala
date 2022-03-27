@@ -124,7 +124,7 @@ class VgaOut(
   // Debug AccessはPPUのDataWriteより優先される
   when(!io.debugAccessReq.rdempty) {
     // 命令をデコードして、Read/WriteをDPRAMに投げる
-    val addr               = DebugAccessCommand.Request.getAddress(io.debugAccessReq.q)
+    val addr               = DebugAccessCommand.Request.getOffset(io.debugAccessReq.q)
     val data               = DebugAccessCommand.Request.getData(io.debugAccessReq.q)
     val (reqType, isValid) = DebugAccessCommand.Request.getRequestType(io.debugAccessReq.q)
 
@@ -181,7 +181,7 @@ class VgaOut(
   // 本cycでReadしていたら、その結果をEnqueueする
   when(ppuFbRdEnReg && !io.debugAccessResp.wrfull) {
     // 応答をQueueに乗せる
-    val data = DebugAccessCommand.Response.encode(io.frameBuffer.ppu.q)
+    val data = DebugAccessCommand.Response.encode(io.frameBuffer.ppu.q) // 上位1byteは未使用だが詰めない
     debugRespEnqueue(data)
   }.otherwise {
     // 応答しない。QueueFullなら結果は捨てる

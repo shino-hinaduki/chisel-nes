@@ -7,7 +7,7 @@ import chisel3._
   */
 class async_fifo_dap_to_vjtag extends BlackBox {
   val dataWidth   = 32
-  val userdwWidth = 3
+  val userdwWidth = 2
 
   val io = IO(new Bundle {
     val aclr    = Input(Bool())               // input	  aclr;
@@ -18,7 +18,7 @@ class async_fifo_dap_to_vjtag extends BlackBox {
     val wrreq   = Input(Bool())               // input	  wrreq;
     val q       = Output(UInt(dataWidth.W))   // output	[31:0]  q;
     val rdempty = Output(Bool())              // output	  rdempty;
-    val rdusedw = Output(UInt(userdwWidth.W)) // output	[2:0]  rdusedw;
+    val rdusedw = Output(UInt(userdwWidth.W)) // output	[1:0]  rdusedw;
     val wrfull  = Output(Bool())              // output	  wrfull;
   })
 }
