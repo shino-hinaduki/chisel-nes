@@ -9,25 +9,29 @@ import chisel3.util.Cat
   */
 class VirtualInstruction extends Bundle {
   /* IR生の値 */
-  val raw = UInt(24.W)
+  val raw = UInt(VirtualInstruction.totalWidth.W)
   /* 正しくParseできていればtrue */
   val isValid = Bool()
   /* 操作するデータ対象 */
   val isWrite = Bool()
   /* DebugAccessPortに対しReadする場合はfalse,Writeする場合はtrue */
   val dataKind = DebugAccessDataKind.Type()
-  /* 操作するデータのベースアドレス。この値はShift-DRを1byteすすめるたびにオートインクリメントする */
-  val baseAddr = UInt(16.W)
+  /* 操作するデータのベースアドレス。この値はShift-DRをすすめるたびにオートインクリメントする */
+  val baseOffset = UInt(VirtualInstruction.baseOffsetWidth.W)
 }
 
 object VirtualInstruction {
+  // IRのbit width
+  val totalWidth = 24
+  // Offset指定可能なビット幅
+  val baseOffsetWidth = 16
 
   /**
     * BaseAddrをParseして取得する
     * @param vir Virtual IRの値
     * @return BaseAddr
     */
-  def getBaseAddr(vir: UInt): UInt = vir(23, 8)
+  def getBaseOffset(vir: UInt): UInt = vir(23, 8)
 
   /**
     * VIRをParseして取得する
@@ -56,11 +60,11 @@ object VirtualInstruction {
   def parse(dst: VirtualInstruction, vir: UInt) = {
     val (dataKind, isValid) = getDataKindAndIsValid(vir)
 
-    dst.raw      := vir
-    dst.baseAddr := getBaseAddr(vir)
-    dst.isWrite  := getIsWrite(vir)
-    dst.dataKind := dataKind
-    dst.isValid  := isValid
+    dst.raw        := vir
+    dst.baseOffset := getBaseOffset(vir)
+    dst.isWrite    := getIsWrite(vir)
+    dst.dataKind   := dataKind
+    dst.isValid    := isValid
   }
 
   /**
@@ -68,10 +72,10 @@ object VirtualInstruction {
     * @param dst 更新対象
     */
   def setInvalid(dst: VirtualInstruction) = {
-    dst.raw      := 0.U(24.W)
-    dst.baseAddr := 0.U(16.W)
-    dst.isWrite  := false.B
-    dst.dataKind := DebugAccessDataKind.invalid
-    dst.isValid  := false.B
+    dst.raw        := 0.U(totalWidth.W)
+    dst.baseOffset := 0.U(baseOffsetWidth.W)
+    dst.isWrite    := false.B
+    dst.dataKind   := DebugAccessDataKind.invalid
+    dst.isValid    := false.B
   }
 }

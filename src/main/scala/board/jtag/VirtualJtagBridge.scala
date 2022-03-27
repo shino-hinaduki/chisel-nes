@@ -17,15 +17,21 @@ import chisel3.util.Cat
   */
 class VirtualJtagBridge extends RawModule {
   // VIRを24bit想定で解釈するため、固定値とする
-  val irWidth = 24.W
+  val irWidth = 24
+  // 指定できるアドレスは24bit空間(IR内の内訳の都合で、バーストしないと17bit目以後は見えない)
+  val offsetWidth = 24
+  // 読み書きは32bit単位で行う。隣接byteとの同時書き換えに不都合があれば上位Xbyteをreservedにする
+  val dataWidth = 32
+  // dataWidth分のデータをシフト状態を取り扱うのに必要なビット幅
+  val shiftCountWidth = log2Up(dataWidth)
   // 命令フォーマットが正しくないときに返す値。どれだけ読み出してもこの値を返し続ける
-  val invalidData: UInt = 0xa5.U
+  val invalidData: UInt = 0x665599aa.U
 
   val io = IO(new Bundle {
     // positive reset
     val rst = Input(Reset())
     // Virtual JTAG IP Coreと接続
-    val vjtag = new VirtualJtagIO(irWidth)
+    val vjtag = new VirtualJtagIO(irWidth.W)
   })
 
   // JTAG TCK Domain
@@ -34,15 +40,15 @@ class VirtualJtagBridge extends RawModule {
     val irInReg = Reg(new VirtualInstruction)
     io.vjtag.ir_out := irInReg.raw // そのまま向けておく
     // Shift DRの制御カウント, 1byte内でのシフト数を指す
-    val shiftCountReg = RegInit(UInt(3.W), 0.U)
+    val shiftCountReg = RegInit(UInt(shiftCountWidth.W), 0.U)
     // Shift DRでアクセスが発生したデータオフセット。irInReg.baseAddr + この値をアクセス先にする
-    val addrOffsetReg = RegInit(UInt(32.W), 0.U)
+    val burstAccessCountReg = RegInit(UInt(offsetWidth.W), 0.U)
     // 入力するデータ
-    val dataInReg     = RegInit(UInt(8.W), 0.U) // 現在TDIからshift inしているデータ
-    val postDataInReg = RegInit(UInt(8.W), 0.U) // (Write命令時のみのデバッグ用。dataInRegで完成した1byteを次1byteが完成するまで保持)
+    val dataInReg     = RegInit(UInt(dataWidth.W), 0.U) // 現在TDIからshift inしているデータ
+    val postDataInReg = RegInit(UInt(dataWidth.W), 0.U) // (Write命令時のみのデバッグ用。dataInRegで完成した1byteを次1byteが完成するまで保持)
     // 出力するデータ
-    val dataOutReg    = RegInit(UInt(8.W), 0.U) // 現在TDOにshift outしているデータ
-    val preDataOutReg = RegInit(UInt(8.W), 0.U) // (Read時にDAPからの結果を格納する。cnt=0で要求を出し、cnt=7までに回収できる想定)
+    val dataOutReg    = RegInit(UInt(dataWidth.W), 0.U) // 現在TDOにshift outしているデータ
+    val preDataOutReg = RegInit(UInt(dataWidth.W), 0.U) // (Read時にDAPからの結果を格納する。cnt=0で要求を出し、cnt=7までに回収できる想定)
 
     // 実際のTDOに出すデータ
     val tdoReg = RegInit(Bool(), false.B)
@@ -52,21 +58,21 @@ class VirtualJtagBridge extends RawModule {
     def resetShiftCount() = {
       shiftCountReg := 0.U
     }
-    // シフト数を指定した値に設定
-    def setShiftCount(count: UInt) = {
-      shiftCountReg := count
-    }
     // シフト数をすすめる
     def incShiftCount() = {
       shiftCountReg := shiftCountReg + 1.U
     }
     // アクセス先オフセットを初期化する
-    def resetAddrOffset() = {
-      addrOffsetReg := 0.U
+    def resetBurstCount() = {
+      burstAccessCountReg := 0.U
+    }
+    // アドレスオフセットを指定値に設定
+    def setBurstCount(count: UInt) = {
+      burstAccessCountReg := count
     }
     // アクセス先オフセットをすすめる
-    def incAddrOffset() = {
-      addrOffsetReg := addrOffsetReg + 1.U
+    def incBurstCount() = {
+      burstAccessCountReg := burstAccessCountReg + 1.U
     }
     // dataInRegをクリアする
     def resetDataInReg() = {
@@ -75,7 +81,7 @@ class VirtualJtagBridge extends RawModule {
     }
     // TDIの値をdataInRegのMSBに取り込みつつ、LSBを破棄
     def shiftDataInReg() = {
-      dataInReg := Cat(io.vjtag.tdi, dataInReg(7, 1))
+      dataInReg := Cat(io.vjtag.tdi, dataInReg(dataWidth - 1, 1))
     }
     // postDataInに値を設定する
     def setPostDataInReg(data: UInt) = {
@@ -90,12 +96,12 @@ class VirtualJtagBridge extends RawModule {
     // dataOutRegのLSBをTDOに移しつつ、右シフト
     def shiftDataOutReg() = {
       tdoReg     := dataOutReg(0)
-      dataOutReg := Cat(false.B, dataOutReg(7, 1))
+      dataOutReg := Cat(false.B, dataOutReg(dataWidth - 1, 1))
     }
     // 1bitはbypassしてtdoRegに直接セットしつつ、次1byteのデータを設定する
     def setDataOutReg(data: UInt) = {
       tdoReg     := data(0)
-      dataOutReg := Cat(false.B, data(7, 1)) // 1bitはBypass済
+      dataOutReg := Cat(false.B, data(dataWidth - 1, 1)) // 1bitはBypass済
     }
     // preDataOutに値を設定する
     def setPreDataOutReg(data: UInt) = {
@@ -115,35 +121,38 @@ class VirtualJtagBridge extends RawModule {
       // Capture_DR
     }.elsewhen(io.vjtag.virtual_state_sdr) {
       // Shift_DR
-      when(shiftCountReg < 7.U) {
-        // 0~6回目: 種別問わずシフトを進める
+      when(shiftCountReg < (dataWidth - 1).U) {
+        // 0~30回目: 種別問わずシフトを進める
         incShiftCount()
         shiftDataInReg()
         shiftDataOutReg()
       }.otherwise {
-        // 7回目(tdi/tdoには8bit目のデータがあって、1byte分終わる状態)
+        // 31回目(tdi/tdoには32bit目のデータがあって、1word分終わる状態)
 
         // tdi + dataInRegでWriteDataは完成
-        val writeData = Cat(io.vjtag.tdi, dataInReg(7, 1))
+        val writeData = Cat(io.vjtag.tdi, dataInReg(dataWidth - 1, 1))
 
         // R/W/Invalidで処理が分岐
         when(irInReg.isValid) {
+          // IRで指定できる baseOffset は下位16bit分だけなので、カウントと足し合わせる前に拡張する
+          val baseOffset = Cat(0.U((offsetWidth - VirtualInstruction.baseOffsetWidth).W), irInReg.baseOffset)
+          val burstCount = baseOffset + burstAccessCountReg
           when(irInReg.isWrite) {
             // Write: shiftはしておくものの、最後のTDIのデータをBypassしてデータを完成させ、Write要求を出す
-            reqWriteToDap(irInReg.dataKind, irInReg.baseAddr + addrOffsetReg, writeData)
+            reqWriteToDap(irInReg.dataKind, burstCount, writeData)
             // Read Dataのregもとりあえず処理はしておく
             shiftDataOutReg()
           }.otherwise {
             // Read: 次のデータをtdo/dataOutにセットしつつ、更に1byte先のRead要求を出す
             setDataOutReg(preDataOutReg)
             // 次回データ用にRead
-            reqReadToDap(irInReg.dataKind, irInReg.baseAddr + addrOffsetReg)
+            reqReadToDap(irInReg.dataKind, burstCount)
           }
           // 共通の後処理
           setPostDataInReg(writeData) // postDataInにも記録しておく(実質デバッグ用)
           shiftDataInReg()            // 利用済で使わないと思うが、進めておく(本cycでDataInRegが完成)
           resetShiftCount()           // 0bit目に戻る
-          incAddrOffset()             // R/W先は次のアドレスにすすめる
+          incBurstCount()             // R/W先は次のアドレスにすすめる
         }.otherwise {
           // Invalid: Readに同じくだが、Invalidな値の入ったpreDataOutRegを使い続ける
           setPostDataInReg(writeData) // postDataInにも記録しておく(実質デバッグ用)
@@ -170,29 +179,29 @@ class VirtualJtagBridge extends RawModule {
 
       // まだirInRegには書き込まれていないので、今回の判断用に自前Parseしておく
       val (dataKind, isValid) = VirtualInstruction.getDataKindAndIsValid(io.vjtag.ir_in)
-      val baseAddr            = VirtualInstruction.getBaseAddr(io.vjtag.ir_in)
+      val baseOffset          = VirtualInstruction.getBaseOffset(io.vjtag.ir_in)
       val isWrite             = VirtualInstruction.getIsWrite(io.vjtag.ir_in)
 
       // 初期データの準備を行う
       when(isValid) {
         when(isWrite) {
           // Write: 1byte書くごとに発行するので何もしない, ReadできるデータにはInvalidを埋めておく
-          resetAddrOffset()
+          resetBurstCount()
           resetDataInReg()
           setDataOutReg(invalidData)    // Read相当で取り扱うが、ReadせずInvalidDataを返す
           setPreDataOutReg(invalidData) // 以後もこのデータを読み出す
           resetShiftCount()
         }.otherwise {
           // Read: 最初に読み出すデータを準備しておく
-          resetAddrOffset()
+          setBurstCount(1.U) // 初回のReadを出すので、1word分進めておく
           resetDataInReg()
           resetDataOutReg()
-          reqReadToDap(dataKind, baseAddr) // Shift-DRまでに回収して、初回のTDOをセットする想定
-          setShiftCount(1.U)               // 初回のReadを出すので、1byte進めておく
+          reqReadToDap(dataKind, baseOffset) // Shift-DRまでに回収して、初回のTDOをセットする想定
+          resetShiftCount()
         }
       }.otherwise {
         // Invalid: dataOutRegには無効データを埋めておく
-        resetAddrOffset()
+        resetBurstCount()
         resetDataInReg()
         setDataOutReg(invalidData)    // Read相当で取り扱うが、ReadせずInvalidDataを返す
         setPreDataOutReg(invalidData) // 以後もこのデータを読み出す
