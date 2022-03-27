@@ -170,15 +170,29 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             const byte VJTAG_USER0 = 0x0c;
             jtag.WriteShiftIr(VJTAG_USER0);
             jtag.MoveShiftIrToShiftDr();
-            var testReadData = jtag.ReadShiftDr(1);
+            var testReadData = jtag.ReadShiftDr(16);
             jtag.MoveShiftDrToShiftIr();
 
             // test終了
             Assert.IsTrue(jtag.Close());
 
             // 期待値確認
-            Assert.AreEqual(testReadData[0], (byte)0xa5);
-
+            Assert.AreEqual(testReadData[0], (byte)0xaa);
+            Assert.AreEqual(testReadData[1], (byte)0x99);
+            Assert.AreEqual(testReadData[2], (byte)0x55);
+            Assert.AreEqual(testReadData[3], (byte)0x66);
+            Assert.AreEqual(testReadData[4], (byte)0xaa);
+            Assert.AreEqual(testReadData[5], (byte)0x99);
+            Assert.AreEqual(testReadData[6], (byte)0x55);
+            Assert.AreEqual(testReadData[7], (byte)0x66);
+            Assert.AreEqual(testReadData[8], (byte)0xaa);
+            Assert.AreEqual(testReadData[9], (byte)0x99);
+            Assert.AreEqual(testReadData[10], (byte)0x55);
+            Assert.AreEqual(testReadData[11], (byte)0x66);
+            Assert.AreEqual(testReadData[12], (byte)0xaa);
+            Assert.AreEqual(testReadData[13], (byte)0x99);
+            Assert.AreEqual(testReadData[14], (byte)0x55);
+            Assert.AreEqual(testReadData[15], (byte)0x66);
         }
 
         /// <summary>
@@ -208,14 +222,29 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             const byte VJTAG_USER0 = 0x0c;
             jtag.WriteShiftIr(VJTAG_USER0);
             jtag.MoveShiftIrToShiftDr();
-            var testReadData = jtag.ReadShiftDr(1);
+            var testReadData = jtag.ReadShiftDr(16);
             jtag.MoveShiftDrToShiftIr();
 
             // test終了
             Assert.IsTrue(jtag.Close());
 
             // 期待値確認
-            Assert.AreEqual(testReadData[0], (byte)0xa5);
+            Assert.AreEqual(testReadData[0], (byte)0xaa);
+            Assert.AreEqual(testReadData[1], (byte)0x99);
+            Assert.AreEqual(testReadData[2], (byte)0x55);
+            Assert.AreEqual(testReadData[3], (byte)0x66);
+            Assert.AreEqual(testReadData[4], (byte)0xaa);
+            Assert.AreEqual(testReadData[5], (byte)0x99);
+            Assert.AreEqual(testReadData[6], (byte)0x55);
+            Assert.AreEqual(testReadData[7], (byte)0x66);
+            Assert.AreEqual(testReadData[8], (byte)0xaa);
+            Assert.AreEqual(testReadData[9], (byte)0x99);
+            Assert.AreEqual(testReadData[10], (byte)0x55);
+            Assert.AreEqual(testReadData[11], (byte)0x66);
+            Assert.AreEqual(testReadData[12], (byte)0xaa);
+            Assert.AreEqual(testReadData[13], (byte)0x99);
+            Assert.AreEqual(testReadData[14], (byte)0x55);
+            Assert.AreEqual(testReadData[15], (byte)0x66);
 
         }
     }
