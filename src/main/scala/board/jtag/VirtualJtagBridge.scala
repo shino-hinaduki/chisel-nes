@@ -29,13 +29,13 @@ class VirtualJtagBridge extends RawModule {
 
   val io = IO(new Bundle {
     // positive reset
-    val rst = Input(Reset())
+    val reset = Input(Reset())
     // Virtual JTAG IP Coreと接続
     val vjtag = new VirtualJtagIO(irWidth.W)
   })
 
   // JTAG TCK Domain
-  withClockAndReset(io.vjtag.tck, io.rst) {
+  withClockAndReset(io.vjtag.tck, io.reset) {
     // 現在キャプチャされている命令
     val irInReg = Reg(new VirtualInstruction)
     io.vjtag.ir_out := irInReg.raw // そのまま向けておく
