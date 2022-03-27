@@ -14,7 +14,6 @@ import board.video.types.VgaIO
 import board.ram.types.AsyncFifoDequeueIO
 import board.ram.types.AsyncFifoEnqueueIO
 import board.access.types.InternalAccessCommand
-import board.access.types.InternalAccessCommandSlaveIO
 
 /**
   * PPUからの映像出力をFrameBufferにため、FrameBufferから映像を出力する
@@ -46,7 +45,7 @@ class VgaOut(
     // PPUからの映像出力を受け取る
     val ppuVideoOut = Flipped(new PpuOutIO())
     // 外部デバッグ用のRAM Control命令。ppuClock Domainで駆動する。 ppuVideoOutより優先される
-    val debugAccess = new InternalAccessCommandSlaveIO
+    val debugAccess = new InternalAccessCommand.SlaveIO
 
     // trueならテスト信号を出力する。pixelClockに同期して読み出される
     val isDebug = Input(Bool())

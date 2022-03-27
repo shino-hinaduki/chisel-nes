@@ -11,7 +11,6 @@ import board.jtag.types.VirtualInstruction
 import board.ram.types.AsyncFifoDequeueIO
 import board.ram.types.AsyncFifoEnqueueIO
 import board.access.types.InternalAccessCommand
-import board.access.types.InternalAccessCommandMasterIO
 
 /**
   * Virtual JTAG Intel(R) FPGA IP Coreと接続し、DebugAccessPortとの接続を行う
@@ -32,7 +31,7 @@ class VirtualJtagBridge extends RawModule {
     // Virtual JTAG IP Coreと接続
     val vjtag = new VirtualJtagIO(VirtualInstruction.totalWidth.W)
     // DebugAccess要求先
-    val debugAccessQueues = Vec(VirtualInstruction.AccessTarget.all.length, new InternalAccessCommandMasterIO)
+    val debugAccessQueues = Vec(VirtualInstruction.AccessTarget.all.length, new InternalAccessCommand.MasterIO)
   })
 
   // JTAG TCK Domain

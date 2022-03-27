@@ -4,6 +4,9 @@ import chisel3._
 import chisel3.experimental.ChiselEnum
 import chisel3.util.Cat
 
+import board.ram.types.AsyncFifoEnqueueIO
+import board.ram.types.AsyncFifoDequeueIO
+
 /**
   * Virtual JTAG Bridgeなどから、R/W要求を出すときとその応答の定義
   */
@@ -122,4 +125,39 @@ object InternalAccessCommand {
       */
     def getData(rawData: UInt): UInt = rawData(dataPosH, dataPosL)
   }
+
+  /**
+  * 外部からのデータ読み書き向けの要求/応答Queue制御
+  * AsyncFIFOで分断することを想定
+  */
+  class MasterIO extends Bundle {
+
+    /**
+    * 要求Queue
+    */
+    val req = Flipped(new AsyncFifoEnqueueIO(InternalAccessCommand.Request.cmdWidth))
+
+    /**
+    * 応答Queue
+    */
+    val resp = Flipped(new AsyncFifoDequeueIO(InternalAccessCommand.Response.cmdWidth))
+  }
+
+  /**
+  * 外部からのデータ読み書き向けの要求受信/応答返却Queue制御
+  * AsyncFIFOで分断することを想定
+  */
+  class SlaveIO extends Bundle {
+
+    /**
+    * 要求Queue
+    */
+    val req = Flipped(new AsyncFifoDequeueIO(InternalAccessCommand.Request.cmdWidth))
+
+    /**
+    * 応答Queue
+    */
+    val resp = Flipped(new AsyncFifoEnqueueIO(InternalAccessCommand.Response.cmdWidth))
+  }
+
 }
