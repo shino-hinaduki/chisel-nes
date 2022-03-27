@@ -14,6 +14,7 @@ import board.video.types.VgaIO
 import board.ram.types.AsyncFifoDequeueIO
 import board.ram.types.AsyncFifoEnqueueIO
 import board.access.types.InternalAccessCommand
+import board.access.types.InternalAccessCommandSlaveIO
 
 /**
   * PPUからの映像出力をFrameBufferにため、FrameBufferから映像を出力する
@@ -44,10 +45,8 @@ class VgaOut(
   val io = IO(new Bundle {
     // PPUからの映像出力を受け取る
     val ppuVideoOut = Flipped(new PpuOutIO())
-    // 外部デバッグ用のRAM Control信号を受け取る。ppuClock Domainで駆動する。 ppuVideoOutより優先される
-    val debugAccessReq = new AsyncFifoDequeueIO(InternalAccessCommand.Request.cmdWidth)
-    // debugAccessReqでReadを行った場合に応答を乗せる。ppuClock Domainで駆動する
-    val debugAccessResp = new AsyncFifoEnqueueIO(InternalAccessCommand.Response.cmdWidth)
+    // 外部デバッグ用のRAM Control命令。ppuClock Domainで駆動する。 ppuVideoOutより優先される
+    val debugAccess = new InternalAccessCommandSlaveIO
 
     // trueならテスト信号を出力する。pixelClockに同期して読み出される
     val isDebug = Input(Bool())
@@ -109,8 +108,8 @@ class VgaOut(
 
   // DebugAccessReq(AsyncFIFO) -> DPRAM
   val debugAccessReqDequeueReg = RegInit(Bool(), false.B)
-  io.debugAccessReq.rdclk := clock
-  io.debugAccessReq.rdreq := debugAccessReqDequeueReg
+  io.debugAccess.req.rdclk := clock
+  io.debugAccess.req.rdreq := debugAccessReqDequeueReg
 
   // Dequeueしない
   def debugReqNop() = {
@@ -122,11 +121,11 @@ class VgaOut(
   }
 
   // Debug AccessはPPUのDataWriteより優先される
-  when(!io.debugAccessReq.rdempty) {
+  when(!io.debugAccess.req.rdempty) {
     // 命令をデコードして、Read/WriteをDPRAMに投げる
-    val addr               = InternalAccessCommand.Request.getOffset(io.debugAccessReq.q)
-    val data               = InternalAccessCommand.Request.getData(io.debugAccessReq.q)
-    val (reqType, isValid) = InternalAccessCommand.Request.getRequestType(io.debugAccessReq.q)
+    val addr               = InternalAccessCommand.Request.getOffset(io.debugAccess.req.q)
+    val data               = InternalAccessCommand.Request.getData(io.debugAccess.req.q)
+    val (reqType, isValid) = InternalAccessCommand.Request.getRequestType(io.debugAccess.req.q)
 
     when(isValid) {
       when(reqType === InternalAccessCommand.Type.read) {
@@ -163,9 +162,9 @@ class VgaOut(
   // DPRAM -> DebugAccessResp(AsyncFIFO)
   val debugAccessRespDataReg    = RegInit(UInt(InternalAccessCommand.Response.cmdWidth.W), 0.U)
   val debugAccessRespEnqueueReg = RegInit(Bool(), false.B)
-  io.debugAccessResp.wrclk := clock
-  io.debugAccessResp.data  := debugAccessRespDataReg
-  io.debugAccessResp.wrreq := debugAccessRespEnqueueReg
+  io.debugAccess.resp.wrclk := clock
+  io.debugAccess.resp.data  := debugAccessRespDataReg
+  io.debugAccess.resp.wrreq := debugAccessRespEnqueueReg
 
   // Enqueueしない
   def debugRespNop() = {
@@ -179,7 +178,7 @@ class VgaOut(
   }
 
   // 本cycでReadしていたら、その結果をEnqueueする
-  when(ppuFbRdEnReg && !io.debugAccessResp.wrfull) {
+  when(ppuFbRdEnReg && !io.debugAccess.resp.wrfull) {
     // 応答をQueueに乗せる
     val data = InternalAccessCommand.Response.encode(io.frameBuffer.ppu.q) // 上位1byteは未使用だが詰めない
     debugRespEnqueue(data)

@@ -8,6 +8,9 @@ import board.jtag.types.VirtualInstruction
 
 import chisel3.util.log2Up
 import chisel3.util.Cat
+import board.ram.types.AsyncFifoDequeueIO
+import board.ram.types.AsyncFifoEnqueueIO
+import board.access.types.InternalAccessCommand
 
 /**
   * Virtual JTAG Intel(R) FPGA IP Coreと接続し、DebugAccessPortとの接続を行う
@@ -30,11 +33,15 @@ class VirtualJtagBridge extends RawModule {
     val reset = Input(Reset())
     // Virtual JTAG IP Coreと接続
     val vjtag = new VirtualJtagIO(irWidth.W)
-    // PPU映像出力のキャプチャ及び書き換え用
+
+    // PPU画面出力関連の要求/応答
   })
 
   // JTAG TCK Domain
   withClockAndReset(io.vjtag.tck, io.reset) {
+
+    /******************************************************************************/
+    /* JTAG制御関連                                                               */
     // 現在キャプチャされている命令
     val irInReg = Reg(new VirtualInstruction)
     io.vjtag.ir_out := irInReg.raw // そのまま向けておく
@@ -106,6 +113,10 @@ class VirtualJtagBridge extends RawModule {
     def setPreDataOutReg(data: UInt) = {
       preDataOutReg := data
     }
+
+    /******************************************************************************/
+    /* Access対象制御関連                                                          */
+
     // ReadをDAPに投げる
     def reqReadToDap(accessTarget: VirtualInstruction.AccessTarget.Type, addr: UInt) = {
       // TODO: AsyncFIFO経由でDAPに要求を出す
@@ -116,6 +127,8 @@ class VirtualJtagBridge extends RawModule {
       // TODO: AsyncFIFO経由でDAPに要求を出す
     }
 
+    /******************************************************************************/
+    /* VJTAG制御実体                                                              */
     when(io.vjtag.virtual_state_cdr) {
       // Capture_DR
     }.elsewhen(io.vjtag.virtual_state_sdr) {
