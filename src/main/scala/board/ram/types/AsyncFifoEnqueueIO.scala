@@ -28,9 +28,4 @@ class AsyncFifoEnqueueIO(val dataWidth: Int) extends Bundle {
     * Queue Full
     */
   val wrfull = Output(Bool())
-
-  /**
-    * Queue Remain
-    */
-  val wrusedw = Output(UInt(dataWidth.W))
 }

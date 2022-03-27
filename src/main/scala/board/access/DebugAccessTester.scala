@@ -19,7 +19,7 @@ object TestMode extends ChiselEnum {
   */
 class DebugAccessTester(val counterWidth: Int = 32) extends Module {
   // このアドレスへのWriteはTestMode切り替えとみなす
-  val modeOffset = 0xffffffff.U
+  val modeOffset = 0x55555555.U
   // 適切なモードを指定せずにReadした場合の値
   val invalidData = 0x01234567.U
 
@@ -45,7 +45,7 @@ class DebugAccessTester(val counterWidth: Int = 32) extends Module {
 
   // Reqに積まれたコマンドを処理して、処理したcyc中に応答を積む
   // Write時/Read時の処理はmodeに委ねられていて、counterの値を返す、要求アドレスをそのまま返す。など
-  // 0xffffffff への Write だけは特別扱いになっており、modeの値を上書きする
+  // 0x55555555 への Write だけは特別扱いになっており、modeの値を上書きする
   when(!io.debugAccess.req.rdempty) {
     // Dequeue
     val offset             = InternalAccessCommand.Request.getOffset(io.debugAccess.req.q)
@@ -79,7 +79,10 @@ class DebugAccessTester(val counterWidth: Int = 32) extends Module {
     }.elsewhen(reqType === InternalAccessCommand.Type.write) {
       // Write CMD
       when(offset === modeOffset) {
-        testModeReg    := data // Update Mode
+        val (mode, isValid) = TestMode.safe(data(TestMode.getWidth - 1, 0))
+        when(isValid) {
+          testModeReg := mode // Update Mode
+        }
         dequeueReg     := true.B
         enqueueReg     := false.B
         enqueueDataReg := DontCare

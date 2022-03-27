@@ -15,6 +15,9 @@ import board.ip.pll_vga
 import board.ip.dpram_framebuffer
 import board.discrete.Debounce
 import board.jtag.types.VirtualInstruction
+import board.access.DebugAccessTester
+import board.ip.async_fifo_vjtag_to_dap
+import board.ip.async_fifo_dap_to_vjtag
 
 /** 
  * Top Module
@@ -108,17 +111,12 @@ class ChiselNes extends RawModule {
   LEDR := ledArrayReg
 
   /**********************************************************************/
-  /* VGA Output                                                         */
-  // Framebuffer, 本家仕様の通りDoubleBufferにはしない
-  // val frameBuffer = Module(new dpram_framebuffer)
-
-  /**********************************************************************/
   /* Virtual JTAG                                                       */
   val vjtagIp           = Module(new virtual_jtag)
   val virtualJtagBridge = withClockAndReset(vjtagIp.io.tck, reset) { Module(new VirtualJtagBridge) }
   virtualJtagBridge.io.reset <> reset
   virtualJtagBridge.io.vjtag <> vjtagIp.io
-  virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.accessTest.litValue.toInt) <> DontCare
+  // virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.accessTest.litValue.toInt) <> DontCare
   virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.cpu.litValue.toInt) <> DontCare
   virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.ppu.litValue.toInt) <> DontCare
   virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.apu.litValue.toInt) <> DontCare
@@ -128,6 +126,44 @@ class ChiselNes extends RawModule {
   virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.ppuBusMaster.litValue.toInt) <> DontCare
   virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.audio.litValue.toInt) <> DontCare
 
+  /**********************************************************************/
+  /* Debug Access Tester                                                */
+  val debugAccessTester = withClockAndReset(CLOCK_50, reset) { Module(new DebugAccessTester()) }
+
+  // TODO: 接続しやすいUtilを用意する...。
+  val vjtagToDatQueue = Module(new async_fifo_vjtag_to_dap)
+  val datToVjtagQueue = Module(new async_fifo_dap_to_vjtag)
+  // debug: queue remain
+  // vjtagToDatQueue.io.wrusedw <> DontCare
+  // datToVjtagQueue.io.rdusedw <> DontCare
+  // req: vjtag -> fifo
+  vjtagToDatQueue.io.data <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.accessTest.litValue.toInt).req.data
+  vjtagToDatQueue.io.wrclk <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.accessTest.litValue.toInt).req.wrclk
+  vjtagToDatQueue.io.wrreq <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.accessTest.litValue.toInt).req.wrreq
+  vjtagToDatQueue.io.wrfull <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.accessTest.litValue.toInt).req.wrfull
+  // req: fifo -> dat
+  vjtagToDatQueue.io.rdclk <> debugAccessTester.io.debugAccess.req.rdclk
+  vjtagToDatQueue.io.rdreq <> debugAccessTester.io.debugAccess.req.rdreq
+  vjtagToDatQueue.io.q <> debugAccessTester.io.debugAccess.req.q
+  vjtagToDatQueue.io.rdempty <> debugAccessTester.io.debugAccess.req.rdempty
+  // resp: dat -> fifo
+  datToVjtagQueue.io.data <> debugAccessTester.io.debugAccess.resp.data
+  datToVjtagQueue.io.wrclk <> debugAccessTester.io.debugAccess.resp.wrclk
+  datToVjtagQueue.io.wrreq <> debugAccessTester.io.debugAccess.resp.wrreq
+  datToVjtagQueue.io.wrfull <> debugAccessTester.io.debugAccess.resp.wrfull
+  // resp: fifo -> vjtag
+  datToVjtagQueue.io.rdclk <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.accessTest.litValue.toInt).resp.rdclk
+  datToVjtagQueue.io.rdreq <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.accessTest.litValue.toInt).resp.rdreq
+  datToVjtagQueue.io.q <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.accessTest.litValue.toInt).resp.q
+  datToVjtagQueue.io.rdempty <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.accessTest.litValue.toInt).resp.rdempty
+
+  /**********************************************************************/
+  /* VGA Output                                                         */
+  // Framebuffer, 本家仕様の通りDoubleBufferにはしない
+  // val frameBuffer = Module(new dpram_framebuffer)
+
+  /**********************************************************************/
+  /* Test                                                               */
   // クロック跨いでるけどテスト回路だからいいとする...
   when(SW === 0.U) {
     //7segにカウンタの値を出す
@@ -159,6 +195,15 @@ class ChiselNes extends RawModule {
         vjtagIp.io.tdi,
         vjtagIp.io.tck.asBool
       )
+    }
+  }.elsewhen(SW === 2.U) {
+    // 7segにDebugAccessTesterのカウンタ値を出す
+    withClockAndReset(CLOCK_50, reset) {
+      // ir_inの値そのまま
+      numReg        := debugAccessTester.io.debugCounter
+      numVisibleReg := true.B
+      // 適当に流れるようにする
+      ledArrayReg := (1.U(10.W) << debugAccessTester.io.debugCounter(3, 0))
     }
   }.otherwise {
     // 7seg消灯。SWの値をそのままLEDRに出す
