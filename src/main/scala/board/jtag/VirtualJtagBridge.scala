@@ -116,8 +116,8 @@ class VirtualJtagBridge extends RawModule {
     // 要求時のOffset/Data/Type
     val debugAccessReqDataReg = RegInit(UInt(InternalAccessCommand.Request.cmdWidth.W), 0.U)
     // Enqueue/Dequeue Req(Port分だけ生成)
-    val debugAccessReqWrEnRegs  = RegInit(UInt(io.debugAccessQueues.size.W), 0.U)
-    val debugAccessRespRdEnRegs = RegInit(UInt(io.debugAccessQueues.size.W), 0.U)
+    val debugAccessReqWrEnRegs  = RegInit(VecInit(Seq.fill(io.debugAccessQueues.size)(false.B)))
+    val debugAccessRespRdEnRegs = RegInit(VecInit(Seq.fill(io.debugAccessQueues.size)(false.B)))
     // 初回のRead要求の場合、直接DataOutRegに設定してもう一度Readを発行する
     val debugAccessFirstReadReg = RegInit(Bool(), false.B)
     // Read結果を捨てた場合のステ先。非ゼロだと不具合だとわかるので一応残しておく
@@ -155,23 +155,26 @@ class VirtualJtagBridge extends RawModule {
             setPreDataOutReg(readData)
           }
           // Dequeueするのでこのcycはててておく
-          debugAccessRespRdEnRegs.bitSet(index.U, true.B)
+          debugAccessRespRdEnRegs(index) := true.B
         }.otherwise {
           // このQueueにはRead要求がないので落としておく
-          debugAccessRespRdEnRegs.bitSet(index.U, false.B)
+          debugAccessRespRdEnRegs(index) := false.B
         }
       }
     }
 
     // Enqueue要求をクリア
     def clearReqToInternal() = {
-      debugAccessReqDataReg  := DontCare
-      debugAccessReqWrEnRegs := 0.U
+      debugAccessReqDataReg := DontCare
+      // 全部落とす
+      debugAccessReqWrEnRegs.foreach(r => {
+        r := false.B
+      })
     }
     // ReqQueueにEnqueueする
     def setReqToInternal(index: UInt, reqData: UInt) = {
-      debugAccessReqDataReg := reqData
-      debugAccessReqWrEnRegs.bitSet(index, true.B)
+      debugAccessReqDataReg         := reqData
+      debugAccessReqWrEnRegs(index) := true.B
     }
 
     // Read Cmdを対象のQueueに発行する
