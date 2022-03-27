@@ -3,17 +3,16 @@ package top
 import chisel3._
 import chisel3.util.Cat
 import chisel3.util.MuxLookup
+import chisel3.experimental.Analog
 
 import board.discrete.SevenSegmentLed
 import board.jtag.VirtualJtagBridge
 import board.jtag.types.VirtualJtagIO
 
-import support.DebugAccessPort
 import board.ip.virtual_jtag
 import board.ip.pll_sysclk
 import board.ip.pll_vga
 import board.ip.dpram_framebuffer
-import chisel3.experimental.Analog
 import board.discrete.Debounce
 
 /** 
@@ -74,7 +73,7 @@ class ChiselNes extends RawModule {
   /**********************************************************************/
   /* Board Component & IP                                               */
   val clk50Mhz = CLOCK_50
-  val rst      = !RESET_N
+  val reset    = !RESET_N
 
   // NES関連のClock
   val pllSysClk = Module(new pll_sysclk)
@@ -90,9 +89,9 @@ class ChiselNes extends RawModule {
 
   /**********************************************************************/
   /* 7SEG LED                                                           */
-  val sevenSegmentLed = withClockAndReset(CLOCK_50, rst) { Module(new SevenSegmentLed()) }
-  val numVisibleReg   = withClockAndReset(CLOCK_50, rst) { RegInit(Bool(), true.B) }
-  val numReg          = withClockAndReset(CLOCK_50, rst) { RegInit(UInt(24.W), 0.U) }
+  val sevenSegmentLed = withClockAndReset(CLOCK_50, reset) { Module(new SevenSegmentLed()) }
+  val numVisibleReg   = withClockAndReset(CLOCK_50, reset) { RegInit(Bool(), true.B) }
+  val numReg          = withClockAndReset(CLOCK_50, reset) { RegInit(UInt(24.W), 0.U) }
   HEX0                         := sevenSegmentLed.io.digitsOut(0)
   HEX1                         := sevenSegmentLed.io.digitsOut(1)
   HEX2                         := sevenSegmentLed.io.digitsOut(2)
@@ -104,7 +103,7 @@ class ChiselNes extends RawModule {
 
   /**********************************************************************/
   /* LED Array                                                          */
-  val ledArrayReg = withClockAndReset(CLOCK_50, rst) { RegInit(UInt(10.W), 0.U) }
+  val ledArrayReg = withClockAndReset(CLOCK_50, reset) { RegInit(UInt(10.W), 0.U) }
   LEDR := ledArrayReg
 
   /**********************************************************************/
@@ -115,14 +114,14 @@ class ChiselNes extends RawModule {
   /**********************************************************************/
   /* Virtual JTAG                                                       */
   val vjtagIp           = Module(new virtual_jtag)
-  val virtualJtagBridge = withClockAndReset(vjtagIp.io.tck, rst) { Module(new VirtualJtagBridge) }
-  virtualJtagBridge.io.rst <> rst
+  val virtualJtagBridge = withClockAndReset(vjtagIp.io.tck, reset) { Module(new VirtualJtagBridge) }
+  virtualJtagBridge.io.reset <> reset
   virtualJtagBridge.io.vjtag <> vjtagIp.io
 
   // クロック跨いでるけどテスト回路だからいいとする...
   when(SW === 0.U) {
     //7segにカウンタの値を出す
-    withClockAndReset(CLOCK_50, rst) {
+    withClockAndReset(CLOCK_50, reset) {
       val counter = RegInit(UInt(64.W), 0.U)
       counter := counter + 1.U
       // カウンタの値そのまま
@@ -133,7 +132,7 @@ class ChiselNes extends RawModule {
     }
   }.elsewhen(SW === 1.U) {
     // 7segにVJTAGのVIRの値を出す
-    withClockAndReset(vjtagIp.io.tck, rst) {
+    withClockAndReset(vjtagIp.io.tck, reset) {
       // ir_inの値そのまま
       numReg        := vjtagIp.io.ir_in
       numVisibleReg := true.B
@@ -153,7 +152,7 @@ class ChiselNes extends RawModule {
     }
   }.otherwise {
     // 7seg消灯。SWの値をそのままLEDRに出す
-    withClockAndReset(CLOCK_50, rst) {
+    withClockAndReset(CLOCK_50, reset) {
       // 消灯
       numReg        := 0x123456.U
       numVisibleReg := false.B

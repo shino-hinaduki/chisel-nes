@@ -1,14 +1,13 @@
-package board.jtag.types
+package board.access.types
 
 import chisel3._
 import chisel3.experimental.ChiselEnum
 import chisel3.util.Cat
 
 /**
-  * Virtual JTAG BridgeからR/W要求を出すときとその応答の定義
-  * (VJTAG以外から出すことがあれば、この定義は移動したほうが良い)
+  * Virtual JTAG Bridgeなどから、R/W要求を出すときとその応答の定義
   */
-object DebugAccessCommand {
+object InternalAccessCommand {
 
   /**
     * 要求種類。R/W以外にReset/Echoなどが必要になるケースに備えてenumにしておく
@@ -51,7 +50,7 @@ object DebugAccessCommand {
       * @param request 要求の種類
       * @param offset 要求アドレス
       * @param data データ
-      * @return { request 8bit, offset 32bit, }
+      * @return { request 8bit, offset 24bit, data 32bit }
       */
     def encode(request: Type.Type, offset: UInt, data: UInt): UInt =
       Cat(request.asUInt(requestTypeWidth - 1, 0), offset(offsetWidth - 1, 0), data(dataWidth - 1, 0))

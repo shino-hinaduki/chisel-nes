@@ -6,8 +6,6 @@ import chisel3.internal.firrtl.Width
 import board.jtag.types.VirtualJtagIO
 import board.jtag.types.VirtualInstruction
 
-import support.types.DebugAccessDataKind
-import support.types.DebugAccessIO
 import chisel3.util.log2Up
 import chisel3.util.Cat
 
@@ -32,6 +30,7 @@ class VirtualJtagBridge extends RawModule {
     val reset = Input(Reset())
     // Virtual JTAG IP Coreと接続
     val vjtag = new VirtualJtagIO(irWidth.W)
+    // PPU映像出力のキャプチャ及び書き換え用
   })
 
   // JTAG TCK Domain
@@ -108,12 +107,12 @@ class VirtualJtagBridge extends RawModule {
       preDataOutReg := data
     }
     // ReadをDAPに投げる
-    def reqReadToDap(kind: DebugAccessDataKind.Type, addr: UInt) = {
+    def reqReadToDap(accessTarget: VirtualInstruction.AccessTarget.Type, addr: UInt) = {
       // TODO: AsyncFIFO経由でDAPに要求を出す
     }
     // TODO: Read応答が来たものを preDataOutRegに格納する(shiftCountReg===1.UならバラしてTDOにもセットする)
     // WriteをDAPに投げる
-    def reqWriteToDap(kind: DebugAccessDataKind.Type, addr: UInt, data: UInt) = {
+    def reqWriteToDap(accessTarget: VirtualInstruction.AccessTarget.Type, addr: UInt, data: UInt) = {
       // TODO: AsyncFIFO経由でDAPに要求を出す
     }
 
@@ -139,14 +138,14 @@ class VirtualJtagBridge extends RawModule {
           val burstCount = baseOffset + burstAccessCountReg
           when(irInReg.isWrite) {
             // Write: shiftはしておくものの、最後のTDIのデータをBypassしてデータを完成させ、Write要求を出す
-            reqWriteToDap(irInReg.dataKind, burstCount, writeData)
+            reqWriteToDap(irInReg.accessTarget, burstCount, writeData)
             // Read Dataのregもとりあえず処理はしておく
             shiftDataOutReg()
           }.otherwise {
             // Read: 次のデータをtdo/dataOutにセットしつつ、更に1byte先のRead要求を出す
             setDataOutReg(preDataOutReg)
             // 次回データ用にRead
-            reqReadToDap(irInReg.dataKind, burstCount)
+            reqReadToDap(irInReg.accessTarget, burstCount)
           }
           // 共通の後処理
           setPostDataInReg(writeData) // postDataInにも記録しておく(実質デバッグ用)
@@ -178,9 +177,9 @@ class VirtualJtagBridge extends RawModule {
       VirtualInstruction.parse(irInReg, io.vjtag.ir_in)
 
       // まだirInRegには書き込まれていないので、今回の判断用に自前Parseしておく
-      val (dataKind, isValid) = VirtualInstruction.getDataKindAndIsValid(io.vjtag.ir_in)
-      val baseOffset          = VirtualInstruction.getBaseOffset(io.vjtag.ir_in)
-      val isWrite             = VirtualInstruction.getIsWrite(io.vjtag.ir_in)
+      val (accessTarget, isValid) = VirtualInstruction.getaccessTargetAndIsValid(io.vjtag.ir_in)
+      val baseOffset              = VirtualInstruction.getBaseOffset(io.vjtag.ir_in)
+      val isWrite                 = VirtualInstruction.getIsWrite(io.vjtag.ir_in)
 
       // 初期データの準備を行う
       when(isValid) {
@@ -196,7 +195,7 @@ class VirtualJtagBridge extends RawModule {
           setBurstCount(1.U) // 初回のReadを出すので、1word分進めておく
           resetDataInReg()
           resetDataOutReg()
-          reqReadToDap(dataKind, baseOffset) // Shift-DRまでに回収して、初回のTDOをセットする想定
+          reqReadToDap(accessTarget, baseOffset) // Shift-DRまでに回収して、初回のTDOをセットする想定
           resetShiftCount()
         }
       }.otherwise {
