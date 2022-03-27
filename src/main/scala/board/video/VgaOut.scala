@@ -19,7 +19,7 @@ import board.ram.types.AsyncFifoEnqueueIO
   * PPUからの映像出力をFrameBufferにため、FrameBufferから映像を出力する
   * Module自体はPPUからのクロックで駆動し、映像出力部分はio.pxelClockで供給したclockで駆動する
   * @param vgaConfig 出力設定。初期値は 640x480 60Hz
-  * @param ppuConfig PPUの映像配置設定。初期値は中央に等倍
+  * @param ppuConfig PPUの映像配置設定。初期値は中央に等倍、背景色は黒
   */
 class VgaOut(
     val vgaConfig: VgaConfig = VgaConfig.minConf,
@@ -234,11 +234,11 @@ class VgaOut(
       vsyncPrefetchReg := !isNeedVSync // activeLowなのでPrefetch regに入れる時点で論理を戻す
     }
     // vga clock domainからReadしつつ、HSYNC,VSYNC要否も同じタイミングで保持
-    def fbByVgaRead(addr: UInt, isNeedHsync: Bool, isNneedVSync: Bool) = {
+    def fbByVgaRead(addr: UInt, isNeedHsync: Bool, isNeedVSync: Bool) = {
       vgaFbAddrReg     := addr
       vgaFbRdEnReg     := true.B
-      hsyncPrefetchReg := !isNeedHsync  // activeLowなのでPrefetch regに入れる時点で論理を戻す
-      vsyncPrefetchReg := !isNneedVSync // activeLowなのでPrefetch regに入れる時点で論理を戻す
+      hsyncPrefetchReg := !isNeedHsync // activeLowなのでPrefetch regに入れる時点で論理を戻す
+      vsyncPrefetchReg := !isNeedVSync // activeLowなのでPrefetch regに入れる時点で論理を戻す
     }
 
     // X,Y位置を確認して, DPRAMの読み出しを行う
