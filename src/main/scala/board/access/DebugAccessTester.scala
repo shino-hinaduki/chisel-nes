@@ -46,7 +46,7 @@ class DebugAccessTester(val counterWidth: Int = 32) extends Module {
   // Reqに積まれたコマンドを処理して、処理したcyc中に応答を積む
   // Write時/Read時の処理はmodeに委ねられていて、counterの値を返す、要求アドレスをそのまま返す。など
   // 0x55555555 への Write だけは特別扱いになっており、modeの値を上書きする
-  when(!io.debugAccess.req.rdempty) {
+  when(!io.debugAccess.req.rdempty && !dequeueReg) { // DequeueRegが立っているときは1回前のデータが見える
     // Dequeue
     val offset             = InternalAccessCommand.Request.getOffset(io.debugAccess.req.q)
     val data               = InternalAccessCommand.Request.getData(io.debugAccess.req.q)
@@ -61,7 +61,7 @@ class DebugAccessTester(val counterWidth: Int = 32) extends Module {
     }.elsewhen(reqType === InternalAccessCommand.Type.read) {
       // Read CMD
       when(testModeReg === TestMode.counter) {
-        dequeueReg     := true.B
+        dequeueReg     := true.B           // TODO: Dequeue regを立てた次cyc時点ではまだremainがあるようにみえるのでは？
         enqueueReg     := true.B
         enqueueDataReg := counterReg       // resp Counter
         counterReg     := counterReg + 1.U // increment Counter
