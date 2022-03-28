@@ -16,10 +16,8 @@ object InternalAccessCommand {
     * 要求種類。R/W以外にReset/Echoなどが必要になるケースに備えてenumにしておく
     */
   object Type extends ChiselEnum {
-    val invalid  = Value(0x00.U)
-    val read     = Value(0x01.U)
-    val write    = Value(0x02.U)
-    val invalid2 = Value(0xff.U)
+    val read  = Value(0x01.U)
+    val write = Value(0x02.U)
   }
 
   /**

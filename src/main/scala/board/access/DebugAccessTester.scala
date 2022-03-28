@@ -1,6 +1,8 @@
 package board.access
 
 import chisel3._
+import chisel3.util.switch
+import chisel3.util.is
 import chisel3.experimental.ChiselEnum
 
 import board.access.types.InternalAccessCommand
@@ -41,33 +43,33 @@ class DebugAccessTester(val counterWidth: Int = 32) extends Module {
     val data               = InternalAccessCommand.Request.getData(io.debugAccess.req.q)
     val (reqType, isValid) = InternalAccessCommand.Request.getRequestType(io.debugAccess.req.q)
 
-    when(!isValid) {
+    when(isValid) {
+      // Valid CMD
+      switch(reqType) {
+        is(InternalAccessCommand.Type.read) {
+          // Read CMD
+          dequeueReg     := true.B
+          enqueueReg     := true.B
+          enqueueDataReg := counterReg       // resp Counter
+          counterReg     := counterReg + 1.U // increment Counter
+        }
+        is(InternalAccessCommand.Type.write) {
+          // Write CMD
+          dequeueReg     := true.B
+          enqueueReg     := false.B
+          enqueueDataReg := DontCare
+          counterReg     := data // Write Counter
+        }
+      }
+      // for Debug
+      latestOffsetReg := offset
+    }.otherwise {
       // Invalid CMD
       dequeueReg     := true.B
       enqueueReg     := false.B
       enqueueDataReg := DontCare
       counterReg     := counterReg
-    }.elsewhen(reqType === InternalAccessCommand.Type.read) {
-      // Read CMD
-      dequeueReg     := true.B
-      enqueueReg     := true.B
-      enqueueDataReg := counterReg       // resp Counter
-      counterReg     := counterReg + 1.U // increment Counter
-    }.elsewhen(reqType === InternalAccessCommand.Type.write) { // TODO: switch-isにしないとだめかも
-      // Write CMD
-      dequeueReg     := true.B
-      enqueueReg     := false.B
-      enqueueDataReg := DontCare
-      counterReg     := data // Write Counter
-    }.otherwise {
-      // Not Implemented CMD
-      dequeueReg     := true.B
-      enqueueReg     := false.B
-      enqueueDataReg := DontCare
-      counterReg     := counterReg
     }
-    // デバッグ用に控えておく
-    latestOffsetReg := offset
   }.otherwise {
     // NOP
     dequeueReg     := false.B
