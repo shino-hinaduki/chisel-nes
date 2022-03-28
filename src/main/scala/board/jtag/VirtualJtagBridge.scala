@@ -139,7 +139,8 @@ class VirtualJtagBridge extends RawModule {
         val isRespExist   = !q.resp.rdempty                         // Read応答がある
         val isInReadCmd   = irInReg.isValid && !irInReg.isWrite     // VIRにReadが積まれている
         val isValidTarget = irInReg.accessTarget.asUInt === index.U // AccessTargetが一致している
-        when(isRespExist) {
+        val isDequeuing   = debugAccessRespRdEnRegs(index)          // Dequeue中
+        when(isRespExist && !isDequeuing) {
           // QueueにRead応答がある
           val readData = InternalAccessCommand.Response.getData(q.resp.q)
           when(!isInReadCmd || !isValidTarget) {
@@ -157,7 +158,7 @@ class VirtualJtagBridge extends RawModule {
           // Dequeueするのでこのcycはててておく
           debugAccessRespRdEnRegs(index) := true.B
         }.otherwise {
-          // このQueueにはRead要求がないので落としておく
+          // このQueueにはRead要求がない、もしくは前回の要求をDequeue中なので落としておく
           debugAccessRespRdEnRegs(index) := false.B
         }
       }

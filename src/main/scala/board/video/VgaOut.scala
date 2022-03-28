@@ -119,8 +119,8 @@ class VgaOut(
     debugAccessReqDequeueReg := true.B
   }
 
-  // Debug AccessはPPUのDataWriteより優先される
-  when(!io.debugAccess.req.rdempty) {
+  // Debug AccessはPPUのDataWriteより優先される。Dequeue中でなく新規Msgがあれば処理
+  when(!io.debugAccess.req.rdempty && !debugAccessReqDequeueReg) {
     // 命令をデコードして、Read/WriteをDPRAMに投げる
     val addr               = InternalAccessCommand.Request.getOffset(io.debugAccess.req.q)
     val data               = InternalAccessCommand.Request.getData(io.debugAccess.req.q)
