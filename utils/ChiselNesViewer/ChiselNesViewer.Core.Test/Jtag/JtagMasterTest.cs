@@ -135,7 +135,7 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             // お試しデータの読み出し。 e6b954b3cc のデザインだとbypassされているはず
             jtag.WriteShiftIr(VJTAG_USER0);
             jtag.MoveShiftIrToShiftDr();
-            var testReadData = jtag.ReadShiftDr((uint)testWriteData.Length);
+            var testReadData = jtag.ReadShiftDr((uint)testWriteData.Length, removeSurplus: false);
             jtag.MoveShiftDrToShiftIr();
 
             // test終了
@@ -170,7 +170,7 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             const byte VJTAG_USER0 = 0x0c;
             jtag.WriteShiftIr(VJTAG_USER0);
             jtag.MoveShiftIrToShiftDr();
-            var testReadData = jtag.ReadShiftDr(16);
+            var testReadData = jtag.ReadShiftDr(16, removeSurplus: false);
             jtag.MoveShiftDrToShiftIr();
 
             // test終了
@@ -235,7 +235,7 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             // USER0 Read 16byte
             jtag.WriteShiftIr(VJTAG_USER0);
             jtag.MoveShiftIrToShiftDr();
-            var testReadData = jtag.ReadShiftDr(16);
+            var testReadData = jtag.ReadShiftDr(16, removeSurplus: false);
             jtag.MoveShiftDrToShiftIr();
 
             // test終了

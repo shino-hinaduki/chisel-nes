@@ -109,8 +109,9 @@ namespace ChiselNesViewer.Core.Jtag {
         /// DataRegの内容を読み取ります
         /// </summary>
         /// <param name="dataSize">読み取りデータ数</param>
+        /// <param name="removeSurplus">ReadUnitSize単位で読み出しているが、端数を捨てる場合はtrue</param>
         /// <returns></returns>
-        public byte[] ReadShiftDr(uint dataSize);
+        public byte[] ReadShiftDr(uint dataSize, bool removeSurplus = true);
         #endregion
     }
 }

@@ -218,7 +218,7 @@ namespace ChiselNesViewer.Core.Jtag {
             return true;
         }
 
-        public byte[] ReadShiftDr(uint dataSize) {
+        public byte[] ReadShiftDr(uint dataSize, bool removeSurplus = true) {
             var result = new List<byte>((int)dataSize);
             // 63byteで通信する分
             var maxTransferCount = dataSize / IJtagCommunicatable.ReadUnitSize;
@@ -230,7 +230,7 @@ namespace ChiselNesViewer.Core.Jtag {
             var remainBytes = dataSize % IJtagCommunicatable.ReadUnitSize;
             if (remainBytes > 0) {
                 var datas = ReadShiftDr();
-                result.AddRange(datas.Take((int)remainBytes));
+                result.AddRange(removeSurplus ? datas.Take((int)remainBytes) : datas);
             }
             // 連結して返す
             return result.ToArray();
