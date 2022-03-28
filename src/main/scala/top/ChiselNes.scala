@@ -205,6 +205,15 @@ class ChiselNes extends RawModule {
       // 適当に流れるようにする
       ledArrayReg := (1.U(10.W) << debugAccessTester.io.debugCounter(3, 0))
     }
+  }.elsewhen(SW === 3.U) {
+    // 7segにDebugAccessTesterの最後のオフセット値を出す
+    withClockAndReset(CLOCK_50, reset) {
+      // ir_inの値そのまま
+      numReg        := debugAccessTester.io.debugLatestOffset
+      numVisibleReg := true.B
+      // 適当に流れるようにする
+      ledArrayReg := (1.U(10.W) << debugAccessTester.io.debugLatestOffset(3, 0))
+    }
   }.otherwise {
     // 7seg消灯。SWの値をそのままLEDRに出す
     withClockAndReset(CLOCK_50, reset) {

@@ -5,33 +5,24 @@ import chisel3.experimental.ChiselEnum
 
 import board.access.types.InternalAccessCommand
 
-object TestMode extends ChiselEnum {
-  // カウンターの値を返す
-  val counter = Value(0x00000000.U)
-  // アクセスされたアドレスの値を返す
-  val address = Value(0x00000001.U)
-}
-
 /**
   * VJTAG to DAPの最低限の動作確認サンプル。Readするたびにインクリするカウンタの値を返し、Writeで上書き可能
   *
   * @param counterWidth
   */
 class DebugAccessTester(val counterWidth: Int = 32) extends Module {
-  // このアドレスへのWriteはTestMode切り替えとみなす
-  val modeOffset = 0x00005555.U
-  // 適切なモードを指定せずにReadした場合の値
-  val invalidData = 0x01234567.U
-
   val io = IO(new Bundle {
-    // デバッグ出力観測用
+    // デバッグカウント観測用
     val debugCounter = Output(UInt(counterWidth.W))
+    // R/W要求観測用
+    val debugLatestOffset = Output(UInt(InternalAccessCommand.Request.offsetWidth.W))
     // デバッグアクセスFIFO
     val debugAccess = new InternalAccessCommand.SlaveIO
   })
-  val testModeReg = RegInit(TestMode.Type(), TestMode.counter)
-  val counterReg  = RegInit(UInt(counterWidth.W), 0.U)
+  val counterReg = RegInit(UInt(counterWidth.W), 0.U)
   io.debugCounter := counterReg
+  val latestOffsetReg = RegInit(UInt(InternalAccessCommand.Request.offsetWidth.W), 0.U)
+  io.debugLatestOffset := latestOffsetReg
 
   val dequeueReg = RegInit(Bool(), false.B)
   io.debugAccess.req.rdclk := clock
@@ -43,9 +34,7 @@ class DebugAccessTester(val counterWidth: Int = 32) extends Module {
   io.debugAccess.resp.wrreq := enqueueReg
   io.debugAccess.resp.data  := enqueueDataReg
 
-  // Reqに積まれたコマンドを処理して、処理したcyc中に応答を積む
-  // Write時/Read時の処理はmodeに委ねられていて、counterの値を返す、要求アドレスをそのまま返す。など
-  // 0x55555555 への Write だけは特別扱いになっており、modeの値を上書きする
+  // Reqに積まれたコマンドを処理して、次cycでcounterの値を応答を積む
   when(!io.debugAccess.req.rdempty && !dequeueReg) { // DequeueRegが立っているときは1回前のデータが見える
     // Dequeue
     val offset             = InternalAccessCommand.Request.getOffset(io.debugAccess.req.q)
@@ -60,45 +49,16 @@ class DebugAccessTester(val counterWidth: Int = 32) extends Module {
       counterReg     := counterReg
     }.elsewhen(reqType === InternalAccessCommand.Type.read) {
       // Read CMD
-      when(testModeReg === TestMode.counter) {
-        dequeueReg     := true.B           // TODO: Dequeue regを立てた次cyc時点ではまだremainがあるようにみえるのでは？
-        enqueueReg     := true.B
-        enqueueDataReg := counterReg       // resp Counter
-        counterReg     := counterReg + 1.U // increment Counter
-      }.elsewhen(testModeReg === TestMode.address) {
-        dequeueReg     := true.B
-        enqueueReg     := true.B
-        enqueueDataReg := offset // resp Read Address
-        counterReg     := counterReg
-      }.otherwise {
-        dequeueReg     := true.B
-        enqueueReg     := true.B
-        enqueueDataReg := invalidData // resp Invalid Data
-        counterReg     := counterReg
-      }
-    }.elsewhen(reqType === InternalAccessCommand.Type.write) {
+      dequeueReg     := true.B
+      enqueueReg     := true.B
+      enqueueDataReg := counterReg       // resp Counter
+      counterReg     := counterReg + 1.U // increment Counter
+    }.elsewhen(reqType === InternalAccessCommand.Type.write) { // TODO: switch-isにしないとだめかも
       // Write CMD
-      when(offset === modeOffset) {
-        val (mode, isValid) = TestMode.safe(data(TestMode.getWidth - 1, 0))
-        when(isValid) {
-          testModeReg := mode // Update Mode
-        }
-        dequeueReg     := true.B
-        enqueueReg     := false.B
-        enqueueDataReg := DontCare
-        counterReg     := counterReg
-      }.elsewhen(testModeReg === TestMode.counter) {
-        dequeueReg     := true.B
-        enqueueReg     := false.B
-        enqueueDataReg := DontCare
-        counterReg     := data // Write Counter
-      }.otherwise {
-        // NOP or Not Implemented
-        dequeueReg     := true.B
-        enqueueReg     := false.B
-        enqueueDataReg := DontCare
-        counterReg     := counterReg
-      }
+      dequeueReg     := true.B
+      enqueueReg     := false.B
+      enqueueDataReg := DontCare
+      counterReg     := data // Write Counter
     }.otherwise {
       // Not Implemented CMD
       dequeueReg     := true.B
@@ -106,6 +66,8 @@ class DebugAccessTester(val counterWidth: Int = 32) extends Module {
       enqueueDataReg := DontCare
       counterReg     := counterReg
     }
+    // デバッグ用に控えておく
+    latestOffsetReg := offset
   }.otherwise {
     // NOP
     dequeueReg     := false.B
