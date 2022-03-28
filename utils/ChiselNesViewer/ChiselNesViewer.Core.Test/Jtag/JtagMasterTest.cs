@@ -217,13 +217,14 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             // USER1 0x000080(isWrite=true, dataKind = accessTest)
             jtag.WriteShiftIr(VJTAG_USER1);
             jtag.MoveShiftIrToShiftDr();
-            jtag.WriteShiftDr(new byte[] { 0x00, 0x00, 0x80 }.Reverse());
+            jtag.WriteShiftDr(new byte[] { 0xab, 0xcd, 0x80 }.Reverse());
             jtag.MoveShiftDrToShiftIr();
 
-            // USER0 Write 4byte, カウント値を 0x00000000 にする
+            // USER0 Write 4byte, カウント値を 0xffffff00 にする
             jtag.WriteShiftIr(VJTAG_USER0);
             jtag.MoveShiftIrToShiftDr();
-            jtag.WriteShiftDr(new byte[] { 0x00, 0x00, 0x00, 0x00 }.Reverse());
+            jtag.WriteShiftDr(new byte[] { 0xff, 0xff, 0xff, 0x00, }.Reverse());
+            jtag.WriteShiftDr(new byte[] { 0xff, 0xff, 0xff, 0x00, }.Reverse());
             jtag.MoveShiftDrToShiftIr();
 
             // USER1 0x000000(isWrite=false, dataKind = accessTest)
@@ -243,21 +244,21 @@ namespace ChiselNesViewer.Core.Test.Jtag {
 
             // 期待値確認
             Assert.AreEqual(testReadData[0], (byte)0x00);
-            Assert.AreEqual(testReadData[1], (byte)0x00);
-            Assert.AreEqual(testReadData[2], (byte)0x00);
-            Assert.AreEqual(testReadData[3], (byte)0x00);
+            Assert.AreEqual(testReadData[1], (byte)0xff);
+            Assert.AreEqual(testReadData[2], (byte)0xff);
+            Assert.AreEqual(testReadData[3], (byte)0xff);
             Assert.AreEqual(testReadData[4], (byte)0x01);
-            Assert.AreEqual(testReadData[5], (byte)0x00);
-            Assert.AreEqual(testReadData[6], (byte)0x00);
-            Assert.AreEqual(testReadData[7], (byte)0x00);
+            Assert.AreEqual(testReadData[5], (byte)0xff);
+            Assert.AreEqual(testReadData[6], (byte)0xff);
+            Assert.AreEqual(testReadData[7], (byte)0xff);
             Assert.AreEqual(testReadData[8], (byte)0x02);
-            Assert.AreEqual(testReadData[9], (byte)0x00);
-            Assert.AreEqual(testReadData[10], (byte)0x00);
-            Assert.AreEqual(testReadData[11], (byte)0x00);
+            Assert.AreEqual(testReadData[9], (byte)0xff);
+            Assert.AreEqual(testReadData[10], (byte)0xff);
+            Assert.AreEqual(testReadData[11], (byte)0xff);
             Assert.AreEqual(testReadData[12], (byte)0x03);
-            Assert.AreEqual(testReadData[13], (byte)0x00);
-            Assert.AreEqual(testReadData[14], (byte)0x00);
-            Assert.AreEqual(testReadData[15], (byte)0x00);
+            Assert.AreEqual(testReadData[13], (byte)0xff);
+            Assert.AreEqual(testReadData[14], (byte)0xff);
+            Assert.AreEqual(testReadData[15], (byte)0xff);
 
         }
     }
