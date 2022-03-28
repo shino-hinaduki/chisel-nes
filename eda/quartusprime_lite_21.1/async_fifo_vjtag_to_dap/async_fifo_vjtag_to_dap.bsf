@@ -76,8 +76,8 @@ https://fpgasoftware.intel.com/eula.
 	(port
 		(pt 176 88)
 		(output)
-		(text "wrusedw[3..0]" (rect 0 0 94 16)(font "Arial" (font_size 8)))
-		(text "wrusedw[3..0]" (rect 77 80 155 95)(font "Arial" (font_size 8)))
+		(text "wrusedw[1..0]" (rect 0 0 94 16)(font "Arial" (font_size 8)))
+		(text "wrusedw[1..0]" (rect 77 80 155 95)(font "Arial" (font_size 8)))
 		(line (pt 176 88)(pt 160 88)(line_width 3))
 	)
 	(port
@@ -95,7 +95,7 @@ https://fpgasoftware.intel.com/eula.
 		(line (pt 176 136)(pt 160 136))
 	)
 	(drawing
-		(text "64 bits x 16 words" (rect 60 154 217 322)(font "Arial" ))
+		(text "64 bits x 4 words" (rect 67 154 224 322)(font "Arial" ))
 		(line (pt 16 100)(pt 160 100))
 		(line (pt 16 148)(pt 160 148))
 		(line (pt 16 32)(pt 160 32))

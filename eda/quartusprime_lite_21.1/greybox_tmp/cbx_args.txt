@@ -1,13 +1,24 @@
 INTENDED_DEVICE_FAMILY="Cyclone V"
-enable_bus_hold=FALSE
-left_shift_series_termination_control=FALSE
-number_of_channels=1
-open_drain_output=FALSE
-use_differential_mode=FALSE
-use_dynamic_termination_control=FALSE
-use_termination_control=FALSE
+LPM_NUMWORDS=4
+LPM_SHOWAHEAD=OFF
+LPM_TYPE=dcfifo
+LPM_WIDTH=32
+LPM_WIDTHU=2
+OVERFLOW_CHECKING=ON
+RDSYNC_DELAYPIPE=4
+READ_ACLR_SYNCH=ON
+UNDERFLOW_CHECKING=ON
+USE_EAB=ON
+WRITE_ACLR_SYNCH=OFF
+WRSYNC_DELAYPIPE=4
 DEVICE_FAMILY="Cyclone V"
-datain
-oe
-dataio
-dataout
+aclr
+data
+rdclk
+rdreq
+wrclk
+wrreq
+q
+rdempty
+rdusedw
+wrfull

@@ -12,7 +12,7 @@ namespace ChiselNesViewer.Core.Jtag {
         /// <summary>
         /// FT232都合だが、ReadU8の成約になっているのでこちらに定義しておく
         /// </summary>
-        const uint ReadUnitSize = 63;
+        const uint ReadUnitSize = 56; // 63+1が最大だが、4byteでalignしたいので減らした
 
         #region デバイスの操作
 
@@ -109,8 +109,9 @@ namespace ChiselNesViewer.Core.Jtag {
         /// DataRegの内容を読み取ります
         /// </summary>
         /// <param name="dataSize">読み取りデータ数</param>
+        /// <param name="removeSurplus">ReadUnitSize単位で読み出しているが、端数を捨てる場合はtrue</param>
         /// <returns></returns>
-        public byte[] ReadShiftDr(uint dataSize);
+        public byte[] ReadShiftDr(uint dataSize, bool removeSurplus = true);
         #endregion
     }
 }

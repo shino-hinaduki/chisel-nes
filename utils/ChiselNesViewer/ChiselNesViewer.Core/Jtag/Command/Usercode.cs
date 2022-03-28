@@ -26,7 +26,7 @@ namespace ChiselNesViewer.Core.Jtag.Command {
             jtag.MoveIdleToShiftIr();
             jtag.WriteShiftIr(0b0000_0111);
             jtag.MoveShiftIrToShiftDr();
-            var readDatas = jtag.ReadShiftDr(4);
+            var readDatas = jtag.ReadShiftDr(4, removeSurplus: false);
             jtag.DeviceClose();
 
             var raw = BitConverter.ToUInt32(readDatas.ToArray());

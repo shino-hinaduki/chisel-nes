@@ -183,10 +183,13 @@ namespace ChiselNesViewer.Core.Jtag {
 
         public byte[] ReadShiftDr() {
             ClearReadBuffer();
-            WriteU16((ushort)(RD | IJtagCommunicatable.ReadUnitSize));
 
-            // dummy write
-            WriteU16(Enumerable.Repeat(L, (int)IJtagCommunicatable.ReadUnitSize).ToArray());
+            // 先頭はRead+読み出しサイズ。のこりはDummyData
+            var writeData = new ushort[] {
+                (ushort)(RD | IJtagCommunicatable.ReadUnitSize)
+            }.Concat(Enumerable.Repeat(L, (int)IJtagCommunicatable.ReadUnitSize)).ToArray();
+            WriteU16(writeData);
+
             // read
             var d = ReadU8((int)IJtagCommunicatable.ReadUnitSize);
 
@@ -218,7 +221,7 @@ namespace ChiselNesViewer.Core.Jtag {
             return true;
         }
 
-        public byte[] ReadShiftDr(uint dataSize) {
+        public byte[] ReadShiftDr(uint dataSize, bool removeSurplus = true) {
             var result = new List<byte>((int)dataSize);
             // 63byteで通信する分
             var maxTransferCount = dataSize / IJtagCommunicatable.ReadUnitSize;
@@ -230,7 +233,7 @@ namespace ChiselNesViewer.Core.Jtag {
             var remainBytes = dataSize % IJtagCommunicatable.ReadUnitSize;
             if (remainBytes > 0) {
                 var datas = ReadShiftDr();
-                result.AddRange(datas.Take((int)remainBytes));
+                result.AddRange(removeSurplus ? datas.Take((int)remainBytes) : datas);
             }
             // 連結して返す
             return result.ToArray();

@@ -1,33 +1,56 @@
 package board.jtag.types
 
 import chisel3._
-import support.types.DebugAccessDataKind
 import chisel3.util.Cat
+import chisel3.experimental.ChiselEnum
 
 /**
   * Virtual JTAGで受付可能な命令の定義
   */
 class VirtualInstruction extends Bundle {
   /* IR生の値 */
-  val raw = UInt(24.W)
+  val raw = UInt(VirtualInstruction.totalWidth.W)
   /* 正しくParseできていればtrue */
   val isValid = Bool()
   /* 操作するデータ対象 */
   val isWrite = Bool()
   /* DebugAccessPortに対しReadする場合はfalse,Writeする場合はtrue */
-  val dataKind = DebugAccessDataKind.Type()
-  /* 操作するデータのベースアドレス。この値はShift-DRを1byteすすめるたびにオートインクリメントする */
-  val baseAddr = UInt(16.W)
+  val accessTarget = VirtualInstruction.AccessTarget.Type()
+  /* 操作するデータのベースアドレス。この値はShift-DRをすすめるたびにオートインクリメントする */
+  val baseOffset = UInt(VirtualInstruction.baseOffsetWidth.W)
 }
 
 object VirtualInstruction {
+  // IRのbit width
+  val totalWidth = 24
+  // Offset指定可能なビット幅
+  val baseOffsetWidth = 16
+  // isWriteのビット幅
+  val isWriteWidth = 1
+  // AccessTargetのビット幅
+  val accessTargetWidth = 7
+
+  /**
+  * DAPのアクセス対象
+  */
+  object AccessTarget extends ChiselEnum {
+    val accessTest   = Value(0x00.U)
+    val cpu          = Value(0x01.U)
+    val ppu          = Value(0x02.U)
+    val apu          = Value(0x03.U)
+    val cart         = Value(0x04.U)
+    val frameBuffer  = Value(0x05.U)
+    val cpuBusMaster = Value(0x06.U)
+    val ppuBusMaster = Value(0x07.U)
+    val audio        = Value(0x08.U)
+  }
 
   /**
     * BaseAddrをParseして取得する
     * @param vir Virtual IRの値
     * @return BaseAddr
     */
-  def getBaseAddr(vir: UInt): UInt = vir(23, 8)
+  def getBaseOffset(vir: UInt): UInt = vir(23, 8)
 
   /**
     * VIRをParseして取得する
@@ -37,30 +60,30 @@ object VirtualInstruction {
   def getIsWrite(vir: UInt): Bool = vir(7)
 
   /**
-    * VIRをParseしてDataKindとIsValidを取得する。IsValidはDataKindがInvalid指定だった場合でもfalseになる
+    * VIRをParseしてaccessTargetとIsValidを取得する
     * @param vir Virtual IRの値
-    * @return DataKind, IsValid
+    * @return accessTarget, IsValid
     */
-  def getDataKindAndIsValid(vir: UInt): (DebugAccessDataKind.Type, Bool) = {
-    val (dataKind, isValid) = DebugAccessDataKind.safe(vir(DebugAccessDataKind.getWidth - 1, 0))
-    (dataKind, isValid && (dataKind =/= DebugAccessDataKind.invalid) && (dataKind =/= DebugAccessDataKind.invalid2))
+  def getaccessTargetAndIsValid(vir: UInt): (AccessTarget.Type, Bool) = {
+    val (accessTarget, isValid) = AccessTarget.safe(vir(AccessTarget.getWidth - 1, 0))
+    (accessTarget, isValid)
   }
 
   /**
     * VIRの値を解釈した値で更新します
-    * VIRは24bit設定想定で、中身のフォーマットは { baseAddr[15:8], baseAddr[7:0], isWrite[1], dataKind[6:0] } とする
+    * VIRは24bit設定想定で、中身のフォーマットは { baseAddr[15:8], baseAddr[7:0], isWrite[1], accessTarget[6:0] } とする
     * 
     * @param vir USER1命令で設定されたIRの値
     * @return 解釈した命令
     */
   def parse(dst: VirtualInstruction, vir: UInt) = {
-    val (dataKind, isValid) = getDataKindAndIsValid(vir)
+    val (accessTarget, isValid) = getaccessTargetAndIsValid(vir)
 
-    dst.raw      := vir
-    dst.baseAddr := getBaseAddr(vir)
-    dst.isWrite  := getIsWrite(vir)
-    dst.dataKind := dataKind
-    dst.isValid  := isValid
+    dst.raw          := vir
+    dst.baseOffset   := getBaseOffset(vir)
+    dst.isWrite      := getIsWrite(vir)
+    dst.accessTarget := accessTarget
+    dst.isValid      := isValid
   }
 
   /**
@@ -68,10 +91,10 @@ object VirtualInstruction {
     * @param dst 更新対象
     */
   def setInvalid(dst: VirtualInstruction) = {
-    dst.raw      := 0.U(24.W)
-    dst.baseAddr := 0.U(16.W)
-    dst.isWrite  := false.B
-    dst.dataKind := DebugAccessDataKind.invalid
-    dst.isValid  := false.B
+    dst.raw          := 0.U(totalWidth.W)
+    dst.baseOffset   := 0.U(baseOffsetWidth.W)
+    dst.isWrite      := false.B
+    dst.accessTarget := AccessTarget.accessTest
+    dst.isValid      := false.B
   }
 }

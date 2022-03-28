@@ -135,7 +135,7 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             // お試しデータの読み出し。 e6b954b3cc のデザインだとbypassされているはず
             jtag.WriteShiftIr(VJTAG_USER0);
             jtag.MoveShiftIrToShiftDr();
-            var testReadData = jtag.ReadShiftDr((uint)testWriteData.Length);
+            var testReadData = jtag.ReadShiftDr((uint)testWriteData.Length, removeSurplus: false);
             jtag.MoveShiftDrToShiftIr();
 
             // test終了
@@ -157,45 +157,7 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             jtag.MoveIdle();
             jtag.MoveIdleToShiftIr();
 
-            // USER1 0x000000(dataKind = invalid)
-            const byte VJTAG_USER1 = 0x0e;
-            var testVirtualInst = new byte[] { 0x00, 0x00, 0x00 }.Reverse().ToArray();
-
-            jtag.WriteShiftIr(VJTAG_USER1);
-            jtag.MoveShiftIrToShiftDr();
-            jtag.WriteShiftDr(testVirtualInst);
-            jtag.MoveShiftDrToShiftIr();
-
-            // USER0 Read 1byte
-            const byte VJTAG_USER0 = 0x0c;
-            jtag.WriteShiftIr(VJTAG_USER0);
-            jtag.MoveShiftIrToShiftDr();
-            var testReadData = jtag.ReadShiftDr(1);
-            jtag.MoveShiftDrToShiftIr();
-
-            // test終了
-            Assert.IsTrue(jtag.Close());
-
-            // 期待値確認
-            Assert.AreEqual(testReadData[0], (byte)0xa5);
-
-        }
-
-        /// <summary>
-        /// 無効な命令を投げてVirtualJtagBridge.invalidDataが読み出せるか確認する
-        /// </summary>
-        [TestMethod]
-        [DoNotParallelize]
-        public void TestInvalid2UserInst() {
-            var jtag = new JtagMaster();
-            var devices = JtagMaster.GetDevices();
-            var device = devices.First(x => x.Description == DeviceDescription);
-            Assert.IsTrue(jtag.Open(device));
-
-            jtag.MoveIdle();
-            jtag.MoveIdleToShiftIr();
-
-            // USER1 0x00007f(dataKind = invalid2)
+            // USER1 0x00007f(dataKind = invalid)
             const byte VJTAG_USER1 = 0x0e;
             var testVirtualInst = new byte[] { 0x00, 0x00, 0x7f }.Reverse().ToArray();
 
@@ -204,18 +166,98 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             jtag.WriteShiftDr(testVirtualInst);
             jtag.MoveShiftDrToShiftIr();
 
-            // USER0 Read 1byte
+            // USER0 Read 16byte
             const byte VJTAG_USER0 = 0x0c;
             jtag.WriteShiftIr(VJTAG_USER0);
             jtag.MoveShiftIrToShiftDr();
-            var testReadData = jtag.ReadShiftDr(1);
+            var testReadData = jtag.ReadShiftDr(16, removeSurplus: false);
             jtag.MoveShiftDrToShiftIr();
 
             // test終了
             Assert.IsTrue(jtag.Close());
 
             // 期待値確認
-            Assert.AreEqual(testReadData[0], (byte)0xa5);
+            Assert.AreEqual(testReadData[0], (byte)0xaa);
+            Assert.AreEqual(testReadData[1], (byte)0x99);
+            Assert.AreEqual(testReadData[2], (byte)0x55);
+            Assert.AreEqual(testReadData[3], (byte)0x66);
+            Assert.AreEqual(testReadData[4], (byte)0xaa);
+            Assert.AreEqual(testReadData[5], (byte)0x99);
+            Assert.AreEqual(testReadData[6], (byte)0x55);
+            Assert.AreEqual(testReadData[7], (byte)0x66);
+            Assert.AreEqual(testReadData[8], (byte)0xaa);
+            Assert.AreEqual(testReadData[9], (byte)0x99);
+            Assert.AreEqual(testReadData[10], (byte)0x55);
+            Assert.AreEqual(testReadData[11], (byte)0x66);
+            Assert.AreEqual(testReadData[12], (byte)0xaa);
+            Assert.AreEqual(testReadData[13], (byte)0x99);
+            Assert.AreEqual(testReadData[14], (byte)0x55);
+            Assert.AreEqual(testReadData[15], (byte)0x66);
+
+        }
+
+
+        /// <summary>
+        /// DebugAccessTesterのカウンターの動作確認を行う
+        /// </summary>
+        [TestMethod]
+        [DoNotParallelize]
+        public void TestDebugAccessTesterCounter() {
+            const byte VJTAG_USER1 = 0x0e;
+            const byte VJTAG_USER0 = 0x0c;
+
+            var jtag = new JtagMaster();
+            var devices = JtagMaster.GetDevices();
+            var device = devices.First(x => x.Description == DeviceDescription);
+            Assert.IsTrue(jtag.Open(device));
+
+            jtag.MoveIdle();
+            jtag.MoveIdleToShiftIr();
+
+            // USER1 0x000080(isWrite=true, dataKind = accessTest)
+            jtag.WriteShiftIr(VJTAG_USER1);
+            jtag.MoveShiftIrToShiftDr();
+            jtag.WriteShiftDr(new byte[] { 0xab, 0xcd, 0x80 }.Reverse()); // Address部分はDon't careなのでデバッグで見やすい値にした
+            jtag.MoveShiftDrToShiftIr();
+
+            // USER0 Write 4byte, カウント値を 0xffffff00 にする
+            jtag.WriteShiftIr(VJTAG_USER0);
+            jtag.MoveShiftIrToShiftDr();
+            jtag.WriteShiftDr(new byte[] { 0xff, 0xff, 0xff, 0x00, }.Reverse()); // カウント値の流し込み
+            jtag.MoveShiftDrToShiftIr();
+
+            // USER1 0x000000(isWrite=false, dataKind = accessTest) 
+            jtag.WriteShiftIr(VJTAG_USER1);
+            jtag.MoveShiftIrToShiftDr();
+            jtag.WriteShiftDr(new byte[] { 0xfe, 0xdc, 0x00 }.Reverse()); // Address部分はDon't careなのでデバッグで見やすい値にした
+            jtag.MoveShiftDrToShiftIr();
+
+            // USER0 Read 16byte
+            jtag.WriteShiftIr(VJTAG_USER0);
+            jtag.MoveShiftIrToShiftDr();
+            var testReadData = jtag.ReadShiftDr(16, removeSurplus: false);
+            jtag.MoveShiftDrToShiftIr();
+
+            // test終了
+            Assert.IsTrue(jtag.Close());
+
+            // 期待値確認
+            Assert.AreEqual(testReadData[0], (byte)0x00);
+            Assert.AreEqual(testReadData[1], (byte)0xff);
+            Assert.AreEqual(testReadData[2], (byte)0xff);
+            Assert.AreEqual(testReadData[3], (byte)0xff);
+            Assert.AreEqual(testReadData[4], (byte)0x01);
+            Assert.AreEqual(testReadData[5], (byte)0xff);
+            Assert.AreEqual(testReadData[6], (byte)0xff);
+            Assert.AreEqual(testReadData[7], (byte)0xff);
+            Assert.AreEqual(testReadData[8], (byte)0x02);
+            Assert.AreEqual(testReadData[9], (byte)0xff);
+            Assert.AreEqual(testReadData[10], (byte)0xff);
+            Assert.AreEqual(testReadData[11], (byte)0xff);
+            Assert.AreEqual(testReadData[12], (byte)0x03);
+            Assert.AreEqual(testReadData[13], (byte)0xff);
+            Assert.AreEqual(testReadData[14], (byte)0xff);
+            Assert.AreEqual(testReadData[15], (byte)0xff);
 
         }
     }

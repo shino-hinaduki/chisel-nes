@@ -53,7 +53,7 @@ module async_fifo_vjtag_to_dap (
 	output	[63:0]  q;
 	output	  rdempty;
 	output	  wrfull;
-	output	[3:0]  wrusedw;
+	output	[1:0]  wrusedw;
 `ifndef ALTERA_RESERVED_QIS
 // synopsys translate_off
 `endif
@@ -73,7 +73,7 @@ endmodule
 // Retrieval info: PRIVATE: AlmostFullThr NUMERIC "-1"
 // Retrieval info: PRIVATE: CLOCKS_ARE_SYNCHRONIZED NUMERIC "0"
 // Retrieval info: PRIVATE: Clock NUMERIC "4"
-// Retrieval info: PRIVATE: Depth NUMERIC "16"
+// Retrieval info: PRIVATE: Depth NUMERIC "4"
 // Retrieval info: PRIVATE: Empty NUMERIC "1"
 // Retrieval info: PRIVATE: Full NUMERIC "1"
 // Retrieval info: PRIVATE: INTENDED_DEVICE_FAMILY STRING "Cyclone V"
@@ -101,11 +101,11 @@ endmodule
 // Retrieval info: PRIVATE: wsUsedW NUMERIC "1"
 // Retrieval info: LIBRARY: altera_mf altera_mf.altera_mf_components.all
 // Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "Cyclone V"
-// Retrieval info: CONSTANT: LPM_NUMWORDS NUMERIC "16"
+// Retrieval info: CONSTANT: LPM_NUMWORDS NUMERIC "4"
 // Retrieval info: CONSTANT: LPM_SHOWAHEAD STRING "OFF"
 // Retrieval info: CONSTANT: LPM_TYPE STRING "dcfifo"
 // Retrieval info: CONSTANT: LPM_WIDTH NUMERIC "64"
-// Retrieval info: CONSTANT: LPM_WIDTHU NUMERIC "4"
+// Retrieval info: CONSTANT: LPM_WIDTHU NUMERIC "2"
 // Retrieval info: CONSTANT: OVERFLOW_CHECKING STRING "ON"
 // Retrieval info: CONSTANT: RDSYNC_DELAYPIPE NUMERIC "4"
 // Retrieval info: CONSTANT: READ_ACLR_SYNCH STRING "OFF"
@@ -122,7 +122,7 @@ endmodule
 // Retrieval info: USED_PORT: wrclk 0 0 0 0 INPUT NODEFVAL "wrclk"
 // Retrieval info: USED_PORT: wrfull 0 0 0 0 OUTPUT NODEFVAL "wrfull"
 // Retrieval info: USED_PORT: wrreq 0 0 0 0 INPUT NODEFVAL "wrreq"
-// Retrieval info: USED_PORT: wrusedw 0 0 4 0 OUTPUT NODEFVAL "wrusedw[3..0]"
+// Retrieval info: USED_PORT: wrusedw 0 0 2 0 OUTPUT NODEFVAL "wrusedw[1..0]"
 // Retrieval info: CONNECT: @aclr 0 0 0 0 aclr 0 0 0 0
 // Retrieval info: CONNECT: @data 0 0 64 0 data 0 0 64 0
 // Retrieval info: CONNECT: @rdclk 0 0 0 0 rdclk 0 0 0 0
@@ -132,7 +132,7 @@ endmodule
 // Retrieval info: CONNECT: q 0 0 64 0 @q 0 0 64 0
 // Retrieval info: CONNECT: rdempty 0 0 0 0 @rdempty 0 0 0 0
 // Retrieval info: CONNECT: wrfull 0 0 0 0 @wrfull 0 0 0 0
-// Retrieval info: CONNECT: wrusedw 0 0 4 0 @wrusedw 0 0 4 0
+// Retrieval info: CONNECT: wrusedw 0 0 2 0 @wrusedw 0 0 2 0
 // Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_vjtag_to_dap.v TRUE
 // Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_vjtag_to_dap.inc FALSE
 // Retrieval info: GEN_FILE: TYPE_NORMAL async_fifo_vjtag_to_dap.cmp FALSE

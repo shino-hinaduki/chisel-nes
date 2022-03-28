@@ -7,8 +7,8 @@ import chisel3._
   */
 class dpram_framebuffer extends BlackBox {
   val io = IO(new Bundle {
-    val address_a = Input(UInt(18.W))  // input	[17:0]  address_a;
-    val address_b = Input(UInt(18.W))  // input	[17:0]  address_b;
+    val address_a = Input(UInt(16.W))  // input	[15:0]  address_a;
+    val address_b = Input(UInt(16.W))  // input	[15:0]  address_b;
     val clock_a   = Input(Clock())     // input	  clock_a;
     val clock_b   = Input(Clock())     // input	  clock_b;
     val data_a    = Input(UInt(24.W))  // input	[23:0]  data_a;
