@@ -183,10 +183,13 @@ namespace ChiselNesViewer.Core.Jtag {
 
         public byte[] ReadShiftDr() {
             ClearReadBuffer();
-            WriteU16((ushort)(RD | IJtagCommunicatable.ReadUnitSize));
 
-            // dummy write
-            WriteU16(Enumerable.Repeat(L, (int)IJtagCommunicatable.ReadUnitSize).ToArray());
+            // 先頭はRead+読み出しサイズ。のこりはDummyData
+            var writeData = new ushort[] {
+                (ushort)(RD | IJtagCommunicatable.ReadUnitSize)
+            }.Concat(Enumerable.Repeat(L, (int)IJtagCommunicatable.ReadUnitSize)).ToArray();
+            WriteU16(writeData);
+
             // read
             var d = ReadU8((int)IJtagCommunicatable.ReadUnitSize);
 
