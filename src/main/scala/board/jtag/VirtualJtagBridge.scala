@@ -254,23 +254,24 @@ class VirtualJtagBridge extends RawModule {
         // R/W/Invalidで処理が分岐
         when(irInReg.isValid) {
           // R/Wで分岐
-          val accessOffset = calcRequestOffset() // incBurstCountする前に計算する
           when(irInReg.isWrite) {
             // Write: shiftはしておくものの、最後のTDIのデータをBypassしてデータを完成させ、Write要求を出す
+            val accessOffset = calcRequestOffset() // incBurstCountする前に計算する
             reqWriteToInternal(irInReg.accessTarget, accessOffset, writeData)
             // Read Dataのregもとりあえず処理はしておく
             shiftDataOutReg()
             incBurstCount() // Writeを出したので、次のアドレスにすすめる
+            // (clearReqToInternalはreqWriteToInternalした内容が消えるので出さない)
           }.otherwise {
             // Read: 次のデータをtdo/dataOutにセット
             setDataOutReg(preDataOutReg)
             // (BurstCountはRead要求時にすすめるのでここでは操作しない)
+            clearReqToInternal() // Read要求が出しっぱなしにならないように落とす
           }
           // 共通の後処理
           setPostDataInReg(writeData) // postDataInにも記録しておく(実質デバッグ用)
           shiftDataInReg()            // 利用済で使わないと思うが、進めておく(本cycでDataInRegが完成)
           resetShiftCount()           // 0bit目に戻る
-          clearReqToInternal()        // Read要求が出しっぱなしにならないように落とす
         }.otherwise {
           // Invalid: Invalidな値の入ったpreDataOutRegを使い続ける
           setPostDataInReg(writeData) // postDataInにも記録しておく(実質デバッグ用)

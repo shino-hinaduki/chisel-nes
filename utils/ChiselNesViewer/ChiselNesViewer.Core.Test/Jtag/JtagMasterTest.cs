@@ -217,20 +217,19 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             // USER1 0x000080(isWrite=true, dataKind = accessTest)
             jtag.WriteShiftIr(VJTAG_USER1);
             jtag.MoveShiftIrToShiftDr();
-            jtag.WriteShiftDr(new byte[] { 0xab, 0xcd, 0x80 }.Reverse());
+            jtag.WriteShiftDr(new byte[] { 0xab, 0xcd, 0x80 }.Reverse()); // Address部分はDon't careなのでデバッグで見やすい値にした
             jtag.MoveShiftDrToShiftIr();
 
             // USER0 Write 4byte, カウント値を 0xffffff00 にする
             jtag.WriteShiftIr(VJTAG_USER0);
             jtag.MoveShiftIrToShiftDr();
-            jtag.WriteShiftDr(new byte[] { 0xff, 0xff, 0xff, 0x00, }.Reverse());
-            jtag.WriteShiftDr(new byte[] { 0xff, 0xff, 0xff, 0x00, }.Reverse());
+            jtag.WriteShiftDr(new byte[] { 0xff, 0xff, 0xff, 0x00, }.Reverse()); // カウント値の流し込み
             jtag.MoveShiftDrToShiftIr();
 
-            // USER1 0x000000(isWrite=false, dataKind = accessTest)
+            // USER1 0x000000(isWrite=false, dataKind = accessTest) 
             jtag.WriteShiftIr(VJTAG_USER1);
             jtag.MoveShiftIrToShiftDr();
-            jtag.WriteShiftDr(new byte[] { 0x00, 0x00, 0x00 }.Reverse());
+            jtag.WriteShiftDr(new byte[] { 0xfe, 0xdc, 0x00 }.Reverse()); // Address部分はDon't careなのでデバッグで見やすい値にした
             jtag.MoveShiftDrToShiftIr();
 
             // USER0 Read 16byte
