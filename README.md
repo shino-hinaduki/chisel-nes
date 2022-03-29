@@ -26,9 +26,9 @@ $ docker-compose run generate
 
 #### DE0-CV向けにビルド
 
-`eda/quartusprime_lite_21.1/chisel_nes.qpf` を Quartus Primeで開き、Compile Design を実行して論理合成した後、Program DeviceでProgrammerを開いて書き込む。
+`eda/quartusprime_lite_21.1/chisel_nes.qpf` を Quartus Primeで開き、Compile Design を実行して論理合成した後、Program Deviceで書き込む。
 
-(先の手順で生成した `dst/ChiselNes.v` がTop moduleに指定されており、プロジェクトにはその他のIPや成約ファイルなどが含まれている)
+(先の手順で生成した `dst/ChiselNes.v` がtop-level design entityに指定されており、プロジェクトにはその他IPや制約ファイルなどが含まれている)
 
 ## NES Peripheral EVB for DE0-CV
 
