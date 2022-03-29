@@ -5,9 +5,10 @@ import chisel3._
 /**
   * async_fifo_dap_to_vjtag.v を chiselで取り扱うために用意した定義
   */
-class async_fifo_dap_to_vjtag extends BlackBox {
-  val dataWidth   = 32
-  val userdwWidth = 2
+class AsyncFifoDapToVJtag extends BlackBox {
+  override def desiredName: String = "async_fifo_dap_to_vjtag"
+  val dataWidth                    = 32
+  val userdwWidth                  = 2
 
   val io = IO(new Bundle {
     val aclr    = Input(Bool())               // input	  aclr;

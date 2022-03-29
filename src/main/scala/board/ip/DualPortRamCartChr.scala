@@ -5,7 +5,9 @@ import chisel3._
 /**
   * dpram_cart_chr.v を chiselで取り扱うために用意した定義
   */
-class dpram_cart_chr extends BlackBox {
+class DualPortRamCartChr extends BlackBox {
+  override def desiredName: String = "dpram_cart_chr"
+
   val io = IO(new Bundle {
     val address_a = Input(UInt(17.W)) // input	[16:0]  address_a;
     val address_b = Input(UInt(17.W)) // input	[16:0]  address_b;

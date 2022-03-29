@@ -5,19 +5,15 @@ import chisel3.util.Cat
 import chisel3.util.MuxLookup
 import chisel3.experimental.Analog
 
+import board.ip._
+
 import board.discrete.SevenSegmentLed
 import board.jtag.VirtualJtagBridge
 import board.jtag.types.VirtualJtagIO
 
-import board.ip.virtual_jtag
-import board.ip.pll_sysclk
-import board.ip.pll_vga
-import board.ip.dpram_framebuffer
 import board.discrete.Debounce
 import board.jtag.types.VirtualInstruction
 import board.access.DebugAccessTester
-import board.ip.async_fifo_vjtag_to_dap
-import board.ip.async_fifo_dap_to_vjtag
 
 /** 
  * Top Module
@@ -80,14 +76,14 @@ class ChiselNes extends RawModule {
   val reset    = !RESET_N
 
   // NES関連のClock
-  val pllSysClk = Module(new pll_sysclk)
+  val pllSysClk = Module(new PllSystemClock)
   val cpuClk    = pllSysClk.io.outclk_0 // 1.789709 MHz
   val ppuClk    = pllSysClk.io.outclk_0 // 5.36127 MHz
   val sysClk    = pllSysClk.io.outclk_0 // 21.616541 MHz
   val sysRst    = !pllSysClk.io.locked
 
   // VGA出力関連のClock
-  val pllVga      = Module(new pll_vga)
+  val pllVga      = Module(new PllVga)
   val vgaPixelClk = pllVga.io.outclk_0 // 25.175644 MHz
   val vgaRst      = !pllVga.io.locked
 
@@ -112,10 +108,10 @@ class ChiselNes extends RawModule {
 
   /**********************************************************************/
   /* Virtual JTAG                                                       */
-  val vjtagIp           = Module(new virtual_jtag)
-  val virtualJtagBridge = withClockAndReset(vjtagIp.io.tck, reset) { Module(new VirtualJtagBridge) }
+  val vjtag             = Module(new VirtualJtag)
+  val virtualJtagBridge = withClockAndReset(vjtag.io.tck, reset) { Module(new VirtualJtagBridge) }
   virtualJtagBridge.io.reset <> reset
-  virtualJtagBridge.io.vjtag <> vjtagIp.io
+  virtualJtagBridge.io.vjtag <> vjtag.io
   // virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.accessTest.litValue.toInt) <> DontCare
   virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.cpu.litValue.toInt) <> DontCare
   virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.ppu.litValue.toInt) <> DontCare
@@ -131,8 +127,8 @@ class ChiselNes extends RawModule {
   val debugAccessTester = withClockAndReset(CLOCK_50, reset) { Module(new DebugAccessTester()) }
 
   // TODO: 接続しやすいUtilを用意する...。
-  val vjtagToDatQueue = Module(new async_fifo_vjtag_to_dap)
-  val datToVjtagQueue = Module(new async_fifo_dap_to_vjtag)
+  val vjtagToDatQueue = Module(new AsyncFifoVJtagToDap)
+  val datToVjtagQueue = Module(new AsyncFifoDapToVJtag)
   // debug: queue remain
   // vjtagToDatQueue.io.wrusedw <> DontCare
   // datToVjtagQueue.io.rdusedw <> DontCare
@@ -178,22 +174,22 @@ class ChiselNes extends RawModule {
     }
   }.elsewhen(SW === 1.U) {
     // 7segにVJTAGのVIRの値を出す
-    withClockAndReset(vjtagIp.io.tck, reset) {
+    withClockAndReset(vjtag.io.tck, reset) {
       // ir_inの値そのまま
-      numReg        := vjtagIp.io.ir_in
+      numReg        := vjtag.io.ir_in
       numVisibleReg := true.B
       // VJTAGのstate
       ledArrayReg := Cat(
-        vjtagIp.io.virtual_state_cdr,
-        vjtagIp.io.virtual_state_sdr,
-        vjtagIp.io.virtual_state_e1dr,
-        vjtagIp.io.virtual_state_pdr,
-        vjtagIp.io.virtual_state_e2dr,
-        vjtagIp.io.virtual_state_udr,
-        vjtagIp.io.virtual_state_cir,
-        vjtagIp.io.virtual_state_uir,
-        vjtagIp.io.tdi,
-        vjtagIp.io.tck.asBool
+        vjtag.io.virtual_state_cdr,
+        vjtag.io.virtual_state_sdr,
+        vjtag.io.virtual_state_e1dr,
+        vjtag.io.virtual_state_pdr,
+        vjtag.io.virtual_state_e2dr,
+        vjtag.io.virtual_state_udr,
+        vjtag.io.virtual_state_cir,
+        vjtag.io.virtual_state_uir,
+        vjtag.io.tdi,
+        vjtag.io.tck.asBool
       )
     }
   }.elsewhen(SW === 2.U) {

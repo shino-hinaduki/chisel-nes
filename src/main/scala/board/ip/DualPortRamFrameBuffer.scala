@@ -5,7 +5,9 @@ import chisel3._
 /**
   * dpram_framebuffer.v を chiselで取り扱うために用意した定義
   */
-class dpram_framebuffer extends BlackBox {
+class DualPortRamFrameBuffer extends BlackBox {
+  override def desiredName: String = "dpram_framebuffer"
+
   val io = IO(new Bundle {
     val address_a = Input(UInt(16.W))  // input	[15:0]  address_a;
     val address_b = Input(UInt(16.W))  // input	[15:0]  address_b;

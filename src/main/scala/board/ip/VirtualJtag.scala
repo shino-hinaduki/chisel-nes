@@ -5,7 +5,9 @@ import chisel3._
 /**
   * virtual_jtag.v を chiselで取り扱うために用意した定義
   */
-class virtual_jtag extends BlackBox {
+class VirtualJtag extends BlackBox {
+  override def desiredName: String = "virtual_jtag"
+
   val io = IO(new Bundle {
     val tdi                = Output(Bool())     // output wire        tdi,                // jtag.tdi
     val tdo                = Input(Bool())      // input  wire        tdo,                //     .tdo
