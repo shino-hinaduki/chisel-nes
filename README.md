@@ -14,7 +14,7 @@ TODO:
 
 #### ChiselNes.v の生成
 
-以下のコマンドでscalaのprojectをビルドして、Chiselから生成したVerilog fileを `dst/ChiselNes.v`得る。
+以下のコマンドでscalaのprojectをビルドして、Chiselから生成したVerilog file  `dst/ChiselNes.v` を得る。
 
 ```shell
 # sbtが使える環境の場合
