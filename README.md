@@ -200,7 +200,7 @@ Digikeyで選定した部品を記載。チップコンデンサを始め、サ�
 | 36 |  D31 |USER_GPIO0      | ピンソケッドJ1に引き出し済 |
 | 37 |  D32 |3V3_JOY2_DO     | 2Player Controller |
 | 38 |  D33 |3V3_JOY2_CLK    | 2Player Controller |
-| 39 |  D34 |3V3_P/~S        | 2Player Controller |
+| 39 |  D34 |3V3_JOY2_P/~S  | 2Player Controller |
 | 40 |  D35 |3V3_OE_IN       | Lowの間はレベル変換をHi-Zで切り離せる |
 
 
