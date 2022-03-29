@@ -29,11 +29,11 @@ namespace ChiselNesViewer.Core.Jtag.Command {
             jtag.MoveIdleToShiftIr();
             jtag.WriteShiftIr(0b0000_0110);
             jtag.MoveShiftIrToShiftDr();
-            var readDatas = jtag.ReadShiftDr(4, removeSurplus: true);
+            var readDatas = jtag.ReadShiftDr();
             jtag.DeviceClose();
 
             // データの復元
-            var raw = BitConverter.ToUInt32(readDatas.ToArray());
+            var raw = BitConverter.ToUInt32(readDatas.Take(4).ToArray());
 
             var dst = new Idcode() {
                 Version = (byte)((raw >> 28) & 0xf),

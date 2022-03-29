@@ -181,17 +181,17 @@ namespace ChiselNesViewer.Core.Jtag {
         public bool WriteShiftDr(byte data) =>
             WriteU8(WR, data);
 
-        public byte[] ReadShiftDr() {
-            ClearReadBuffer();
+        public byte[] ReadShiftDr(uint readSize = IJtagCommunicatable.ReadUnitSize) {
+            Debug.Assert(readSize <= IJtagCommunicatable.ReadUnitSize);
 
             // 先頭はRead+読み出しサイズ。のこりはDummyData
             var writeData = new ushort[] {
-                (ushort)(RD | IJtagCommunicatable.ReadUnitSize)
-            }.Concat(Enumerable.Repeat(L, (int)IJtagCommunicatable.ReadUnitSize)).ToArray();
+                (ushort)(RD | readSize )
+            }.Concat(Enumerable.Repeat(L, (int)readSize)).ToArray();
             WriteU16(writeData);
 
             // read
-            var d = ReadU8((int)IJtagCommunicatable.ReadUnitSize);
+            var d = ReadU8((int)readSize);
 
             return d;
         }
@@ -221,23 +221,6 @@ namespace ChiselNesViewer.Core.Jtag {
             return true;
         }
 
-        public byte[] ReadShiftDr(uint dataSize, bool removeSurplus = true) {
-            var result = new List<byte>((int)dataSize);
-            // 63byteで通信する分
-            var maxTransferCount = dataSize / IJtagCommunicatable.ReadUnitSize;
-            for (var i = 0; i < maxTransferCount; i++) {
-                var datas = ReadShiftDr();
-                result.AddRange(datas);
-            }
-            // 最後のあまり
-            var remainBytes = dataSize % IJtagCommunicatable.ReadUnitSize;
-            if (remainBytes > 0) {
-                var datas = ReadShiftDr();
-                result.AddRange(removeSurplus ? datas.Take((int)remainBytes) : datas);
-            }
-            // 連結して返す
-            return result.ToArray();
-        }
         #endregion
     }
 }
