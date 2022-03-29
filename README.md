@@ -108,12 +108,6 @@ Digikeyで選定した部品を記載。チップコンデンサを始め、サ�
 | U17, U18 | 4021	| 2 |CD4021BMT|https://www.digikey.jp/ja/products/detail/texas-instruments/CD4021BMT/1690863|
 | U19	| MAX98357 | 1 |MAX98357AETE+T|https://www.digikey.jp/ja/products/detail/analog-devices-inc-maxim-integrated/MAX98357AETE-T/4936122|
 
-### 設計データの活用範囲
-
-`eda/kicad_6.0.2/nes_peripheral` にある基板設計データは、 [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/deed) の範囲で利用を許可する。
-
-例えば、本基板の設計データか内容を改変したデータを用い、製造した製品を営利目的で販売する行為は禁止である。
-
 
 ### GPIO Pin Assign
 
@@ -208,3 +202,11 @@ Digikeyで選定した部品を記載。チップコンデンサを始め、サ�
 | 38 |  D33 |3V3_JOY2_CLK    | 2Player Controller |
 | 39 |  D34 |3V3_P/~S        | 2Player Controller |
 | 40 |  D35 |3V3_OE_IN       | Lowの間はレベル変換をHi-Zで切り離せる |
+
+
+### 設計データの活用範囲
+
+`eda/kicad_6.0.2/nes_peripheral` にある基板設計データは、 [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/deed) の範囲で利用を許可する。
+
+例えば、本基板の設計データか内容を改変したデータを用い、製造した製品を営利目的で販売する行為は禁止である。
+
