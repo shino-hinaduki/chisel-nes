@@ -43,8 +43,8 @@ class VgaOut(
 
   val io = IO(new Bundle {
     // PPUからの映像出力を受け取る
-    val ppuVideoOut = Flipped(new PpuOutIO())
-    // 外部デバッグ用のRAM Control命令。ppuClock Domainで駆動する。 ppuVideoOutより優先される
+    val ppuVideo = Flipped(new PpuOutIO())
+    // 外部デバッグ用のRAM Control命令。ppuClock Domainで駆動する。 ppuVideoより優先される
     val debugAccess = new InternalAccessCommand.SlaveIO
 
     // trueならテスト信号を出力する。pixelClockに同期して読み出される
@@ -56,7 +56,7 @@ class VgaOut(
     // FrameBuffer用RAMとの接続
     val frameBuffer = new FrameBufferIO(fbAddrWidth, fbDataWidth)
     // 映像出力
-    val vgaOut = new VgaIO(fbDataWidth)
+    val videoOut = new VgaIO(fbDataWidth)
   })
 
   /*********************************************************************/
@@ -145,10 +145,10 @@ class VgaOut(
       fbByPpuNop()
       debugReqDequeue()
     }
-  }.elsewhen(io.ppuVideoOut.valid) {
+  }.elsewhen(io.ppuVideo.valid) {
     // PPUが出力している現在の値をDPRAMへWrite
-    val addr = posToFbAddr(io.ppuVideoOut.x, io.ppuVideoOut.y)
-    val data = rgbToFbData(io.ppuVideoOut.r, io.ppuVideoOut.g, io.ppuVideoOut.b)
+    val addr = posToFbAddr(io.ppuVideo.x, io.ppuVideo.y)
+    val data = rgbToFbData(io.ppuVideo.r, io.ppuVideo.g, io.ppuVideo.b)
     fbByPpuWrite(addr, data)
     // 処理してないのでDequeueしない
     debugReqNop()
@@ -179,7 +179,9 @@ class VgaOut(
   // 本cycでReadしていたら、その結果をEnqueueする
   when(ppuFbRdEnReg && !io.debugAccess.resp.wrfull) {
     // 応答をQueueに乗せる
-    val data = InternalAccessCommand.Response.encode(io.frameBuffer.ppu.q) // 上位1byteは未使用だが詰めない
+    val data = InternalAccessCommand.Response.encode(
+      Cat(0.U((InternalAccessCommand.Response.dataWidth - fbDataWidth).W), io.frameBuffer.ppu.q) // 上位1byteは未使用だが詰めない
+    )
     debugRespEnqueue(data)
   }.otherwise {
     // 応答しない。QueueFullなら結果は捨てる
@@ -283,11 +285,11 @@ class VgaOut(
     val bOutReg  = RegInit(UInt(channelDataWidth.W), 0.U)
     val hsyncReg = RegInit(Bool(), true.B) // active low
     val vsyncReg = RegInit(Bool(), true.B) // active low
-    io.vgaOut.r     := rOutReg
-    io.vgaOut.g     := gOutReg
-    io.vgaOut.b     := bOutReg
-    io.vgaOut.hsync := hsyncReg
-    io.vgaOut.vsync := vsyncReg
+    io.videoOut.r     := rOutReg
+    io.videoOut.g     := gOutReg
+    io.videoOut.b     := bOutReg
+    io.videoOut.hsync := hsyncReg
+    io.videoOut.vsync := vsyncReg
     // ビデオ出力信号を設定する
     def setVideoOut(r: UInt, g: UInt, b: UInt, hsync: Bool, vsync: Bool) = {
       rOutReg  := r
