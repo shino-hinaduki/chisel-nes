@@ -416,7 +416,7 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             var device = devices.First(x => x.Description == DeviceDescription);
             Assert.IsTrue(jtag.Open(device));
 
-            int FB_WIDTH = 255;
+            int FB_WIDTH = 256;
             int FB_HEIGHT = 256;
             var testData = Enumerable.Repeat(0, FB_HEIGHT).SelectMany((_, y) =>
                 Enumerable.Repeat(0, FB_WIDTH).Select((_, x) =>
@@ -440,7 +440,7 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             var device = devices.First(x => x.Description == DeviceDescription);
             Assert.IsTrue(jtag.Open(device));
 
-            int FB_WIDTH = 255;
+            int FB_WIDTH = 256;
             int FB_HEIGHT = 256;
             var writeData = Enumerable.Repeat(0, FB_HEIGHT).SelectMany((_, y) =>
                 Enumerable.Repeat(0, FB_WIDTH).Select((_, x) =>
