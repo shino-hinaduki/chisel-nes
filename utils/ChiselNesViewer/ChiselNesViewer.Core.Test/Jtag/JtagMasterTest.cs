@@ -417,7 +417,7 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             Assert.IsTrue(jtag.Open(device));
 
             int FB_WIDTH = 255;
-            int FB_HEIGHT= 256;
+            int FB_HEIGHT = 256;
             var testData = Enumerable.Repeat(0, FB_HEIGHT).SelectMany((_, y) =>
                 Enumerable.Repeat(0, FB_WIDTH).Select((_, x) =>
                     (uint)((((x * 1) & 0xff) << 16) | (((y * 1) & 0xff) << 8) | (((0) & 0xff) << 0))
@@ -427,6 +427,32 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             WriteToChiselNes(jtag, ChiselNesAccessTarget.FrameBuffer, 0x00000000, testData);
 
             Assert.IsTrue(jtag.Close());
+        }
+
+        /// <summary>
+        /// FrameBufferへのデータ書き読みテスト
+        /// </summary>
+        [TestMethod]
+        [DoNotParallelize]
+        public void TestWriteReadToFrameBuffer() {
+            var jtag = new JtagMaster();
+            var devices = JtagMaster.GetDevices();
+            var device = devices.First(x => x.Description == DeviceDescription);
+            Assert.IsTrue(jtag.Open(device));
+
+            int FB_WIDTH = 255;
+            int FB_HEIGHT = 256;
+            var writeData = Enumerable.Repeat(0, FB_HEIGHT).SelectMany((_, y) =>
+                Enumerable.Repeat(0, FB_WIDTH).Select((_, x) =>
+                    (uint)((((x * 1) & 0xff) << 16) | (((y * 1) & 0xff) << 8) | (((0) & 0xff) << 0))
+                )
+            ).ToArray();
+
+            WriteToChiselNes(jtag, ChiselNesAccessTarget.FrameBuffer, 0x00000000, writeData);
+            var readData = ReadFromChiselNes(jtag, ChiselNesAccessTarget.FrameBuffer, 0x00000000, (uint)writeData.Length);
+
+            Assert.IsTrue(jtag.Close());
+            Assert.IsTrue(Enumerable.SequenceEqual(writeData, readData));
         }
         #endregion
     }
