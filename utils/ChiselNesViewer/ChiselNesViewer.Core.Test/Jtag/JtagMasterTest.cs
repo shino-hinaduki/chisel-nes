@@ -11,6 +11,8 @@ namespace ChiselNesViewer.Core.Test.Jtag {
     public class JtagMasterTest {
         readonly string DeviceDescription = "USB-Blaster";
 
+        #region JTAGコマンド開通
+
         /// <summary>
         /// デバイスの検索と接続
         /// </summary>
@@ -97,6 +99,9 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             Assert.AreEqual(usercode.Raw, (uint)0x04b56019);
         }
 
+        #endregion
+
+        #region Virtual JTAG開通
 
         /// <summary>
         /// VIRへの書き込みと、適当なデータの流し込みテスト
@@ -315,11 +320,114 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             /* アドレス不問で32byteずつ読み出す */
             var dst = new List<byte>(4096);
             while (dst.Count < totalRead) {
-                var data = doRead((uint)(dst.Count /4), readUnitBytes);
+                var data = doRead((uint)(dst.Count / 4), readUnitBytes);
                 dst.AddRange(data);
             }
             // test終了
             Assert.IsTrue(jtag.Close());
         }
+
+        #endregion
+
+        // TODO: ChiselNes独自コマンドなので、実装が落ち着いたら Jtag.Command.XXXXに新設したクラスに移管する
+        #region ChiselNesデバッグコマンド
+
+        const byte VJTAG_USER1 = 0x0e;
+        const byte VJTAG_USER0 = 0x0c;
+
+        public enum ChiselNesAccessTarget: byte {
+            AccessTest = 0x00,
+            Cpu,
+            Ppu,
+            Apu,
+            Cart,
+            FrameBuffer,
+            CpuBusMaster,
+            PpuBusMaster,
+            Audio,
+        }
+        public IEnumerable<byte> CreateVir(uint offset, bool isWrite, ChiselNesAccessTarget target)
+                => new byte[] { (byte)((offset >> 8) & 0xff), (byte)((offset >> 0) & 0xff), (byte)(((isWrite ? 0x01 : 0x00) << 7) | ((byte)target)) }.Reverse();
+
+        public void WriteToChiselNes(JtagMaster jtag, ChiselNesAccessTarget target, uint offset, IEnumerable<uint> src) {
+            jtag.MoveIdle();
+            jtag.MoveIdleToShiftIr();
+
+            // USER1
+            var vir = CreateVir(offset, true, target).ToArray(); // 3byte, { offset[15:0], isWrite[1], target[6:0] }
+
+            jtag.WriteShiftIr(VJTAG_USER1);
+            jtag.MoveShiftIrToShiftDr();
+            jtag.WriteShiftDr(vir);
+            jtag.MoveShiftDrToShiftIr();
+
+            // USER0 Write 4byte
+            var writeData = src.SelectMany(x => BitConverter.GetBytes(x)).ToArray(); // 4byteの内容を1byteずつにバラす
+
+            jtag.WriteShiftIr(VJTAG_USER0);
+            jtag.MoveShiftIrToShiftDr();
+            jtag.WriteShiftDr(writeData);
+            jtag.MoveShiftDrToShiftIr();
+        }
+        public uint[] ReadFromChiselNes(JtagMaster jtag, ChiselNesAccessTarget target, uint offset, uint size) {
+            // 前処理
+            jtag.MoveIdle();
+            jtag.MoveIdleToShiftIr();
+
+            // 32byteずつ読み出す
+            uint readUnitBytes = 32; // 1回あたり読むRead数
+            uint dummyBytes = 8; // 前回Prefetchしたデータがいるので、最初8byteを捨てる
+
+            Func<uint, uint, IEnumerable<byte>> doRead = (offset, size) => {
+                // USER1
+                var vir = CreateVir(offset, false, target).ToArray(); // 3byte, { offset[15:0], isWrite[1], target[6:0] }
+
+                jtag.WriteShiftIr(VJTAG_USER1);
+                jtag.MoveShiftIrToShiftDr();
+                jtag.WriteShiftDr(vir);
+                jtag.MoveShiftDrToShiftIr();
+
+                // USER0 Read
+                jtag.WriteShiftIr(VJTAG_USER0);
+                jtag.MoveShiftIrToShiftDr();
+                var readData = jtag.ReadShiftDr(size + dummyBytes);
+                jtag.MoveShiftDrToShiftIr();
+                return readData.Skip((int)dummyBytes);
+            };
+
+            var dst = new List<uint>((int)size);
+            while (dst.Count < size) {
+                var rawData = doRead((uint)(offset + dst.Count * 4), readUnitBytes);
+                var dstData = rawData.Chunk(4).Select(raw => BitConverter.ToUInt32(raw)).ToArray();
+                dst.AddRange(dstData);
+            }
+
+            return dst.ToArray();
+        }
+
+        /// <summary>
+        /// FrameBufferへのデータ書き込みテスト
+        /// </summary>
+        [TestMethod]
+        [DoNotParallelize]
+        public void TestWriteToFrameBuffer() {
+            var jtag = new JtagMaster();
+            var devices = JtagMaster.GetDevices();
+            var device = devices.First(x => x.Description == DeviceDescription);
+            Assert.IsTrue(jtag.Open(device));
+
+            int FB_WIDTH = 255;
+            int FB_HEIGHT= 256;
+            var testData = Enumerable.Repeat(0, FB_HEIGHT).SelectMany((_, y) =>
+                Enumerable.Repeat(0, FB_WIDTH).Select((_, x) =>
+                    (uint)((((x * 1) & 0xff) << 16) | (((y * 1) & 0xff) << 8) | (((0) & 0xff) << 0))
+                )
+            ).ToArray();
+
+            WriteToChiselNes(jtag, ChiselNesAccessTarget.FrameBuffer, 0x00000000, testData);
+
+            Assert.IsTrue(jtag.Close());
+        }
+        #endregion
     }
 }
