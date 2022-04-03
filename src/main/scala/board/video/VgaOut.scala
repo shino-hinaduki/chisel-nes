@@ -305,7 +305,7 @@ class VgaOut(
       when(io.isDebug) {
         // デバッグ用に読み出しアドレスからパターンを作る
         val (x, y) = fbAddrToPos(vgaFbAddrReg)
-        setVideoOut(x, y, (x >> 1) + y, true.B, true.B) // ActiveAreaなのでtrue固定
+        setVideoOut((x << 4), (y << 4), (x << 5) + (y << 4), true.B, true.B) // ActiveAreaなのでtrue固定, 使うのは上位4bitなので飛ばしておく
       }.otherwise {
         // 有効なデータを読みだした後
         val (r, g, b) = fbDataToRgb(io.frameBuffer.vga.q)

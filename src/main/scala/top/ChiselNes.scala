@@ -314,11 +314,6 @@ class ChiselNes extends RawModule {
   SD_CLK     := false.B
   SD_CMD     := DontCare
   SD_DATA    := DontCare
-  VGA_B      := 0.U
-  VGA_G      := 0.U
-  VGA_HS     := false.B
-  VGA_R      := 0.U
-  VGA_VS     := false.B
 }
 
 /** Generate Verilog
