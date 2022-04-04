@@ -71,6 +71,7 @@ namespace ChiselNesViewer.Core.Jtag {
             if (device.OpenByDescription(targetInfo.Description) != FTDI.FT_STATUS.FT_OK) {
                 return false;
             }
+            device.SetBaudRate(3000000); // 3MHz
             // ローカルにセット
             this._device = device;
             Debug.Assert(_device?.IsOpen ?? false);
