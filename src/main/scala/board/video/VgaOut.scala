@@ -27,9 +27,9 @@ class VgaOut(
       centerX = VgaConfig.minConf.width / 2,
       centerY = VgaConfig.minConf.height / 2,
       scale = 1,
-      bgColorR = 0,
-      bgColorG = 0,
-      bgColorB = 0
+      bgColorR = 255,
+      bgColorG = 255,
+      bgColorB = 255
     ),
 ) extends Module {
   // FrameBufferのアクセス範囲 256 * 256 = 65536word => 16bit
@@ -292,11 +292,21 @@ class VgaOut(
     io.videoOut.vsync := vsyncReg
     // ビデオ出力信号を設定する
     def setVideoOut(r: UInt, g: UInt, b: UInt, hsync: Bool, vsync: Bool) = {
-      rOutReg  := r
-      gOutReg  := g
-      bOutReg  := b
+      // 同期信号
       hsyncReg := hsync
       vsyncReg := vsync
+
+      // 色設定
+      when(!hsync || !vsync) {
+        // SYNC時はr,g,bも0にする必要がある
+        rOutReg := 0.U
+        gOutReg := 0.U
+        bOutReg := 0.U
+      }.otherwise {
+        rOutReg := r
+        gOutReg := g
+        bOutReg := b
+      }
     }
 
     // 現在の読み出し結果から出力信号を決定する
