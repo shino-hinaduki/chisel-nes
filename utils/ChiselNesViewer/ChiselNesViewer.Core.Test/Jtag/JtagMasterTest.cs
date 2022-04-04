@@ -421,7 +421,6 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             var testData = Enumerable.Repeat(0, FB_HEIGHT).SelectMany((_, y) =>
                 Enumerable.Repeat(0, FB_WIDTH).Select((_, x) =>
                     (uint)((((x * 1) & 0xff) << 16) | (((y * 1) & 0xff) << 8) | (((0) & 0xff) << 0))
-                //(uint)0x0000ff00
                 )
             ).ToArray();
 

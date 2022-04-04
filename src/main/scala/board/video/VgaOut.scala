@@ -26,7 +26,7 @@ class VgaOut(
     val ppuConfig: PpuImageConfig = PpuImageConfig(
       centerX = VgaConfig.minConf.width / 2,
       centerY = VgaConfig.minConf.height / 2,
-      scale = 1,
+      scale = 2,
       bgColorR = 255,
       bgColorG = 255,
       bgColorB = 255
