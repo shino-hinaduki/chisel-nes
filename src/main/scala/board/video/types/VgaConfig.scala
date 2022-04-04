@@ -28,19 +28,9 @@ case class SyncSignal(
   val counterWidth = log2Up(counterMax)
 
   /**
-    * Back Porch開始count
-    */
-  val backPorchStart = 0
-
-  /**
-    * Back Portch終了count
-    */
-  val backPorchEnd = backPorchStart + backPorch
-
-  /**
     * Active Video開始count
     */
-  val activeVideoStart = backPorchEnd
+  val activeVideoStart = 0
 
   /**
     * Active Video終了count
@@ -68,9 +58,19 @@ case class SyncSignal(
   val syncEnd = syncStart + syncPulse
 
   /**
+    * Back Porch開始count
+    */
+  val backPorchStart = syncEnd
+
+  /**
+    * Back Portch終了count
+    */
+  val backPorchEnd = backPorchStart + backPorch
+
+  /**
     * これより大きな値は範囲外
     */
-  val outOfRangeStart = syncEnd
+  val outOfRangeStart = backPorchEnd
 }
 
 /**
