@@ -371,6 +371,7 @@ namespace ChiselNesViewer.Core.Test.Jtag {
         }
         public uint[] ReadFromChiselNes(JtagMaster jtag, ChiselNesAccessTarget target, uint offset, uint size) {
             uint readUnitBytes = 32;
+            uint dummyBytes = 24;
             var dst = new List<uint>((int)size);
 
             // ‘Oˆ—
@@ -389,14 +390,14 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             // USER0 Read
             jtag.WriteShiftIr(VJTAG_USER0);
             jtag.MoveShiftIrToShiftDr();
-            while (dst.Count < size) {
+            while (dst.Count < size + dummyBytes) {
                 var rawData = jtag.ReadShiftDr(readUnitBytes);
                 var dstData = rawData.Chunk(4).Select(raw => BitConverter.ToUInt32(raw)).ToArray();
                 dst.AddRange(dstData);
             }
             jtag.MoveShiftDrToShiftIr();
 
-            return dst.ToArray();
+            return dst.Skip((int)dummyBytes / 8).Take((int)size).ToArray(); // æ“ª‚ÆÅŒã‚Ì‚ ‚Ü‚è‚ğÌ‚Ä‚é
         }
 
         /// <summary>
