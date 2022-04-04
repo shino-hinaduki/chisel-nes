@@ -1,6 +1,6 @@
 <sld_project_info>
   <sld_infos>
-    <sld_info hpath="virtual_jtag:vjtagIp" name="vjtagIp">
+    <sld_info hpath="virtual_jtag:vjtag" name="vjtag">
       <assignment_values>
         <assignment_value text="QSYS_NAME virtual_jtag HAS_SOPCINFO 1 GENERATION_ID 1647788491"/>
       </assignment_values>

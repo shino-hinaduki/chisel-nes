@@ -14,10 +14,10 @@ class FrameBufferIO(val addrWidth: Int, val dataWidth: Int) extends Bundle {
   /**
     * PPU Clock Domainからのアクセス
     */
-  val ppu = new RamIO(addrWidth = addrWidth, dataWidth = dataWidth)
+  val ppu = Flipped(new RamIO(addrWidth = addrWidth, dataWidth = dataWidth))
 
   /**
     * VGA Pixel Clock Domainからのアクセス
     */
-  val vga = new RamIO(addrWidth = addrWidth, dataWidth = dataWidth)
+  val vga = Flipped(new RamIO(addrWidth = addrWidth, dataWidth = dataWidth))
 }

@@ -1,14 +1,13 @@
 package board.access
 
 import chisel3._
-import chisel3.util.switch
-import chisel3.util.is
+import chisel3.util._
 import chisel3.experimental.ChiselEnum
 
 import board.access.types.InternalAccessCommand
 
 /**
-  * VJTAG to DAPの最低限の動作確認サンプル。Readするたびにインクリするカウンタの値を返し、Writeで上書き可能
+  * VJTAG to DAPの動作確認サンプル
   *
   * @param counterWidth
   */
@@ -50,8 +49,9 @@ class DebugAccessTester(val counterWidth: Int = 32) extends Module {
           // Read CMD
           dequeueReg     := true.B
           enqueueReg     := true.B
-          enqueueDataReg := counterReg       // resp Counter
-          counterReg     := counterReg + 1.U // increment Counter
+          enqueueDataReg := Cat(0.U((InternalAccessCommand.Response.cmdWidth - InternalAccessCommand.Request.offsetWidth).W), offset) // resp offset
+          // enqueueDataReg := counterReg       // resp Counter
+          counterReg := counterReg + 1.U // increment Counter
         }
         is(InternalAccessCommand.Type.write) {
           // Write CMD

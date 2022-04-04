@@ -27,6 +27,9 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./dst:/diagrammer/dst
+    mem_reservation: 4096GB
+    environment:
+     - "JAVA_OPTS=-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1"
     command: /bin/bash ./diagram.sh -td ./dst -i ./dst/ChiselNes.fir --open-command echo
     
 

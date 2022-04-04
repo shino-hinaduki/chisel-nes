@@ -71,6 +71,7 @@ namespace ChiselNesViewer.Core.Jtag {
             if (device.OpenByDescription(targetInfo.Description) != FTDI.FT_STATUS.FT_OK) {
                 return false;
             }
+            device.SetBaudRate(3000000); // 3MHz
             // ローカルにセット
             this._device = device;
             Debug.Assert(_device?.IsOpen ?? false);
@@ -181,17 +182,16 @@ namespace ChiselNesViewer.Core.Jtag {
         public bool WriteShiftDr(byte data) =>
             WriteU8(WR, data);
 
-        public byte[] ReadShiftDr() {
-            ClearReadBuffer();
+        public byte[] ReadShiftDr(uint readSize = IJtagCommunicatable.ReadUnitSize) {
+            Debug.Assert(readSize <= IJtagCommunicatable.ReadUnitSize);
 
             // 先頭はRead+読み出しサイズ。のこりはDummyData
-            var writeData = new ushort[] {
-                (ushort)(RD | IJtagCommunicatable.ReadUnitSize)
-            }.Concat(Enumerable.Repeat(L, (int)IJtagCommunicatable.ReadUnitSize)).ToArray();
+            var writeData = Enumerable.Repeat(L, (int)((readSize / 2) + 1)).ToArray();
+            writeData[0] = (ushort)(RD | readSize);
             WriteU16(writeData);
 
             // read
-            var d = ReadU8((int)IJtagCommunicatable.ReadUnitSize);
+            var d = ReadU8((int)readSize);
 
             return d;
         }
@@ -221,23 +221,6 @@ namespace ChiselNesViewer.Core.Jtag {
             return true;
         }
 
-        public byte[] ReadShiftDr(uint dataSize, bool removeSurplus = true) {
-            var result = new List<byte>((int)dataSize);
-            // 63byteで通信する分
-            var maxTransferCount = dataSize / IJtagCommunicatable.ReadUnitSize;
-            for (var i = 0; i < maxTransferCount; i++) {
-                var datas = ReadShiftDr();
-                result.AddRange(datas);
-            }
-            // 最後のあまり
-            var remainBytes = dataSize % IJtagCommunicatable.ReadUnitSize;
-            if (remainBytes > 0) {
-                var datas = ReadShiftDr();
-                result.AddRange(removeSurplus ? datas.Take((int)remainBytes) : datas);
-            }
-            // 連結して返す
-            return result.ToArray();
-        }
         #endregion
     }
 }

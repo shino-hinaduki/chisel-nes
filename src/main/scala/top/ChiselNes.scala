@@ -5,19 +5,16 @@ import chisel3.util.Cat
 import chisel3.util.MuxLookup
 import chisel3.experimental.Analog
 
+import board.ip._
+
 import board.discrete.SevenSegmentLed
 import board.jtag.VirtualJtagBridge
 import board.jtag.types.VirtualJtagIO
 
-import board.ip.virtual_jtag
-import board.ip.pll_sysclk
-import board.ip.pll_vga
-import board.ip.dpram_framebuffer
 import board.discrete.Debounce
 import board.jtag.types.VirtualInstruction
 import board.access.DebugAccessTester
-import board.ip.async_fifo_vjtag_to_dap
-import board.ip.async_fifo_dap_to_vjtag
+import board.video.VgaOut
 
 /** 
  * Top Module
@@ -76,26 +73,31 @@ class ChiselNes extends RawModule {
 
   /**********************************************************************/
   /* Board Component & IP                                               */
-  val clk50Mhz = CLOCK_50
-  val reset    = !RESET_N
+  val clk50Mhz  = CLOCK_50  // Bank 3B
+  val clk50Mhz2 = CLOCK2_50 // Bank 7A
+  val clk50Mhz3 = CLOCK3_50 // Bank 8A
+  val clk50Mhz4 = CLOCK4_50 // Bank 4A
+  val reset     = !RESET_N
 
   // NES関連のClock
-  val pllSysClk = Module(new pll_sysclk)
+  val pllSysClk = Module(new PllSystemClock)
   val cpuClk    = pllSysClk.io.outclk_0 // 1.789709 MHz
   val ppuClk    = pllSysClk.io.outclk_0 // 5.36127 MHz
   val sysClk    = pllSysClk.io.outclk_0 // 21.616541 MHz
-  val sysRst    = !pllSysClk.io.locked
+  pllSysClk.io.refclk := clk50Mhz
+  pllSysClk.io.rst    := reset
 
   // VGA出力関連のClock
-  val pllVga      = Module(new pll_vga)
+  val pllVga      = Module(new PllVga)
   val vgaPixelClk = pllVga.io.outclk_0 // 25.175644 MHz
-  val vgaRst      = !pllVga.io.locked
+  pllVga.io.refclk := clk50Mhz3 // VGA関連の端子が8Aなので、近いCLK入力を使う
+  pllVga.io.rst    := reset
 
   /**********************************************************************/
   /* 7SEG LED                                                           */
-  val sevenSegmentLed = withClockAndReset(CLOCK_50, reset) { Module(new SevenSegmentLed()) }
-  val numVisibleReg   = withClockAndReset(CLOCK_50, reset) { RegInit(Bool(), true.B) }
-  val numReg          = withClockAndReset(CLOCK_50, reset) { RegInit(UInt(24.W), 0.U) }
+  val sevenSegmentLed = withClockAndReset(clk50Mhz, reset) { Module(new SevenSegmentLed()) }
+  val numVisibleReg   = withClockAndReset(clk50Mhz, reset) { RegInit(Bool(), true.B) }
+  val numReg          = withClockAndReset(clk50Mhz, reset) { RegInit(UInt(24.W), 0.U) }
   HEX0                         := sevenSegmentLed.io.digitsOut(0)
   HEX1                         := sevenSegmentLed.io.digitsOut(1)
   HEX2                         := sevenSegmentLed.io.digitsOut(2)
@@ -107,15 +109,15 @@ class ChiselNes extends RawModule {
 
   /**********************************************************************/
   /* LED Array                                                          */
-  val ledArrayReg = withClockAndReset(CLOCK_50, reset) { RegInit(UInt(10.W), 0.U) }
+  val ledArrayReg = withClockAndReset(clk50Mhz, reset) { RegInit(UInt(10.W), 0.U) }
   LEDR := ledArrayReg
 
   /**********************************************************************/
   /* Virtual JTAG                                                       */
-  val vjtagIp           = Module(new virtual_jtag)
-  val virtualJtagBridge = withClockAndReset(vjtagIp.io.tck, reset) { Module(new VirtualJtagBridge) }
+  val vjtag             = Module(new VirtualJtag)
+  val virtualJtagBridge = withClockAndReset(vjtag.io.tck, reset) { Module(new VirtualJtagBridge) }
   virtualJtagBridge.io.reset <> reset
-  virtualJtagBridge.io.vjtag <> vjtagIp.io
+  virtualJtagBridge.io.vjtag <> vjtag.io
   // virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.accessTest.litValue.toInt) <> DontCare
   virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.cpu.litValue.toInt) <> DontCare
   virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.ppu.litValue.toInt) <> DontCare
@@ -128,11 +130,11 @@ class ChiselNes extends RawModule {
 
   /**********************************************************************/
   /* Debug Access Tester                                                */
-  val debugAccessTester = withClockAndReset(CLOCK_50, reset) { Module(new DebugAccessTester()) }
+  val debugAccessTester = withClockAndReset(clk50Mhz, reset) { Module(new DebugAccessTester()) }
 
   // TODO: 接続しやすいUtilを用意する...。
-  val vjtagToDatQueue = Module(new async_fifo_vjtag_to_dap)
-  val datToVjtagQueue = Module(new async_fifo_dap_to_vjtag)
+  val vjtagToDatQueue = Module(new AsyncFifoVJtagToDap)
+  val datToVjtagQueue = Module(new AsyncFifoDapToVJtag)
   // debug: queue remain
   // vjtagToDatQueue.io.wrusedw <> DontCare
   // datToVjtagQueue.io.rdusedw <> DontCare
@@ -160,14 +162,77 @@ class ChiselNes extends RawModule {
   /**********************************************************************/
   /* VGA Output                                                         */
   // Framebuffer, 本家仕様の通りDoubleBufferにはしない
-  // val frameBuffer = Module(new dpram_framebuffer)
+  val vgaOut = withClockAndReset(ppuClk, reset) { Module(new VgaOut()) }
+
+  // 端子出力
+  VGA_R  := vgaOut.io.videoOut.r(7, 4)
+  VGA_G  := vgaOut.io.videoOut.g(7, 4)
+  VGA_B  := vgaOut.io.videoOut.b(7, 4)
+  VGA_HS := vgaOut.io.videoOut.hsync
+  VGA_VS := vgaOut.io.videoOut.vsync
+
+  // 制御関連
+  vgaOut.io.isDebug         := SW(9) // for Debug
+  vgaOut.io.pixelClock      := vgaPixelClk
+  vgaOut.io.pixelClockReset := reset
+
+  // FrameBufferと接続
+  val frameBuffer = Module(new DualPortRamFrameBuffer)
+  frameBuffer.io.address_a <> vgaOut.io.frameBuffer.ppu.address
+  frameBuffer.io.clock_a <> vgaOut.io.frameBuffer.ppu.clock
+  frameBuffer.io.data_a <> vgaOut.io.frameBuffer.ppu.data
+  frameBuffer.io.rden_a <> vgaOut.io.frameBuffer.ppu.rden
+  frameBuffer.io.wren_a <> vgaOut.io.frameBuffer.ppu.wren
+  frameBuffer.io.q_a <> vgaOut.io.frameBuffer.ppu.q
+  frameBuffer.io.address_b <> vgaOut.io.frameBuffer.vga.address
+  frameBuffer.io.clock_b <> vgaOut.io.frameBuffer.vga.clock
+  frameBuffer.io.data_b <> vgaOut.io.frameBuffer.vga.data
+  frameBuffer.io.rden_b <> vgaOut.io.frameBuffer.vga.rden
+  frameBuffer.io.wren_b <> vgaOut.io.frameBuffer.vga.wren
+  frameBuffer.io.q_b <> vgaOut.io.frameBuffer.vga.q
+
+  // TODO: PPUと接続
+  vgaOut.io.ppuVideo.valid := false.B
+  vgaOut.io.ppuVideo.r     := DontCare
+  vgaOut.io.ppuVideo.g     := DontCare
+  vgaOut.io.ppuVideo.b     := DontCare
+  vgaOut.io.ppuVideo.x     := DontCare
+  vgaOut.io.ppuVideo.y     := DontCare
+
+  // TODO: 接続しやすいUtilを用意する...。
+  val vjtagToFbQueue = Module(new AsyncFifoVJtagToDap)
+  val fbToVjtagQueue = Module(new AsyncFifoDapToVJtag)
+
+  // debug: queue remain
+  // vjtagToFbQueue.io.wrusedw <> DontCare
+  // fbToVjtagQueue.io.rdusedw <> DontCare
+  // req: vjtag -> fifo
+  vjtagToFbQueue.io.data <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.frameBuffer.litValue.toInt).req.data
+  vjtagToFbQueue.io.wrclk <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.frameBuffer.litValue.toInt).req.wrclk
+  vjtagToFbQueue.io.wrreq <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.frameBuffer.litValue.toInt).req.wrreq
+  vjtagToFbQueue.io.wrfull <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.frameBuffer.litValue.toInt).req.wrfull
+  // req: fifo -> fb
+  vjtagToFbQueue.io.rdclk <> vgaOut.io.debugAccess.req.rdclk
+  vjtagToFbQueue.io.rdreq <> vgaOut.io.debugAccess.req.rdreq
+  vjtagToFbQueue.io.q <> vgaOut.io.debugAccess.req.q
+  vjtagToFbQueue.io.rdempty <> vgaOut.io.debugAccess.req.rdempty
+  // resp: fb -> fifo
+  fbToVjtagQueue.io.data <> vgaOut.io.debugAccess.resp.data
+  fbToVjtagQueue.io.wrclk <> vgaOut.io.debugAccess.resp.wrclk
+  fbToVjtagQueue.io.wrreq <> vgaOut.io.debugAccess.resp.wrreq
+  fbToVjtagQueue.io.wrfull <> vgaOut.io.debugAccess.resp.wrfull
+  // resp: fifo -> vjtag
+  fbToVjtagQueue.io.rdclk <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.frameBuffer.litValue.toInt).resp.rdclk
+  fbToVjtagQueue.io.rdreq <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.frameBuffer.litValue.toInt).resp.rdreq
+  fbToVjtagQueue.io.q <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.frameBuffer.litValue.toInt).resp.q
+  fbToVjtagQueue.io.rdempty <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.frameBuffer.litValue.toInt).resp.rdempty
 
   /**********************************************************************/
   /* Test                                                               */
   // クロック跨いでるけどテスト回路だからいいとする...
   when(SW === 0.U) {
     //7segにカウンタの値を出す
-    withClockAndReset(CLOCK_50, reset) {
+    withClockAndReset(clk50Mhz, reset) {
       val counter = RegInit(UInt(64.W), 0.U)
       counter := counter + 1.U
       // カウンタの値そのまま
@@ -178,27 +243,27 @@ class ChiselNes extends RawModule {
     }
   }.elsewhen(SW === 1.U) {
     // 7segにVJTAGのVIRの値を出す
-    withClockAndReset(vjtagIp.io.tck, reset) {
+    withClockAndReset(vjtag.io.tck, reset) {
       // ir_inの値そのまま
-      numReg        := vjtagIp.io.ir_in
+      numReg        := vjtag.io.ir_in
       numVisibleReg := true.B
       // VJTAGのstate
       ledArrayReg := Cat(
-        vjtagIp.io.virtual_state_cdr,
-        vjtagIp.io.virtual_state_sdr,
-        vjtagIp.io.virtual_state_e1dr,
-        vjtagIp.io.virtual_state_pdr,
-        vjtagIp.io.virtual_state_e2dr,
-        vjtagIp.io.virtual_state_udr,
-        vjtagIp.io.virtual_state_cir,
-        vjtagIp.io.virtual_state_uir,
-        vjtagIp.io.tdi,
-        vjtagIp.io.tck.asBool
+        vjtag.io.virtual_state_cdr,
+        vjtag.io.virtual_state_sdr,
+        vjtag.io.virtual_state_e1dr,
+        vjtag.io.virtual_state_pdr,
+        vjtag.io.virtual_state_e2dr,
+        vjtag.io.virtual_state_udr,
+        vjtag.io.virtual_state_cir,
+        vjtag.io.virtual_state_uir,
+        vjtag.io.tdi,
+        vjtag.io.tck.asBool
       )
     }
   }.elsewhen(SW === 2.U) {
     // 7segにDebugAccessTesterのカウンタ値を出す
-    withClockAndReset(CLOCK_50, reset) {
+    withClockAndReset(clk50Mhz, reset) {
       // ir_inの値そのまま
       numReg        := debugAccessTester.io.debugCounter
       numVisibleReg := true.B
@@ -207,16 +272,44 @@ class ChiselNes extends RawModule {
     }
   }.elsewhen(SW === 3.U) {
     // 7segにDebugAccessTesterの最後のオフセット値を出す
-    withClockAndReset(CLOCK_50, reset) {
+    withClockAndReset(clk50Mhz, reset) {
       // ir_inの値そのまま
       numReg        := debugAccessTester.io.debugLatestOffset
       numVisibleReg := true.B
       // 適当に流れるようにする
       ledArrayReg := (1.U(10.W) << debugAccessTester.io.debugLatestOffset(3, 0))
     }
+  }.elsewhen(SW === 4.U) {
+    // 7segにfb -> vjtagの最後の値を出す
+    withClockAndReset(vjtag.io.tck, reset) {
+      val fbReadDataReg = RegInit(UInt(32.W), 0.U)
+      when(!fbToVjtagQueue.io.rdempty) {
+        fbReadDataReg := fbToVjtagQueue.io.q
+      }
+      numReg        := fbReadDataReg(23, 0)
+      numVisibleReg := true.B
+      // Queueのステータスを表示
+      ledArrayReg := Cat(
+        // clk
+        vjtagToFbQueue.io.wrclk.asBool,
+        vjtagToFbQueue.io.rdclk.asBool,
+        // vjtag -> fifo
+        vjtagToFbQueue.io.wrreq,
+        vjtagToFbQueue.io.wrfull,
+        // fifo -> fb
+        vjtagToFbQueue.io.rdreq,
+        vjtagToFbQueue.io.rdempty,
+        // fb -> fifo
+        fbToVjtagQueue.io.wrreq,
+        fbToVjtagQueue.io.wrfull,
+        // fifo -> vjtag
+        fbToVjtagQueue.io.rdreq,
+        fbToVjtagQueue.io.rdempty,
+      )
+    }
   }.otherwise {
     // 7seg消灯。SWの値をそのままLEDRに出す
-    withClockAndReset(CLOCK_50, reset) {
+    withClockAndReset(clk50Mhz, reset) {
       // 消灯
       numReg        := 0x123456.U
       numVisibleReg := false.B
@@ -249,11 +342,6 @@ class ChiselNes extends RawModule {
   SD_CLK     := false.B
   SD_CMD     := DontCare
   SD_DATA    := DontCare
-  VGA_B      := 0.U
-  VGA_G      := 0.U
-  VGA_HS     := false.B
-  VGA_R      := 0.U
-  VGA_VS     := false.B
 }
 
 /** Generate Verilog
