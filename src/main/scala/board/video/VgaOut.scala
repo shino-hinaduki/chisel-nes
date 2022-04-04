@@ -310,11 +310,15 @@ class VgaOut(
     }
 
     // 現在の読み出し結果から出力信号を決定する
-    when(vgaFbRdEnReg) {
+    val videoOutTrigReg  = RegNext(vgaFbRdEnReg, false.B) // RAMからDataoutされる1cyc分遅延させる
+    val videoOutAddrReg  = RegNext(vgaFbAddrReg, 0.U)
+    val videoOutHSyncReg = RegNext(hsyncPrefetchReg, true.B)
+    val videoOutVSyncReg = RegNext(vsyncPrefetchReg, true.B)
+    when(videoOutTrigReg) {
       // Active Video Area
       when(io.isDebug) {
         // デバッグ用に読み出しアドレスからパターンを作る
-        val (x, y) = fbAddrToPos(vgaFbAddrReg)
+        val (x, y) = fbAddrToPos(videoOutAddrReg)
         setVideoOut(x, y, 0.U, true.B, true.B) // ActiveAreaなのでtrue固定, 使うのは上位4bitなので飛ばしておく
       }.otherwise {
         // 有効なデータを読みだした後
@@ -327,8 +331,8 @@ class VgaOut(
         ppuConfig.bgColorR.U(channelDataWidth.W),
         ppuConfig.bgColorG.U(channelDataWidth.W),
         ppuConfig.bgColorB.U(channelDataWidth.W),
-        hsyncPrefetchReg,
-        vsyncPrefetchReg
+        videoOutHSyncReg,
+        videoOutVSyncReg
       )
     }
   }
