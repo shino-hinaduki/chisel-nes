@@ -335,7 +335,7 @@ namespace ChiselNesViewer.Core.Test.Jtag {
         const byte VJTAG_USER1 = 0x0e;
         const byte VJTAG_USER0 = 0x0c;
 
-        public enum ChiselNesAccessTarget: byte {
+        public enum ChiselNesAccessTarget : byte {
             AccessTest = 0x00,
             Cpu,
             Ppu,
@@ -370,37 +370,31 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             jtag.MoveShiftDrToShiftIr();
         }
         public uint[] ReadFromChiselNes(JtagMaster jtag, ChiselNesAccessTarget target, uint offset, uint size) {
+            uint readUnitBytes = 32;
+            var dst = new List<uint>((int)size);
+
             // 前処理
             jtag.MoveIdle();
             jtag.MoveIdleToShiftIr();
 
-            // 32byteずつ読み出す
-            uint readUnitBytes = 32; // 1回あたり読むRead数
-            uint dummyBytes = 8; // 前回Prefetchしたデータがいるので、最初8byteを捨てる
 
-            Func<uint, uint, IEnumerable<byte>> doRead = (offset, size) => {
-                // USER1
-                var vir = CreateVir(offset, false, target).ToArray(); // 3byte, { offset[15:0], isWrite[1], target[6:0] }
+            // USER1
+            var vir = CreateVir(offset, false, target).ToArray(); // 3byte, { offset[15:0], isWrite[1], target[6:0] }
 
-                jtag.WriteShiftIr(VJTAG_USER1);
-                jtag.MoveShiftIrToShiftDr();
-                jtag.WriteShiftDr(vir);
-                jtag.MoveShiftDrToShiftIr();
+            jtag.WriteShiftIr(VJTAG_USER1);
+            jtag.MoveShiftIrToShiftDr();
+            jtag.WriteShiftDr(vir);
+            jtag.MoveShiftDrToShiftIr();
 
-                // USER0 Read
-                jtag.WriteShiftIr(VJTAG_USER0);
-                jtag.MoveShiftIrToShiftDr();
-                var readData = jtag.ReadShiftDr(size + dummyBytes);
-                jtag.MoveShiftDrToShiftIr();
-                return readData.Skip((int)dummyBytes);
-            };
-
-            var dst = new List<uint>((int)size);
+            // USER0 Read
+            jtag.WriteShiftIr(VJTAG_USER0);
+            jtag.MoveShiftIrToShiftDr();
             while (dst.Count < size) {
-                var rawData = doRead((uint)(offset + dst.Count * 4), readUnitBytes);
+                var rawData = jtag.ReadShiftDr(readUnitBytes);
                 var dstData = rawData.Chunk(4).Select(raw => BitConverter.ToUInt32(raw)).ToArray();
                 dst.AddRange(dstData);
             }
+            jtag.MoveShiftDrToShiftIr();
 
             return dst.ToArray();
         }

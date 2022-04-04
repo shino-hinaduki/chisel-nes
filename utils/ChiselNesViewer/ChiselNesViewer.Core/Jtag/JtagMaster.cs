@@ -185,9 +185,8 @@ namespace ChiselNesViewer.Core.Jtag {
             Debug.Assert(readSize <= IJtagCommunicatable.ReadUnitSize);
 
             // 先頭はRead+読み出しサイズ。のこりはDummyData
-            var writeData = new ushort[] {
-                (ushort)(RD | readSize )
-            }.Concat(Enumerable.Repeat(L, (int)readSize)).ToArray();
+            var writeData = Enumerable.Repeat(L, (int)((readSize / 2) + 1)).ToArray();
+            writeData[0] = (ushort)(RD | readSize);
             WriteU16(writeData);
 
             // read

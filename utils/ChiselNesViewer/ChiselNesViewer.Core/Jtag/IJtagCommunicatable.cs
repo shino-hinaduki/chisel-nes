@@ -12,7 +12,7 @@ namespace ChiselNesViewer.Core.Jtag {
         /// <summary>
         /// FT232都合だが、ReadU8の成約になっているのでこちらに定義しておく
         /// </summary>
-        const uint ReadUnitSize = 63; // 64が最大で、先頭はRD指示に使うので63
+        const uint ReadUnitSize = 32;
 
         #region デバイスの操作
 
