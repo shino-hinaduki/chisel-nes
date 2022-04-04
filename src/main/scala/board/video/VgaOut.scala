@@ -173,7 +173,7 @@ class VgaOut(
   // Enqueueする
   def debugRespEnqueue(data: UInt) = {
     debugAccessRespDataReg    := data
-    debugAccessRespEnqueueReg := false.B
+    debugAccessRespEnqueueReg := true.B
   }
 
   // 本cycでReadしていたら、その結果をEnqueueする
