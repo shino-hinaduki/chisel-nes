@@ -430,7 +430,7 @@ namespace ChiselNesViewer.Core.Test.Jtag {
         }
 
         /// <summary>
-        /// FrameBufferへのデータ書き読みテスト
+        /// FrameBufferの読みテスト
         /// </summary>
         [TestMethod]
         [DoNotParallelize]
@@ -448,7 +448,7 @@ namespace ChiselNesViewer.Core.Test.Jtag {
                 )
             ).ToArray();
 
-            WriteToChiselNes(jtag, ChiselNesAccessTarget.FrameBuffer, 0x00000000, writeData);
+            //WriteToChiselNes(jtag, ChiselNesAccessTarget.FrameBuffer, 0x00000000, writeData);
             var readData = ReadFromChiselNes(jtag, ChiselNesAccessTarget.FrameBuffer, 0x00000000, (uint)writeData.Length);
 
             Assert.IsTrue(jtag.Close());

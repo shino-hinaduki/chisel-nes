@@ -279,6 +279,34 @@ class ChiselNes extends RawModule {
       // 適当に流れるようにする
       ledArrayReg := (1.U(10.W) << debugAccessTester.io.debugLatestOffset(3, 0))
     }
+  }.elsewhen(SW === 4.U) {
+    // 7segにfb -> vjtagの最後の値を出す
+    withClockAndReset(vjtag.io.tck, reset) {
+      val fbReadDataReg = RegInit(UInt(32.W), 0.U)
+      when(!fbToVjtagQueue.io.rdempty) {
+        fbReadDataReg := fbToVjtagQueue.io.q
+      }
+      numReg        := fbReadDataReg(23, 0)
+      numVisibleReg := true.B
+      // Queueのステータスを表示
+      ledArrayReg := Cat(
+        // clk
+        vjtagToFbQueue.io.wrclk.asBool,
+        vjtagToFbQueue.io.rdclk.asBool,
+        // vjtag -> fifo
+        vjtagToFbQueue.io.wrreq,
+        vjtagToFbQueue.io.wrfull,
+        // fifo -> fb
+        vjtagToFbQueue.io.rdreq,
+        vjtagToFbQueue.io.rdempty,
+        // fb -> fifo
+        fbToVjtagQueue.io.wrreq,
+        fbToVjtagQueue.io.wrfull,
+        // fifo -> vjtag
+        fbToVjtagQueue.io.rdreq,
+        fbToVjtagQueue.io.rdempty,
+      )
+    }
   }.otherwise {
     // 7seg消灯。SWの値をそのままLEDRに出す
     withClockAndReset(clk50Mhz, reset) {
