@@ -17,7 +17,7 @@
 // PROGRAM "Quartus Prime"
 // VERSION "Version 21.1.0 Build 842 10/21/2021 SJ Lite Edition"
 
-// DATE "04/05/2022 02:55:32"
+// DATE "04/05/2022 22:14:05"
 
 // 
 // Device: Altera 5CEBA4F23C7 Package FBGA484
@@ -2044,7 +2044,6 @@ wire [4:0] \virtualJtagBridge|shiftCountReg ;
 wire [6:0] \sevenSegmentLed|digitsOutReg_4 ;
 wire [2:0] \vjtagToFbQueue|dcfifo_component|auto_generated|wrptr_g ;
 wire [7:0] \vgaOut|gOutReg ;
-wire [15:0] \auto_hub|instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|instrumentation_fabric|alt_sld_fab|sldfabric|jtag_hub_gen:real_sld_jtag_hub|shadow_jsm|state ;
 wire [6:0] \sevenSegmentLed|digitsOutReg_5 ;
 wire [3:0] \frameBuffer|altsyncram_component|auto_generated|rden_decode_a|w_anode2478w ;
 wire [2:0] \vjtagToFbQueue|dcfifo_component|auto_generated|ws_dgrp|dffpipe16|dffe18a ;
@@ -2075,7 +2074,7 @@ wire [31:0] \virtualJtagBridge|dataInReg ;
 wire [23:0] \virtualJtagBridge|burstAccessCountReg ;
 wire [63:0] \vjtagToFbQueue|dcfifo_component|auto_generated|fifo_ram|q_b ;
 wire [7:0] \vgaOut|bOutReg ;
-wire [3:0] \auto_hub|instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|instrumentation_fabric|alt_sld_fab|sldfabric|jtag_hub_gen:real_sld_jtag_hub|hub_minor_ver_reg ;
+wire [3:0] \auto_hub|instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|instrumentation_fabric|alt_sld_fab|sldfabric|jtag_hub_gen:real_sld_jtag_hub|design_hash_reg ;
 wire [3:0] \frameBuffer|altsyncram_component|auto_generated|rden_decode_b|w_anode2488w ;
 wire [2:0] \fbToVjtagQueue|dcfifo_component|auto_generated|rs_dgwp|dffpipe6|dffe7a ;
 wire [2:0] \vjtagToDatQueue|dcfifo_component|auto_generated|rdptr_g ;
@@ -2097,15 +2096,14 @@ wire [3:0] \frameBuffer|altsyncram_component|auto_generated|decode2|w_anode2478w
 wire [3:0] \frameBuffer|altsyncram_component|auto_generated|rden_decode_b|w_anode2478w ;
 wire [3:0] \frameBuffer|altsyncram_component|auto_generated|decode2|w_anode2488w ;
 wire [3:0] \frameBuffer|altsyncram_component|auto_generated|rden_decode_a|w_anode2498w ;
-wire [3:0] \auto_hub|instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|instrumentation_fabric|alt_sld_fab|sldfabric|jtag_hub_gen:real_sld_jtag_hub|identity_contrib_shift_reg ;
+wire [2:0] \auto_hub|instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|instrumentation_fabric|alt_sld_fab|sldfabric|jtag_hub_gen:real_sld_jtag_hub|hub_mode_reg ;
 wire [3:0] \frameBuffer|altsyncram_component|auto_generated|rden_decode_b|w_anode2498w ;
 wire [3:0] \frameBuffer|altsyncram_component|auto_generated|decode2|w_anode2508w ;
 wire [3:0] \frameBuffer|altsyncram_component|auto_generated|rden_decode_a|w_anode2508w ;
-wire [24:0] \auto_hub|instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|instrumentation_fabric|alt_sld_fab|sldfabric|jtag_hub_gen:real_sld_jtag_hub|irsr_reg ;
 wire [3:0] \frameBuffer|altsyncram_component|auto_generated|rden_decode_b|w_anode2508w ;
 wire [2:0] \frameBuffer|altsyncram_component|auto_generated|address_reg_b ;
 wire [3:0] \frameBuffer|altsyncram_component|auto_generated|decode2|w_anode2431w ;
-wire [4:0] \auto_hub|instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|instrumentation_fabric|alt_sld_fab|sldfabric|jtag_hub_gen:real_sld_jtag_hub|mixer_addr_reg_internal ;
+wire [9:0] \auto_hub|instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|instrumentation_fabric|alt_sld_fab|sldfabric|jtag_hub_gen:real_sld_jtag_hub|jtag_ir_reg ;
 wire [3:0] \frameBuffer|altsyncram_component|auto_generated|rden_decode_a|w_anode2431w ;
 wire [3:0] \frameBuffer|altsyncram_component|auto_generated|rden_decode_b|w_anode2431w ;
 wire [3:0] \frameBuffer|altsyncram_component|auto_generated|decode2|w_anode2448w ;
@@ -2129,6 +2127,7 @@ wire [0:0] \vjtagToDatQueue|dcfifo_component|auto_generated|wrfull_eq_comp|aneb_
 wire [1:0] \vjtagToDatQueue|dcfifo_component|auto_generated|ram_address_a ;
 wire [2:0] \vjtagToDatQueue|dcfifo_component|auto_generated|rs_dgwp|dffpipe10|dffe11a ;
 wire [2:0] \fbToVjtagQueue|dcfifo_component|auto_generated|delayed_wrptr_g ;
+wire [2:0] \auto_hub|instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|instrumentation_fabric|alt_sld_fab|sldfabric|jtag_hub_gen:real_sld_jtag_hub|shadow_jsm|tms_cnt ;
 wire [2:0] \vjtagToFbQueue|dcfifo_component|auto_generated|delayed_wrptr_g ;
 wire [2:0] \frameBuffer|altsyncram_component|auto_generated|out_address_reg_a ;
 wire [2:0] \datToVjtagQueue|dcfifo_component|auto_generated|delayed_wrptr_g ;
@@ -2136,14 +2135,15 @@ wire [2:0] \vjtagToDatQueue|dcfifo_component|auto_generated|ws_dgrp|dffpipe16|df
 wire [2:0] \vjtagToDatQueue|dcfifo_component|auto_generated|delayed_wrptr_g ;
 wire [2:0] \frameBuffer|altsyncram_component|auto_generated|address_reg_a ;
 wire [15:0] \virtualJtagBridge|irInReg_baseOffset ;
-wire [2:0] \auto_hub|instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|instrumentation_fabric|alt_sld_fab|sldfabric|jtag_hub_gen:real_sld_jtag_hub|shadow_jsm|tms_cnt ;
+wire [15:0] \auto_hub|instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|instrumentation_fabric|alt_sld_fab|sldfabric|jtag_hub_gen:real_sld_jtag_hub|shadow_jsm|state ;
+wire [24:0] \auto_hub|instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|instrumentation_fabric|alt_sld_fab|sldfabric|jtag_hub_gen:real_sld_jtag_hub|irsr_reg ;
 wire [46:0] \auto_hub|instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|instrumentation_fabric|alt_sld_fab|splitter_nodes_receive_0 ;
-wire [3:0] \auto_hub|instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|instrumentation_fabric|alt_sld_fab|sldfabric|jtag_hub_gen:real_sld_jtag_hub|design_hash_reg ;
+wire [3:0] \auto_hub|instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|instrumentation_fabric|alt_sld_fab|sldfabric|jtag_hub_gen:real_sld_jtag_hub|hub_minor_ver_reg ;
 wire [3:0] \auto_hub|instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|instrumentation_fabric|alt_sld_fab|sldfabric|jtag_hub_gen:real_sld_jtag_hub|hub_info_reg|WORD_SR ;
-wire [2:0] \auto_hub|instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|instrumentation_fabric|alt_sld_fab|sldfabric|jtag_hub_gen:real_sld_jtag_hub|hub_mode_reg ;
-wire [9:0] \auto_hub|instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|instrumentation_fabric|alt_sld_fab|sldfabric|jtag_hub_gen:real_sld_jtag_hub|jtag_ir_reg ;
+wire [4:0] \auto_hub|instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|instrumentation_fabric|alt_sld_fab|sldfabric|jtag_hub_gen:real_sld_jtag_hub|mixer_addr_reg_internal ;
 wire [3:0] \auto_hub|instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|instrumentation_fabric|alt_sld_fab|sldfabric_ident_writedata ;
 wire [4:0] \auto_hub|instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|instrumentation_fabric|alt_sld_fab|sldfabric|jtag_hub_gen:real_sld_jtag_hub|hub_info_reg|word_counter ;
+wire [3:0] \auto_hub|instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|instrumentation_fabric|alt_sld_fab|sldfabric|jtag_hub_gen:real_sld_jtag_hub|identity_contrib_shift_reg ;
 wire [2:0] \pllSysClk|pll_sysclk_inst|altera_pll_i|fboutclk_wire ;
 wire [2:0] \pllSysClk|pll_sysclk_inst|altera_pll_i|outclk_wire ;
 wire [0:0] \pllVga|pll_vga_inst|altera_pll_i|fboutclk_wire ;
@@ -3470,7 +3470,7 @@ defparam \DRAM_BA[1]~output .shift_series_termination_control = "false";
 
 // Location: IOOBUF_X12_Y0_N36
 cyclonev_io_obuf \DRAM_CAS_N~output (
-	.i(gnd),
+	.i(vcc),
 	.oe(vcc),
 	.dynamicterminationcontrol(gnd),
 	.seriesterminationcontrol(16'b0000000000000000),
@@ -3518,7 +3518,7 @@ defparam \DRAM_CLK~output .shift_series_termination_control = "false";
 
 // Location: IOOBUF_X12_Y0_N53
 cyclonev_io_obuf \DRAM_CS_N~output (
-	.i(gnd),
+	.i(vcc),
 	.oe(vcc),
 	.dynamicterminationcontrol(gnd),
 	.seriesterminationcontrol(16'b0000000000000000),
@@ -3582,7 +3582,7 @@ defparam \DRAM_UDQM~output .shift_series_termination_control = "false";
 
 // Location: IOOBUF_X16_Y0_N76
 cyclonev_io_obuf \DRAM_WE_N~output (
-	.i(gnd),
+	.i(vcc),
 	.oe(vcc),
 	.dynamicterminationcontrol(gnd),
 	.seriesterminationcontrol(16'b0000000000000000),
