@@ -19,7 +19,7 @@ import board.access.types.InternalAccessCommand
   * PPUからの映像出力をFrameBufferにため、FrameBufferから映像を出力する
   * Module自体はPPUからのクロックで駆動し、映像出力部分はio.pxelClockで供給したclockで駆動する
   * @param vgaConfig 出力設定。初期値は 640x480 60Hz
-  * @param ppuConfig PPUの映像配置設定。初期値は中央に等倍、背景色は黒
+  * @param ppuConfig PPUの映像配置設定。初期値は中央に2倍、背景色は白
   */
 class VgaOut(
     val vgaConfig: VgaConfig = VgaConfig.minConf,
