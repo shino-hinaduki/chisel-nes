@@ -6,6 +6,8 @@ import chisel3.util.Cat
 
 import board.ram.types.AsyncFifoEnqueueIO
 import board.ram.types.AsyncFifoDequeueIO
+import board.ip.AsyncFifoVJtagToDap
+import board.ip.AsyncFifoDapToVJtag
 
 /**
   * Virtual JTAG Bridgeなどから、R/W要求を出すときとその応答の定義
@@ -139,6 +141,36 @@ object InternalAccessCommand {
     * 応答Queue
     */
     val resp = Flipped(new AsyncFifoDequeueIO(InternalAccessCommand.Response.cmdWidth))
+
+    /**
+      * SlaveIOと接続します
+      *
+      * @param slave 接続先のI/F
+      * @param mosiFifo Master->Slave間のFIFO
+      * @param misoFifo Master<-Slave間のFIFO
+      */
+    def connect(slave: SlaveIO, mosiFifo: AsyncFifoVJtagToDap, misoFifo: AsyncFifoDapToVJtag) = {
+      // req: master -> fifo
+      mosiFifo.io.data <> req.data
+      mosiFifo.io.wrclk <> req.wrclk
+      mosiFifo.io.wrreq <> req.wrreq
+      mosiFifo.io.wrfull <> req.wrfull
+      // req: fifo -> slave
+      mosiFifo.io.rdclk <> slave.req.rdclk
+      mosiFifo.io.rdreq <> slave.req.rdreq
+      mosiFifo.io.q <> slave.req.q
+      mosiFifo.io.rdempty <> slave.req.rdempty
+      // resp: slave -> fifo
+      misoFifo.io.data <> slave.resp.data
+      misoFifo.io.wrclk <> slave.resp.wrclk
+      misoFifo.io.wrreq <> slave.resp.wrreq
+      misoFifo.io.wrfull <> slave.resp.wrfull
+      // resp: fifo -> master
+      misoFifo.io.rdclk <> resp.rdclk
+      misoFifo.io.rdreq <> resp.rdreq
+      misoFifo.io.q <> resp.q
+      misoFifo.io.rdempty <> resp.rdempty
+    }
   }
 
   /**
@@ -156,6 +188,17 @@ object InternalAccessCommand {
     * 応答Queue
     */
     val resp = Flipped(new AsyncFifoEnqueueIO(InternalAccessCommand.Response.cmdWidth))
+
+    /**
+      * MasterIOと接続します
+      *
+      * @param master 接続先のI/F
+      * @param mosiFifo Master->Slave間のFIFO
+      * @param misoFifo Master<-Slave間のFIFO
+      */
+    def connect(master: MasterIO, mosiFifo: AsyncFifoVJtagToDap, misoFifo: AsyncFifoDapToVJtag) = {
+      master.connect(this, mosiFifo, misoFifo)
+    }
   }
 
 }

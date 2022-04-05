@@ -141,12 +141,12 @@ class ChiselNes extends RawModule {
   val virtualJtagBridge = withClockAndReset(vjtag.io.tck, reset) { Module(new VirtualJtagBridge) }
   virtualJtagBridge.io.reset <> reset
   virtualJtagBridge.io.vjtag <> vjtag.io
-  // virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.accessTest.litValue.toInt) <> DontCare
+
+  // TODO: 接続したら削除
   virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.cpu.litValue.toInt) <> DontCare
   virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.ppu.litValue.toInt) <> DontCare
   virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.apu.litValue.toInt) <> DontCare
   virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.cart.litValue.toInt) <> DontCare
-  virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.frameBuffer.litValue.toInt) <> DontCare
   virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.cpuBusMaster.litValue.toInt) <> DontCare
   virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.ppuBusMaster.litValue.toInt) <> DontCare
   virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.audio.litValue.toInt) <> DontCare
@@ -155,32 +155,11 @@ class ChiselNes extends RawModule {
   /* Debug Access Tester                                                */
   val debugAccessTester = withClockAndReset(clk50Mhz, reset) { Module(new DebugAccessTester()) }
 
-  // TODO: 接続しやすいUtilを用意する...。
   val vjtagToDatQueue = Module(new AsyncFifoVJtagToDap)
   val datToVjtagQueue = Module(new AsyncFifoDapToVJtag)
-  // debug: queue remain
-  // vjtagToDatQueue.io.wrusedw <> DontCare
-  // datToVjtagQueue.io.rdusedw <> DontCare
-  // req: vjtag -> fifo
-  vjtagToDatQueue.io.data <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.accessTest.litValue.toInt).req.data
-  vjtagToDatQueue.io.wrclk <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.accessTest.litValue.toInt).req.wrclk
-  vjtagToDatQueue.io.wrreq <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.accessTest.litValue.toInt).req.wrreq
-  vjtagToDatQueue.io.wrfull <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.accessTest.litValue.toInt).req.wrfull
-  // req: fifo -> dat
-  vjtagToDatQueue.io.rdclk <> debugAccessTester.io.debugAccess.req.rdclk
-  vjtagToDatQueue.io.rdreq <> debugAccessTester.io.debugAccess.req.rdreq
-  vjtagToDatQueue.io.q <> debugAccessTester.io.debugAccess.req.q
-  vjtagToDatQueue.io.rdempty <> debugAccessTester.io.debugAccess.req.rdempty
-  // resp: dat -> fifo
-  datToVjtagQueue.io.data <> debugAccessTester.io.debugAccess.resp.data
-  datToVjtagQueue.io.wrclk <> debugAccessTester.io.debugAccess.resp.wrclk
-  datToVjtagQueue.io.wrreq <> debugAccessTester.io.debugAccess.resp.wrreq
-  datToVjtagQueue.io.wrfull <> debugAccessTester.io.debugAccess.resp.wrfull
-  // resp: fifo -> vjtag
-  datToVjtagQueue.io.rdclk <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.accessTest.litValue.toInt).resp.rdclk
-  datToVjtagQueue.io.rdreq <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.accessTest.litValue.toInt).resp.rdreq
-  datToVjtagQueue.io.q <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.accessTest.litValue.toInt).resp.q
-  datToVjtagQueue.io.rdempty <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.accessTest.litValue.toInt).resp.rdempty
+  virtualJtagBridge.io
+    .debugAccessQueues(VirtualInstruction.AccessTarget.accessTest.litValue.toInt)
+    .connect(debugAccessTester.io.debugAccess, vjtagToDatQueue, datToVjtagQueue)
 
   /**********************************************************************/
   /* VGA Output                                                         */
@@ -222,33 +201,12 @@ class ChiselNes extends RawModule {
   vgaOut.io.ppuVideo.x     := DontCare
   vgaOut.io.ppuVideo.y     := DontCare
 
-  // TODO: 接続しやすいUtilを用意する...。
+  // VJTAGと接続
   val vjtagToFbQueue = Module(new AsyncFifoVJtagToDap)
   val fbToVjtagQueue = Module(new AsyncFifoDapToVJtag)
-
-  // debug: queue remain
-  // vjtagToFbQueue.io.wrusedw <> DontCare
-  // fbToVjtagQueue.io.rdusedw <> DontCare
-  // req: vjtag -> fifo
-  vjtagToFbQueue.io.data <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.frameBuffer.litValue.toInt).req.data
-  vjtagToFbQueue.io.wrclk <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.frameBuffer.litValue.toInt).req.wrclk
-  vjtagToFbQueue.io.wrreq <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.frameBuffer.litValue.toInt).req.wrreq
-  vjtagToFbQueue.io.wrfull <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.frameBuffer.litValue.toInt).req.wrfull
-  // req: fifo -> fb
-  vjtagToFbQueue.io.rdclk <> vgaOut.io.debugAccess.req.rdclk
-  vjtagToFbQueue.io.rdreq <> vgaOut.io.debugAccess.req.rdreq
-  vjtagToFbQueue.io.q <> vgaOut.io.debugAccess.req.q
-  vjtagToFbQueue.io.rdempty <> vgaOut.io.debugAccess.req.rdempty
-  // resp: fb -> fifo
-  fbToVjtagQueue.io.data <> vgaOut.io.debugAccess.resp.data
-  fbToVjtagQueue.io.wrclk <> vgaOut.io.debugAccess.resp.wrclk
-  fbToVjtagQueue.io.wrreq <> vgaOut.io.debugAccess.resp.wrreq
-  fbToVjtagQueue.io.wrfull <> vgaOut.io.debugAccess.resp.wrfull
-  // resp: fifo -> vjtag
-  fbToVjtagQueue.io.rdclk <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.frameBuffer.litValue.toInt).resp.rdclk
-  fbToVjtagQueue.io.rdreq <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.frameBuffer.litValue.toInt).resp.rdreq
-  fbToVjtagQueue.io.q <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.frameBuffer.litValue.toInt).resp.q
-  fbToVjtagQueue.io.rdempty <> virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.frameBuffer.litValue.toInt).resp.rdempty
+  virtualJtagBridge.io
+    .debugAccessQueues(VirtualInstruction.AccessTarget.frameBuffer.litValue.toInt)
+    .connect(vgaOut.io.debugAccess, vjtagToFbQueue, fbToVjtagQueue)
 
   /**********************************************************************/
   /* Test                                                               */
