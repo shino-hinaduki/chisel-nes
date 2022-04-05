@@ -72,6 +72,29 @@ class ChiselNes extends RawModule {
   val VGA_VS = IO(Output(Bool()))
 
   /**********************************************************************/
+  /* Unuse ports                                                        */
+  DRAM_ADDR  := 0.U
+  DRAM_BA    := 0.U
+  DRAM_CAS_N := true.B
+  DRAM_CKE   := 0.U
+  DRAM_CLK   := 0.U
+  DRAM_CS_N  := true.B
+  DRAM_DQ    := DontCare
+  DRAM_LDQM  := false.B
+  DRAM_RAS_N := false.B
+  DRAM_UDQM  := false.B
+  DRAM_WE_N  := true.B
+  GPIO_0     := DontCare
+  GPIO_1     := DontCare
+  PS2_CLK    := DontCare
+  PS2_CLK2   := DontCare
+  PS2_DAT    := DontCare
+  PS2_DAT2   := DontCare
+  SD_CLK     := false.B
+  SD_CMD     := DontCare
+  SD_DATA    := DontCare
+
+  /**********************************************************************/
   /* Board Component & IP                                               */
   val clk50Mhz  = CLOCK_50  // Bank 3B
   val clk50Mhz2 = CLOCK2_50 // Bank 7A
@@ -321,27 +344,6 @@ class ChiselNes extends RawModule {
   // TODO: エミュレータ自体のImpl
   // TODO: エミュレータと外部コンポーネントの接続
 
-  // unuse ports
-  DRAM_ADDR  := 0.U
-  DRAM_BA    := 0.U
-  DRAM_CAS_N := 0.U
-  DRAM_CKE   := 0.U
-  DRAM_CLK   := 0.U
-  DRAM_CS_N  := 0.U
-  DRAM_DQ    := DontCare
-  DRAM_LDQM  := false.B
-  DRAM_RAS_N := false.B
-  DRAM_UDQM  := false.B
-  DRAM_WE_N  := false.B
-  GPIO_0     := DontCare
-  GPIO_1     := DontCare
-  PS2_CLK    := DontCare
-  PS2_CLK2   := DontCare
-  PS2_DAT    := DontCare
-  PS2_DAT2   := DontCare
-  SD_CLK     := false.B
-  SD_CMD     := DontCare
-  SD_DATA    := DontCare
 }
 
 /** Generate Verilog
