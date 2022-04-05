@@ -15,6 +15,8 @@ import board.discrete.Debounce
 import board.jtag.types.VirtualInstruction
 import board.access.DebugAccessTester
 import board.video.VgaOut
+import board.gpio.GpioMapping
+import os.truncate
 
 /** 
  * Top Module
@@ -84,15 +86,15 @@ class ChiselNes extends RawModule {
   DRAM_RAS_N := false.B
   DRAM_UDQM  := false.B
   DRAM_WE_N  := true.B
-  GPIO_0     := DontCare
-  GPIO_1     := DontCare
-  PS2_CLK    := DontCare
-  PS2_CLK2   := DontCare
-  PS2_DAT    := DontCare
-  PS2_DAT2   := DontCare
-  SD_CLK     := false.B
-  SD_CMD     := DontCare
-  SD_DATA    := DontCare
+
+  PS2_CLK  := DontCare
+  PS2_CLK2 := DontCare
+  PS2_DAT  := DontCare
+  PS2_DAT2 := DontCare
+
+  SD_CLK  := false.B
+  SD_CMD  := DontCare
+  SD_DATA := DontCare
 
   /**********************************************************************/
   /* Board Component & IP                                               */
@@ -115,6 +117,46 @@ class ChiselNes extends RawModule {
   val vgaPixelClk = pllVga.io.outclk_0 // 25.175644 MHz
   pllVga.io.refclk := clk50Mhz3 // VGA関連の端子が8Aなので、近いCLK入力を使う
   pllVga.io.rst    := reset
+
+  /**********************************************************************/
+  /* GPIO Remap                                                         */
+  val gpioMapping = Module(new GpioMapping)
+  gpioMapping.io.GPIO_0 <> GPIO_0
+  gpioMapping.io.GPIO_1 <> GPIO_1
+  // TODO: エミュレータに接続する
+  // TODO: Cartridgeエミュレータとの接続を切り替え式にする(cart_oe_inを使えば外部は完全に切り離せるが、データ入力側のセレクタはケアが必要)
+  // CPU
+  gpioMapping.io.a      := 0.U
+  gpioMapping.io.d_o    := 0.U
+  gpioMapping.io.d_oe   := SW(8)  // for Debug
+  gpioMapping.io.rw     := false.B
+  gpioMapping.io.romsel := false.B
+  gpioMapping.io.o2     := cpuClk // TODO: cpuClkから位相シフトが必要, Mapper次第で調整
+  // PPU
+  gpioMapping.io.pa      := 0.U
+  gpioMapping.io.pd_o    := 0.U
+  gpioMapping.io.pd_oe   := SW(8) // for Debug
+  gpioMapping.io.vrama10 := false.B
+  gpioMapping.io.rd      := false.B
+  gpioMapping.io.we      := false.B
+  // LevelShift Enable
+  gpioMapping.io.cart_oe_in := false.B
+  // Controller
+  gpioMapping.io.joy1_ps  := false.B
+  gpioMapping.io.joy1_clk := false.B
+  gpioMapping.io.joy2_ps  := false.B
+  gpioMapping.io.joy2_clk := false.B
+  // Audio
+  gpioMapping.io.dac_bclk    := false.B
+  gpioMapping.io.dac_lrclk   := false.B
+  gpioMapping.io.dac_sd_mode := false.B
+  gpioMapping.io.dac_din     := false.B
+  // Debug
+  gpioMapping.io.led  := true.B
+  gpioMapping.io.io0  := cpuClk.asBool
+  gpioMapping.io.io1  := ppuClk.asBool
+  gpioMapping.io.rsv0 := cpuClk.asBool
+  gpioMapping.io.rsv1 := ppuClk.asBool
 
   /**********************************************************************/
   /* 7SEG LED                                                           */
@@ -211,7 +253,8 @@ class ChiselNes extends RawModule {
   /**********************************************************************/
   /* Test                                                               */
   // クロック跨いでるけどテスト回路だからいいとする...
-  when(SW === 0.U) {
+  val pattern = SW(7, 0) // 上位bitは別用途で使っているので削る
+  when(pattern === 0.U) {
     //7segにカウンタの値を出す
     withClockAndReset(clk50Mhz, reset) {
       val counter = RegInit(UInt(64.W), 0.U)
@@ -222,7 +265,7 @@ class ChiselNes extends RawModule {
       // 流れる感じにする
       ledArrayReg := (1.U(10.W) << counter(23, 20))
     }
-  }.elsewhen(SW === 1.U) {
+  }.elsewhen(pattern === 1.U) {
     // 7segにVJTAGのVIRの値を出す
     withClockAndReset(vjtag.io.tck, reset) {
       // ir_inの値そのまま
@@ -242,7 +285,7 @@ class ChiselNes extends RawModule {
         vjtag.io.tck.asBool
       )
     }
-  }.elsewhen(SW === 2.U) {
+  }.elsewhen(pattern === 2.U) {
     // 7segにDebugAccessTesterのカウンタ値を出す
     withClockAndReset(clk50Mhz, reset) {
       // ir_inの値そのまま
@@ -251,7 +294,7 @@ class ChiselNes extends RawModule {
       // 適当に流れるようにする
       ledArrayReg := (1.U(10.W) << debugAccessTester.io.debugCounter(3, 0))
     }
-  }.elsewhen(SW === 3.U) {
+  }.elsewhen(pattern === 3.U) {
     // 7segにDebugAccessTesterの最後のオフセット値を出す
     withClockAndReset(clk50Mhz, reset) {
       // ir_inの値そのまま
@@ -260,7 +303,7 @@ class ChiselNes extends RawModule {
       // 適当に流れるようにする
       ledArrayReg := (1.U(10.W) << debugAccessTester.io.debugLatestOffset(3, 0))
     }
-  }.elsewhen(SW === 4.U) {
+  }.elsewhen(pattern === 4.U) {
     // 7segにfb -> vjtagの最後の値を出す
     withClockAndReset(vjtag.io.tck, reset) {
       val fbReadDataReg = RegInit(UInt(32.W), 0.U)
@@ -286,6 +329,24 @@ class ChiselNes extends RawModule {
         // fifo -> vjtag
         fbToVjtagQueue.io.rdreq,
         fbToVjtagQueue.io.rdempty,
+      )
+    }
+  }.elsewhen(pattern === 5.U) {
+    // 7segにGPIOの値を出す
+    withClockAndReset(cpuClk, reset) {
+      numReg        := Cat(gpioMapping.io.pd_i, 0.U(8.W), gpioMapping.io.d_i)
+      numVisibleReg := true.B
+      ledArrayReg := Cat(
+        gpioMapping.io.irq,
+        gpioMapping.io.vramcs,
+        gpioMapping.io.joy1_rsv,
+        gpioMapping.io.joy1_do,
+        gpioMapping.io.joy2_micin,
+        gpioMapping.io.joy2_do,
+        gpioMapping.io.rsv1,
+        gpioMapping.io.rsv0,
+        gpioMapping.io.cart_oe_in,
+        gpioMapping.io.led,
       )
     }
   }.otherwise {
