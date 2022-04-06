@@ -20,7 +20,7 @@ class GpioMapping extends BlackBox with HasBlackBoxInline {
     // DE0-CV GPIO1
     val GPIO_1 = Analog(gpioWidth.W)
 
-    // CPU
+    // CPU (CartridgeIO.CpuIO と同じ定義だが、BlackBoxなので名称一致優先)
     val a      = Input(UInt(15.W))
     val d_o    = Input(UInt(8.W))
     val d_i    = Output(UInt(8.W))
@@ -30,7 +30,7 @@ class GpioMapping extends BlackBox with HasBlackBoxInline {
     val o2     = Input(Clock())
     val irq    = Output(Bool())
 
-    // PPU
+    // PPU (CartridgeIO.PpuIO と同じ定義だが、BlackBoxなので名称一致優先)
     val pa      = Input(UInt(14.W))
     val pd_o    = Input(UInt(8.W))
     val pd_i    = Output(UInt(8.W))
