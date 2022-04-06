@@ -55,15 +55,15 @@ https://fpgasoftware.intel.com/eula.
 	(port
 		(pt 0 104)
 		(input)
-		(text "data_b[7..0]" (rect 0 0 81 16)(font "Arial" (font_size 8)))
-		(text "data_b[7..0]" (rect 4 88 71 103)(font "Arial" (font_size 8)))
+		(text "data_b[31..0]" (rect 0 0 89 16)(font "Arial" (font_size 8)))
+		(text "data_b[31..0]" (rect 4 88 78 103)(font "Arial" (font_size 8)))
 		(line (pt 0 104)(pt 112 104)(line_width 3))
 	)
 	(port
 		(pt 0 120)
 		(input)
-		(text "address_b[16..0]" (rect 0 0 114 16)(font "Arial" (font_size 8)))
-		(text "address_b[16..0]" (rect 4 104 99 119)(font "Arial" (font_size 8)))
+		(text "address_b[14..0]" (rect 0 0 114 16)(font "Arial" (font_size 8)))
+		(text "address_b[14..0]" (rect 4 104 99 119)(font "Arial" (font_size 8)))
 		(line (pt 0 120)(pt 112 120)(line_width 3))
 	)
 	(port
@@ -104,8 +104,8 @@ https://fpgasoftware.intel.com/eula.
 	(port
 		(pt 256 104)
 		(output)
-		(text "q_b[7..0]" (rect 0 0 60 16)(font "Arial" (font_size 8)))
-		(text "q_b[7..0]" (rect 202 88 251 103)(font "Arial" (font_size 8)))
+		(text "q_b[31..0]" (rect 0 0 68 16)(font "Arial" (font_size 8)))
+		(text "q_b[31..0]" (rect 195 88 251 103)(font "Arial" (font_size 8)))
 		(line (pt 256 104)(pt 192 104)(line_width 3))
 	)
 	(drawing
