@@ -28,10 +28,10 @@ class VirtualCartridge(
     val isEnable = Input(Bool())
 
     // DPRAMをPRG-ROM, CHR-ROMの2種類置く。VJTAGから書き込む側を別ポートにする
-    val prgRamEmu   = Flipped(new RamIO(addrWidth = prgRomAddrWidth, dataWidth = 8))
-    val chrRamEmu   = Flipped(new RamIO(addrWidth = chrRomAddrWidth, dataWidth = 8))
-    val prgRamDebug = Flipped(new RamIO(addrWidth = prgRomAddrWidth, dataWidth = 32))
-    val chrRamDebug = Flipped(new RamIO(addrWidth = chrRomAddrWidth, dataWidth = 32))
+    val prgRamEmu   = Flipped(new RamIO(addrWidth = prgRomAddrWidth, dataWidth = emuDataWidth))
+    val chrRamEmu   = Flipped(new RamIO(addrWidth = chrRomAddrWidth, dataWidth = emuDataWidth))
+    val prgRamDebug = Flipped(new RamIO(addrWidth = prgRomAddrWidth, dataWidth = debugDataWidth))
+    val chrRamDebug = Flipped(new RamIO(addrWidth = chrRomAddrWidth, dataWidth = debugDataWidth))
 
     // VJTAGからデータの読み書きを実現する
     val debugAccess = new InternalAccessCommand.SlaveIO
