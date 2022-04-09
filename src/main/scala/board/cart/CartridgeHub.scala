@@ -1,7 +1,7 @@
-package cart
+package board.cart
 
 import chisel3._
-import cart.types.CartridgeIO
+import board.cart.types.CartridgeIO
 
 /**
   * Cartridge配線のセレクタ

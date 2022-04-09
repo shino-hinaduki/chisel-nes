@@ -16,8 +16,8 @@ import board.jtag.types.VirtualInstruction
 import board.access.DebugAccessTester
 import board.video.VgaOut
 import board.gpio.GpioMapping
-import cart.CartridgeHub
-import cart.VirtualCartridge
+import board.cart.CartridgeHub
+import board.cart.VirtualCartridge
 
 /** 
  * Top Module

@@ -1,8 +1,8 @@
-package cart
+package board.cart
 
 import chisel3._
 
-import cart.types.CartridgeIO
+import board.cart.types.CartridgeIO
 import board.access.types.InternalAccessCommand
 import board.ram.types.RamIO
 
@@ -36,6 +36,7 @@ class VirtualCartridge(
     // VJTAGからデータの読み書きを実現する
     val debugAccess = new InternalAccessCommand.SlaveIO
   })
+  // TODO: VIRでは最初16bit表現が難しいので、アクセス先アドレスをコマンド代わりにする?
 
   // TODO: 実装する
   io.cart.cpu.dataIn      := 0x39.U

@@ -1,4 +1,4 @@
-package cart.types
+package board.cart.types
 
 import chisel3._
 import common.TriState
