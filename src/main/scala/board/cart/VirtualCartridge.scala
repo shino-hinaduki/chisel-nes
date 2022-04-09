@@ -27,11 +27,14 @@ class VirtualCartridge(
     // VirtualCartridgeを利用する場合はtrue
     val isEnable = Input(Bool())
 
-    // DPRAMをPRG-ROM, CHR-ROMの2種類置く。VJTAGから書き込む側を別ポートにする
-    val prgRamEmu   = Flipped(new RamIO(addrWidth = prgRomAddrWidth, dataWidth = emuDataWidth))
-    val chrRamEmu   = Flipped(new RamIO(addrWidth = chrRomAddrWidth, dataWidth = emuDataWidth))
-    val prgRamDebug = Flipped(new RamIO(addrWidth = prgRomAddrWidth, dataWidth = debugDataWidth))
-    val chrRamDebug = Flipped(new RamIO(addrWidth = chrRomAddrWidth, dataWidth = debugDataWidth))
+    // DPRAMをPRG-ROM, SAVE-RAM, CHR-ROMの3種類置く。VJTAGから書き込む側を別ポートにする
+    val prgRamEmu  = Flipped(new RamIO(addrWidth = prgRomAddrWidth, dataWidth = emuDataWidth))
+    val saveRamEmu = Flipped(new RamIO(addrWidth = prgRomAddrWidth, dataWidth = emuDataWidth))
+    val chrRamEmu  = Flipped(new RamIO(addrWidth = chrRomAddrWidth, dataWidth = emuDataWidth))
+
+    val prgRamDebug  = Flipped(new RamIO(addrWidth = prgRomAddrWidth, dataWidth = debugDataWidth))
+    val saveRamDebug = Flipped(new RamIO(addrWidth = prgRomAddrWidth, dataWidth = debugDataWidth))
+    val chrRamDebug  = Flipped(new RamIO(addrWidth = chrRomAddrWidth, dataWidth = debugDataWidth))
 
     // VJTAGからデータの読み書きを実現する
     val debugAccess = new InternalAccessCommand.SlaveIO
@@ -56,6 +59,12 @@ class VirtualCartridge(
   io.chrRamEmu.rden    := false.B
   io.chrRamEmu.wren    := false.B
 
+  io.saveRamEmu.address := 0.U
+  io.saveRamEmu.clock   := clock
+  io.saveRamEmu.data    := 0.U
+  io.saveRamEmu.rden    := false.B
+  io.saveRamEmu.wren    := false.B
+
   io.prgRamDebug.address := 0.U
   io.prgRamDebug.clock   := clock
   io.prgRamDebug.data    := 0.U
@@ -67,6 +76,12 @@ class VirtualCartridge(
   io.chrRamDebug.data    := 0.U
   io.chrRamDebug.rden    := false.B
   io.chrRamDebug.wren    := false.B
+
+  io.saveRamDebug.address := 0.U
+  io.saveRamDebug.clock   := clock
+  io.saveRamDebug.data    := 0.U
+  io.saveRamDebug.rden    := false.B
+  io.saveRamDebug.wren    := false.B
 
   io.debugAccess.req.rdclk  := clock
   io.debugAccess.req.rdreq  := false.B

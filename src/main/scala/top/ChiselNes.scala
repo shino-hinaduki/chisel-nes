@@ -184,8 +184,9 @@ class ChiselNes extends RawModule {
     .connect(virtualCart.io.debugAccess, vjtagToVCartQueue, vCartToVjtagQueue)
 
   // DPRAMと接続
-  val vcartPrgRam = Module(new DualPortRamCartPrg)
-  val vcartChrRam = Module(new DualPortRamCartChr)
+  val vcartPrgRam  = Module(new DualPortRamCartPrg)
+  val vcartSaveRam = Module(new DualPortRamCartSave)
+  val vcartChrRam  = Module(new DualPortRamCartChr)
   // PRG 1byte
   vcartPrgRam.io.address_a <> virtualCart.io.prgRamEmu.address
   vcartPrgRam.io.clock_a <> virtualCart.io.prgRamEmu.clock
@@ -200,6 +201,20 @@ class ChiselNes extends RawModule {
   vcartPrgRam.io.rden_b <> virtualCart.io.prgRamDebug.rden
   vcartPrgRam.io.wren_b <> virtualCart.io.prgRamDebug.wren
   vcartPrgRam.io.q_b <> virtualCart.io.prgRamDebug.q
+  // SAVE 1byte
+  vcartSaveRam.io.address_a <> virtualCart.io.saveRamEmu.address
+  vcartSaveRam.io.clock_a <> virtualCart.io.saveRamEmu.clock
+  vcartSaveRam.io.data_a <> virtualCart.io.saveRamEmu.data
+  vcartSaveRam.io.rden_a <> virtualCart.io.saveRamEmu.rden
+  vcartSaveRam.io.wren_a <> virtualCart.io.saveRamEmu.wren
+  vcartSaveRam.io.q_a <> virtualCart.io.saveRamEmu.q
+  // Save 4byte
+  vcartSaveRam.io.address_b <> virtualCart.io.saveRamDebug.address
+  vcartSaveRam.io.clock_b <> virtualCart.io.saveRamDebug.clock
+  vcartSaveRam.io.data_b <> virtualCart.io.saveRamDebug.data
+  vcartSaveRam.io.rden_b <> virtualCart.io.saveRamDebug.rden
+  vcartSaveRam.io.wren_b <> virtualCart.io.saveRamDebug.wren
+  vcartSaveRam.io.q_b <> virtualCart.io.saveRamDebug.q
   // CHR 1byte
   vcartChrRam.io.address_a <> virtualCart.io.chrRamEmu.address
   vcartChrRam.io.clock_a <> virtualCart.io.chrRamEmu.clock
