@@ -201,25 +201,9 @@ class ChiselNes extends RawModule {
   val gpioMapping = Module(new GpioMapping)
   gpioMapping.io.GPIO_0 <> GPIO_0
   gpioMapping.io.GPIO_1 <> GPIO_1
-  // CPU
-  gpioMapping.io.a                  := cartHub.io.hubToGpio.cpu.address
-  gpioMapping.io.d_o                := cartHub.io.hubToGpio.cpu.dataOut.data
-  gpioMapping.io.d_oe               := cartHub.io.hubToGpio.cpu.dataOut.oe
-  cartHub.io.hubToGpio.cpu.dataIn   := gpioMapping.io.d_i
-  gpioMapping.io.rw                 := cartHub.io.hubToGpio.cpu.isRead
-  gpioMapping.io.romsel             := cartHub.io.hubToGpio.cpu.isNotRomSel
-  gpioMapping.io.o2                 := cartHub.io.hubToGpio.cpu.o2
-  cartHub.io.hubToGpio.cpu.isNotIrq := gpioMapping.io.irq
-  // PPU
-  gpioMapping.io.pa                    := cartHub.io.hubToGpio.ppu.address
-  gpioMapping.io.pd_o                  := cartHub.io.hubToGpio.ppu.dataOut.data
-  gpioMapping.io.pd_oe                 := cartHub.io.hubToGpio.ppu.dataOut.oe
-  cartHub.io.hubToGpio.ppu.dataIn      := gpioMapping.io.pd_i
-  gpioMapping.io.vrama10               := cartHub.io.hubToGpio.ppu.vrama10
-  cartHub.io.hubToGpio.ppu.isNotVramCs := gpioMapping.io.vramcs
-  gpioMapping.io.rd                    := cartHub.io.hubToGpio.ppu.isNotRead
-  gpioMapping.io.we                    := cartHub.io.hubToGpio.ppu.isNotWrite
-  // LevelShift Enable
+  // Cartridge
+  gpioMapping.connectToCart(cartHub.io.hubToGpio)
+  // Cartridge LevelShift Enable
   gpioMapping.io.cart_oe_in := cartHub.io.isEnableGpio // GPIO側が選ばれていたらHi-Z解除
   // Controller
   gpioMapping.io.joy1_ps  := false.B // TODO: エミュに接続
