@@ -184,51 +184,17 @@ class ChiselNes extends RawModule {
     .connect(virtualCart.io.debugAccess, vjtagToVCartQueue, vCartToVjtagQueue)
 
   // DPRAMと接続
-  val vcartPrgRam  = Module(new DualPortRamCartPrg)
+  val vcartPrgRam = Module(new DualPortRamCartPrg)
+  vcartPrgRam.connectToA(virtualCart.io.prgRamEmu)
+  vcartPrgRam.connectToB(virtualCart.io.prgRamDebug)
+
   val vcartSaveRam = Module(new DualPortRamCartSave)
-  val vcartChrRam  = Module(new DualPortRamCartChr)
-  // PRG 1byte
-  vcartPrgRam.io.address_a <> virtualCart.io.prgRamEmu.address
-  vcartPrgRam.io.clock_a <> virtualCart.io.prgRamEmu.clock
-  vcartPrgRam.io.data_a <> virtualCart.io.prgRamEmu.data
-  vcartPrgRam.io.rden_a <> virtualCart.io.prgRamEmu.rden
-  vcartPrgRam.io.wren_a <> virtualCart.io.prgRamEmu.wren
-  vcartPrgRam.io.q_a <> virtualCart.io.prgRamEmu.q
-  // PRG 4byte
-  vcartPrgRam.io.address_b <> virtualCart.io.prgRamDebug.address
-  vcartPrgRam.io.clock_b <> virtualCart.io.prgRamDebug.clock
-  vcartPrgRam.io.data_b <> virtualCart.io.prgRamDebug.data
-  vcartPrgRam.io.rden_b <> virtualCart.io.prgRamDebug.rden
-  vcartPrgRam.io.wren_b <> virtualCart.io.prgRamDebug.wren
-  vcartPrgRam.io.q_b <> virtualCart.io.prgRamDebug.q
-  // SAVE 1byte
-  vcartSaveRam.io.address_a <> virtualCart.io.saveRamEmu.address
-  vcartSaveRam.io.clock_a <> virtualCart.io.saveRamEmu.clock
-  vcartSaveRam.io.data_a <> virtualCart.io.saveRamEmu.data
-  vcartSaveRam.io.rden_a <> virtualCart.io.saveRamEmu.rden
-  vcartSaveRam.io.wren_a <> virtualCart.io.saveRamEmu.wren
-  vcartSaveRam.io.q_a <> virtualCart.io.saveRamEmu.q
-  // Save 4byte
-  vcartSaveRam.io.address_b <> virtualCart.io.saveRamDebug.address
-  vcartSaveRam.io.clock_b <> virtualCart.io.saveRamDebug.clock
-  vcartSaveRam.io.data_b <> virtualCart.io.saveRamDebug.data
-  vcartSaveRam.io.rden_b <> virtualCart.io.saveRamDebug.rden
-  vcartSaveRam.io.wren_b <> virtualCart.io.saveRamDebug.wren
-  vcartSaveRam.io.q_b <> virtualCart.io.saveRamDebug.q
-  // CHR 1byte
-  vcartChrRam.io.address_a <> virtualCart.io.chrRamEmu.address
-  vcartChrRam.io.clock_a <> virtualCart.io.chrRamEmu.clock
-  vcartChrRam.io.data_a <> virtualCart.io.chrRamEmu.data
-  vcartChrRam.io.rden_a <> virtualCart.io.chrRamEmu.rden
-  vcartChrRam.io.wren_a <> virtualCart.io.chrRamEmu.wren
-  vcartChrRam.io.q_a <> virtualCart.io.chrRamEmu.q
-  // CHR 4byte
-  vcartChrRam.io.address_b <> virtualCart.io.chrRamDebug.address
-  vcartChrRam.io.clock_b <> virtualCart.io.chrRamDebug.clock
-  vcartChrRam.io.data_b <> virtualCart.io.chrRamDebug.data
-  vcartChrRam.io.rden_b <> virtualCart.io.chrRamDebug.rden
-  vcartChrRam.io.wren_b <> virtualCart.io.chrRamDebug.wren
-  vcartChrRam.io.q_b <> virtualCart.io.chrRamDebug.q
+  vcartSaveRam.connectToA(virtualCart.io.saveRamEmu)
+  vcartSaveRam.connectToB(virtualCart.io.saveRamDebug)
+
+  val vcartChrRam = Module(new DualPortRamCartChr)
+  vcartChrRam.connectToA(virtualCart.io.chrRamEmu)
+  vcartChrRam.connectToB(virtualCart.io.chrRamDebug)
 
   /**********************************************************************/
   /* GPIO Remap                                                         */
@@ -301,18 +267,7 @@ class ChiselNes extends RawModule {
 
   // FrameBufferと接続
   val frameBuffer = Module(new DualPortRamFrameBuffer)
-  frameBuffer.io.address_a <> vgaOut.io.frameBuffer.ppu.address
-  frameBuffer.io.clock_a <> vgaOut.io.frameBuffer.ppu.clock
-  frameBuffer.io.data_a <> vgaOut.io.frameBuffer.ppu.data
-  frameBuffer.io.rden_a <> vgaOut.io.frameBuffer.ppu.rden
-  frameBuffer.io.wren_a <> vgaOut.io.frameBuffer.ppu.wren
-  frameBuffer.io.q_a <> vgaOut.io.frameBuffer.ppu.q
-  frameBuffer.io.address_b <> vgaOut.io.frameBuffer.vga.address
-  frameBuffer.io.clock_b <> vgaOut.io.frameBuffer.vga.clock
-  frameBuffer.io.data_b <> vgaOut.io.frameBuffer.vga.data
-  frameBuffer.io.rden_b <> vgaOut.io.frameBuffer.vga.rden
-  frameBuffer.io.wren_b <> vgaOut.io.frameBuffer.vga.wren
-  frameBuffer.io.q_b <> vgaOut.io.frameBuffer.vga.q
+  vgaOut.io.frameBuffer.connect(frameBuffer)
 
   // TODO: PPUと接続
   vgaOut.io.ppuVideo.valid := false.B
