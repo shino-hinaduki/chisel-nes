@@ -16,6 +16,8 @@ import board.jtag.types.VirtualInstruction
 import board.access.DebugAccessTester
 import board.video.VgaOut
 import board.gpio.GpioMapping
+import board.cart.CartridgeHub
+import board.cart.VirtualCartridge
 
 /** 
  * Top Module
@@ -117,48 +119,7 @@ class ChiselNes extends RawModule {
   pllVga.io.refclk := clk50Mhz3 // VGA関連の端子が8Aなので、近いCLK入力を使う
   pllVga.io.rst    := reset
 
-  /**********************************************************************/
-  /* GPIO Remap                                                         */
-  val gpioMapping = Module(new GpioMapping)
-  gpioMapping.io.GPIO_0 <> GPIO_0
-  gpioMapping.io.GPIO_1 <> GPIO_1
-  // TODO: エミュレータに接続する
-  // TODO: Cartridgeエミュレータとの接続を切り替え式にする(cart_oe_inを使えば外部は完全に切り離せるが、データ入力側のセレクタはケアが必要)
-  // CPU
-  gpioMapping.io.a      := 0.U
-  gpioMapping.io.d_o    := 0.U
-  gpioMapping.io.d_oe   := SW(8)  // for Debug
-  gpioMapping.io.rw     := false.B
-  gpioMapping.io.romsel := false.B
-  gpioMapping.io.o2     := cpuClk // TODO: cpuClkから位相シフトが必要, Mapper次第で調整
-  // PPU
-  gpioMapping.io.pa      := 0.U
-  gpioMapping.io.pd_o    := 0.U
-  gpioMapping.io.pd_oe   := SW(8) // for Debug
-  gpioMapping.io.vrama10 := false.B
-  gpioMapping.io.rd      := false.B
-  gpioMapping.io.we      := false.B
-  // LevelShift Enable
-  gpioMapping.io.cart_oe_in := false.B
-  // Controller
-  gpioMapping.io.joy1_ps  := false.B
-  gpioMapping.io.joy1_clk := false.B
-  gpioMapping.io.joy2_ps  := false.B
-  gpioMapping.io.joy2_clk := false.B
-  // Audio
-  gpioMapping.io.dac_bclk    := false.B
-  gpioMapping.io.dac_lrclk   := false.B
-  gpioMapping.io.dac_sd_mode := false.B
-  gpioMapping.io.dac_din     := false.B
-  // Debug
-  gpioMapping.io.led  := true.B
-  gpioMapping.io.io0  := cpuClk.asBool
-  gpioMapping.io.io1  := ppuClk.asBool
-  gpioMapping.io.rsv0 := cpuClk.asBool
-  gpioMapping.io.rsv1 := ppuClk.asBool
-
-  /**********************************************************************/
-  /* 7SEG LED                                                           */
+  // 7SEG LED
   val sevenSegmentLed = withClockAndReset(clk50Mhz, reset) { Module(new SevenSegmentLed()) }
   val numVisibleReg   = withClockAndReset(clk50Mhz, reset) { RegInit(Bool(), true.B) }
   val numReg          = withClockAndReset(clk50Mhz, reset) { RegInit(UInt(24.W), 0.U) }
@@ -171,8 +132,7 @@ class ChiselNes extends RawModule {
   sevenSegmentLed.io.isVisible := numVisibleReg
   sevenSegmentLed.io.dataIn    := numReg
 
-  /**********************************************************************/
-  /* LED Array                                                          */
+  // LED Array
   val ledArrayReg = withClockAndReset(clk50Mhz, reset) { RegInit(UInt(10.W), 0.U) }
   LEDR := ledArrayReg
 
@@ -180,17 +140,87 @@ class ChiselNes extends RawModule {
   /* Virtual JTAG                                                       */
   val vjtag             = Module(new VirtualJtag)
   val virtualJtagBridge = withClockAndReset(vjtag.io.tck, reset) { Module(new VirtualJtagBridge) }
-  virtualJtagBridge.io.reset <> reset
+  virtualJtagBridge.io.reset := reset
   virtualJtagBridge.io.vjtag <> vjtag.io
 
   // TODO: 接続したら削除
   virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.cpu.litValue.toInt) <> DontCare
   virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.ppu.litValue.toInt) <> DontCare
   virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.apu.litValue.toInt) <> DontCare
-  virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.cart.litValue.toInt) <> DontCare
   virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.cpuBusMaster.litValue.toInt) <> DontCare
   virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.ppuBusMaster.litValue.toInt) <> DontCare
   virtualJtagBridge.io.debugAccessQueues(VirtualInstruction.AccessTarget.audio.litValue.toInt) <> DontCare
+
+  /**********************************************************************/
+  /* Virtual Cartridge & Hub                                            */
+  // Cartridge切り替え用Hub
+  val cartHub = Module(new CartridgeHub)
+  cartHub.io.isUseGpio := SW(9) // 一番左端のスライドスイッチ
+
+  // TODO: Emu本体と接続
+  cartHub.io.emuToHub.cpu.address      := 0.U
+  cartHub.io.emuToHub.cpu.dataOut.data := 0.U
+  cartHub.io.emuToHub.cpu.dataOut.oe   := false.B
+  cartHub.io.emuToHub.cpu.isRead       := false.B
+  cartHub.io.emuToHub.cpu.isNotRomSel  := true.B
+  cartHub.io.emuToHub.cpu.o2           := cpuClk // TODO: cpuClkから位相シフトが必要, Mapper次第で調整
+  cartHub.io.emuToHub.ppu.address      := 0.U
+  cartHub.io.emuToHub.ppu.dataOut.data := 0.U
+  cartHub.io.emuToHub.ppu.dataOut.oe   := false.B
+  cartHub.io.emuToHub.ppu.vrama10      := false.B
+  cartHub.io.emuToHub.ppu.isNotRead    := true.B
+  cartHub.io.emuToHub.ppu.isNotWrite   := true.B
+
+  // 仮想Cartridge本体
+  val virtualCart = withClockAndReset(sysClk, reset) { Module(new VirtualCartridge(prgRomAddrWidth = 17, chrRomAddrWidth = 17)) }
+  virtualCart.io.cart <> cartHub.io.hubToVirtual
+  virtualCart.io.isEnable := cartHub.io.isEnableVirtual
+
+  // VJTAG経由で読み書きできるように
+  val vjtagToVCartQueue = Module(new AsyncFifoVJtagToDap)
+  val vCartToVjtagQueue = Module(new AsyncFifoDapToVJtag)
+  virtualJtagBridge.io
+    .debugAccessQueues(VirtualInstruction.AccessTarget.cart.litValue.toInt)
+    .connect(virtualCart.io.debugAccess, vjtagToVCartQueue, vCartToVjtagQueue)
+
+  // DPRAMと接続
+  val vcartPrgRam = Module(new DualPortRamCartPrg)
+  vcartPrgRam.connectToA(virtualCart.io.prgRamEmu)
+  vcartPrgRam.connectToB(virtualCart.io.prgRamDebug)
+
+  val vcartSaveRam = Module(new DualPortRamCartSave)
+  vcartSaveRam.connectToA(virtualCart.io.saveRamEmu)
+  vcartSaveRam.connectToB(virtualCart.io.saveRamDebug)
+
+  val vcartChrRam = Module(new DualPortRamCartChr)
+  vcartChrRam.connectToA(virtualCart.io.chrRamEmu)
+  vcartChrRam.connectToB(virtualCart.io.chrRamDebug)
+
+  /**********************************************************************/
+  /* GPIO Remap                                                         */
+  val gpioMapping = Module(new GpioMapping)
+  gpioMapping.io.GPIO_0 <> GPIO_0
+  gpioMapping.io.GPIO_1 <> GPIO_1
+  // Cartridge
+  gpioMapping.connectToCart(cartHub.io.hubToGpio)
+  // Cartridge LevelShift Enable
+  gpioMapping.io.cart_oe_in := cartHub.io.isEnableGpio // GPIO側が選ばれていたらHi-Z解除
+  // Controller
+  gpioMapping.io.joy1_ps  := false.B // TODO: エミュに接続
+  gpioMapping.io.joy1_clk := false.B // TODO: エミュに接続
+  gpioMapping.io.joy2_ps  := false.B // TODO: エミュに接続
+  gpioMapping.io.joy2_clk := false.B // TODO: エミュに接続
+  // Audio
+  gpioMapping.io.dac_bclk    := false.B // TODO: エミュに接続
+  gpioMapping.io.dac_lrclk   := false.B // TODO: エミュに接続
+  gpioMapping.io.dac_sd_mode := false.B // TODO: エミュに接続
+  gpioMapping.io.dac_din     := false.B // TODO: エミュに接続
+  // Debug
+  gpioMapping.io.led  := cartHub.io.isEnableGpio // GPIO側が選ばれていたら点灯
+  gpioMapping.io.io0  := cpuClk.asBool
+  gpioMapping.io.io1  := ppuClk.asBool
+  gpioMapping.io.rsv0 := cpuClk.asBool
+  gpioMapping.io.rsv1 := ppuClk.asBool
 
   /**********************************************************************/
   /* Debug Access Tester                                                */
@@ -215,24 +245,13 @@ class ChiselNes extends RawModule {
   VGA_VS := vgaOut.io.videoOut.vsync
 
   // 制御関連
-  vgaOut.io.isDebug         := SW(9) // for Debug
+  vgaOut.io.isDebug         := SW(8) // for Debug
   vgaOut.io.pixelClock      := vgaPixelClk
   vgaOut.io.pixelClockReset := reset
 
   // FrameBufferと接続
   val frameBuffer = Module(new DualPortRamFrameBuffer)
-  frameBuffer.io.address_a <> vgaOut.io.frameBuffer.ppu.address
-  frameBuffer.io.clock_a <> vgaOut.io.frameBuffer.ppu.clock
-  frameBuffer.io.data_a <> vgaOut.io.frameBuffer.ppu.data
-  frameBuffer.io.rden_a <> vgaOut.io.frameBuffer.ppu.rden
-  frameBuffer.io.wren_a <> vgaOut.io.frameBuffer.ppu.wren
-  frameBuffer.io.q_a <> vgaOut.io.frameBuffer.ppu.q
-  frameBuffer.io.address_b <> vgaOut.io.frameBuffer.vga.address
-  frameBuffer.io.clock_b <> vgaOut.io.frameBuffer.vga.clock
-  frameBuffer.io.data_b <> vgaOut.io.frameBuffer.vga.data
-  frameBuffer.io.rden_b <> vgaOut.io.frameBuffer.vga.rden
-  frameBuffer.io.wren_b <> vgaOut.io.frameBuffer.vga.wren
-  frameBuffer.io.q_b <> vgaOut.io.frameBuffer.vga.q
+  vgaOut.io.frameBuffer.connect(frameBuffer)
 
   // TODO: PPUと接続
   vgaOut.io.ppuVideo.valid := false.B

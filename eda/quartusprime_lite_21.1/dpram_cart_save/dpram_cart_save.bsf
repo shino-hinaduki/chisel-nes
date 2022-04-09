@@ -22,7 +22,7 @@ https://fpgasoftware.intel.com/eula.
 (header "symbol" (version "1.2"))
 (symbol
 	(rect 0 0 256 216)
-	(text "dpram_cart_chr" (rect 70 0 206 19)(font "Arial" (font_size 10)))
+	(text "dpram_cart_save" (rect 66 0 213 19)(font "Arial" (font_size 10)))
 	(text "inst" (rect 8 197 31 212)(font "Arial" ))
 	(port
 		(pt 0 32)
@@ -34,8 +34,8 @@ https://fpgasoftware.intel.com/eula.
 	(port
 		(pt 0 48)
 		(input)
-		(text "address_a[16..0]" (rect 0 0 114 16)(font "Arial" (font_size 8)))
-		(text "address_a[16..0]" (rect 4 32 99 47)(font "Arial" (font_size 8)))
+		(text "address_a[12..0]" (rect 0 0 114 16)(font "Arial" (font_size 8)))
+		(text "address_a[12..0]" (rect 4 32 99 47)(font "Arial" (font_size 8)))
 		(line (pt 0 48)(pt 112 48)(line_width 3))
 	)
 	(port
@@ -62,8 +62,8 @@ https://fpgasoftware.intel.com/eula.
 	(port
 		(pt 0 120)
 		(input)
-		(text "address_b[14..0]" (rect 0 0 114 16)(font "Arial" (font_size 8)))
-		(text "address_b[14..0]" (rect 4 104 99 119)(font "Arial" (font_size 8)))
+		(text "address_b[10..0]" (rect 0 0 114 16)(font "Arial" (font_size 8)))
+		(text "address_b[10..0]" (rect 4 104 99 119)(font "Arial" (font_size 8)))
 		(line (pt 0 120)(pt 112 120)(line_width 3))
 	)
 	(port
@@ -109,7 +109,7 @@ https://fpgasoftware.intel.com/eula.
 		(line (pt 256 104)(pt 192 104)(line_width 3))
 	)
 	(drawing
-		(text "131072 Word(s)" (rect 134 65 284 286)(font "Arial" )(vertical))
+		(text "8192 Word(s)" (rect 134 65 277 272)(font "Arial" )(vertical))
 		(text "RAM" (rect 148 51 266 222)(font "Arial" )(vertical))
 		(text "Block Type: AUTO" (rect 40 202 173 418)(font "Arial" ))
 		(line (pt 128 24)(pt 168 24))

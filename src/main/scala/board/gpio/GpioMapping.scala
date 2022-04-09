@@ -6,6 +6,7 @@ import chisel3.util.Cat
 import chisel3.util.HasBlackBoxInline
 
 import board.ip.GpioBidirectional
+import board.cart.types.CartridgeIO
 
 /**
   * eda/kicad_6.0.2/nes_peripheral のpin assignに変換する
@@ -20,7 +21,7 @@ class GpioMapping extends BlackBox with HasBlackBoxInline {
     // DE0-CV GPIO1
     val GPIO_1 = Analog(gpioWidth.W)
 
-    // CPU
+    // CPU (CartridgeIO.CpuIO と同じ定義だが、BlackBoxなので名称一致優先)
     val a      = Input(UInt(15.W))
     val d_o    = Input(UInt(8.W))
     val d_i    = Output(UInt(8.W))
@@ -30,7 +31,7 @@ class GpioMapping extends BlackBox with HasBlackBoxInline {
     val o2     = Input(Clock())
     val irq    = Output(Bool())
 
-    // PPU
+    // PPU (CartridgeIO.PpuIO と同じ定義だが、BlackBoxなので名称一致優先)
     val pa      = Input(UInt(14.W))
     val pd_o    = Input(UInt(8.W))
     val pd_i    = Output(UInt(8.W))
@@ -221,4 +222,30 @@ class GpioMapping extends BlackBox with HasBlackBoxInline {
       |endmodule
     """.stripMargin
   )
+
+  /**
+    * Cartridgeの配線を接続する
+    * @param cart CartridgeのIO I/F
+    */
+  def connectToCart(cart: CartridgeIO) = {
+    // CPU
+    io.a              := cart.cpu.address
+    io.d_o            := cart.cpu.dataOut.data
+    io.d_oe           := cart.cpu.dataOut.oe
+    cart.cpu.dataIn   := io.d_i
+    io.rw             := cart.cpu.isRead
+    io.romsel         := cart.cpu.isNotRomSel
+    io.o2             := cart.cpu.o2
+    cart.cpu.isNotIrq := io.irq
+
+    // PPU
+    io.pa                := cart.ppu.address
+    io.pd_o              := cart.ppu.dataOut.data
+    io.pd_oe             := cart.ppu.dataOut.oe
+    cart.ppu.dataIn      := io.pd_i
+    io.vrama10           := cart.ppu.vrama10
+    cart.ppu.isNotVramCs := io.vramcs
+    io.rd                := cart.ppu.isNotRead
+    io.we                := cart.ppu.isNotWrite
+  }
 }

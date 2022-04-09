@@ -134,7 +134,7 @@ Digikeyで選定した部品を記載。チップコンデンサを始め、サ�
 | 15 |  D12 |3V3_R/~W        | CPU Bus |
 | 16 |  D13 |3V3_~ROMSEL     | CPU Bus |
 | 17 |  D14 |3V3_~IRQ        | CPU Bus |
-| 18 |  D15 |3V3_~WE         | CPU Bus |
+| 18 |  D15 |3V3_~WE         | PPU Bus |
 | 19 |  D16 |3V3_PA6         | PPU Bus |
 | 20 |  D17 |3V3_PA7         | PPU Bus |
 | 21 |  D18 |3V3_PA5         | PPU Bus |
@@ -176,7 +176,7 @@ Digikeyで選定した部品を記載。チップコンデンサを始め、サ�
 | 12 |  GND |GND             |  |
 | 13 |  D10 |3V3_A0          | CPU Bus |
 | 14 |  D11 |3V3_D0          | CPU Bus |
-| 15 |  D12 |3V3_~RD         | CPU Bus |
+| 15 |  D12 |3V3_~RD         | PPU Bus |
 | 16 |  D13 |3V3_~VRAMCS     | PPU Bus |
 | 17 |  D14 |3V3_VRAMA10     | PPU Bus |
 | 18 |  D15 |3V3_~PA13       | PPU Bus |
