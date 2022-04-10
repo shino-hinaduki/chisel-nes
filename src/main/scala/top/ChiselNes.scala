@@ -175,13 +175,30 @@ class ChiselNes extends RawModule {
   val virtualCart = withClockAndReset(sysClk, reset) { Module(new VirtualCartridge(prgRomAddrWidth = 17, chrRomAddrWidth = 17)) }
   virtualCart.io.cart <> cartHub.io.hubToVirtual
   virtualCart.io.isEnable := cartHub.io.isEnableVirtual
+  virtualCart.io.ppuClock := ppuClk
+  virtualCart.io.ppuReset := reset
 
   // VJTAG経由で読み書きできるように
-  val vjtagToVCartQueue = Module(new AsyncFifoVJtagToDap)
-  val vCartToVjtagQueue = Module(new AsyncFifoDapToVJtag)
+  val vjtagToVCartCommonQueue = Module(new AsyncFifoVJtagToDap)
+  val vCartCommonToVjtagQueue = Module(new AsyncFifoDapToVJtag)
   virtualJtagBridge.io
-    .debugAccessQueues(VirtualInstruction.AccessTarget.cart.litValue.toInt)
-    .connect(virtualCart.io.debugAccess, vjtagToVCartQueue, vCartToVjtagQueue)
+    .debugAccessQueues(VirtualInstruction.AccessTarget.cartCommon.litValue.toInt)
+    .connect(virtualCart.io.debugAccessCommon, vjtagToVCartCommonQueue, vCartCommonToVjtagQueue)
+  val vjtagToVCartPrgQueue = Module(new AsyncFifoVJtagToDap)
+  val vCartPrgToVjtagQueue = Module(new AsyncFifoDapToVJtag)
+  virtualJtagBridge.io
+    .debugAccessQueues(VirtualInstruction.AccessTarget.cartPrg.litValue.toInt)
+    .connect(virtualCart.io.debugAccessPrg, vjtagToVCartPrgQueue, vCartPrgToVjtagQueue)
+  val vjtagToVCartSaveQueue = Module(new AsyncFifoVJtagToDap)
+  val vCartSaveToVjtagQueue = Module(new AsyncFifoDapToVJtag)
+  virtualJtagBridge.io
+    .debugAccessQueues(VirtualInstruction.AccessTarget.cartSave.litValue.toInt)
+    .connect(virtualCart.io.debugAccessSave, vjtagToVCartSaveQueue, vCartSaveToVjtagQueue)
+  val vjtagToVCartChrQueue = Module(new AsyncFifoVJtagToDap)
+  val vCartChrToVjtagQueue = Module(new AsyncFifoDapToVJtag)
+  virtualJtagBridge.io
+    .debugAccessQueues(VirtualInstruction.AccessTarget.cartChr.litValue.toInt)
+    .connect(virtualCart.io.debugAccessChr, vjtagToVCartChrQueue, vCartChrToVjtagQueue)
 
   // DPRAMと接続
   val vcartPrgRam = Module(new DualPortRamCartPrg)
@@ -201,7 +218,7 @@ class ChiselNes extends RawModule {
   val gpioMapping = Module(new GpioMapping)
   gpioMapping.io.GPIO_0 <> GPIO_0
   gpioMapping.io.GPIO_1 <> GPIO_1
-  // Cartridge
+  // Cartridge (GPIO-CartHub)
   gpioMapping.connectToCart(cartHub.io.hubToGpio)
   // Cartridge LevelShift Enable
   gpioMapping.io.cart_oe_in := cartHub.io.isEnableGpio // GPIO側が選ばれていたらHi-Z解除
