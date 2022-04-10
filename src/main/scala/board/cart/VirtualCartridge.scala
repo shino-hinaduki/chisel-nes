@@ -10,25 +10,35 @@ import board.jtag.types.VirtualInstruction
 /**
   * VirtualCartridgeでRAM AccessをDebugAccess側から行うときの定義
   *
-  * @param accessTarget
-  * @param ram
-  * @param dap
-  * @param clock
-  * @param reset
+  * @param accessTarget アクセス対象の識別子
+  * @param ram DPRAM I/F
+  * @param addrWidth ram のアドレス幅
+  * @param dap DebugAccess I/F
+  * @param clock 動作するClock Domain
+  * @param reset リセット信号
   */
-case class VirtualCartDebugAccessDef(accessTarget: VirtualInstruction.AccessTarget.Type, ram: RamIO, dap: InternalAccessCommand.SlaveIO, clock: Clock, reset: Reset)
+case class VirtualCartDebugAccessDef(
+    accessTarget: VirtualInstruction.AccessTarget.Type,
+    ram: RamIO,
+    addrWidth: Int,
+    dap: InternalAccessCommand.SlaveIO,
+    clock: Clock,
+    reset: Reset
+)
 
 /**
   * Cartridge実機を模倣したモジュール定義
   * clock,resetにはCPU Clock domainのものを指定(Mapper-DAP間のClock Crossing考慮が面倒)
   * 
   * @param prgRomAddrWidth PRG-ROMのアドレス空間
+  * @param saveRamAddrWidth SAVE-RAMのアドレス空間
   * @param chrRomAddrWidth PRG-ROMのアドレス空間
   * @param emuDataWidth エミュレータからアクセスする時のデータ幅、変更不要のはず
   * @param debugDataWidth DebugAccess経由でアクセスする時のデータ幅
   */
 class VirtualCartridge(
     val prgRomAddrWidth: Int = 17,
+    val saveRamAddrWidth: Int = 13,
     val chrRomAddrWidth: Int = 17,
     val emuDataWidth: Int = 8,
     val debugDataWidth: Int = 32,
@@ -54,12 +64,12 @@ class VirtualCartridge(
 
     // DPRAMをPRG-ROM, SAVE-RAM, CHR-ROMの3種類置く。VJTAGから書き込む側を別ポートにする
     val prgRamEmu  = Flipped(new RamIO(addrWidth = prgRomAddrWidth, dataWidth = emuDataWidth))
-    val saveRamEmu = Flipped(new RamIO(addrWidth = prgRomAddrWidth, dataWidth = emuDataWidth))
+    val saveRamEmu = Flipped(new RamIO(addrWidth = saveRamAddrWidth, dataWidth = emuDataWidth))
     val chrRamEmu  = Flipped(new RamIO(addrWidth = chrRomAddrWidth, dataWidth = emuDataWidth))
-
-    val prgRamDebug  = Flipped(new RamIO(addrWidth = prgRomAddrWidth, dataWidth = debugDataWidth))
-    val saveRamDebug = Flipped(new RamIO(addrWidth = prgRomAddrWidth, dataWidth = debugDataWidth))
-    val chrRamDebug  = Flipped(new RamIO(addrWidth = chrRomAddrWidth, dataWidth = debugDataWidth))
+    // 4byteごとのアクセスなので、アクセスレンジが2bit分減る
+    val prgRamDebug  = Flipped(new RamIO(addrWidth = prgRomAddrWidth - 2, dataWidth = debugDataWidth))
+    val saveRamDebug = Flipped(new RamIO(addrWidth = saveRamAddrWidth - 2, dataWidth = debugDataWidth))
+    val chrRamDebug  = Flipped(new RamIO(addrWidth = chrRomAddrWidth - 2, dataWidth = debugDataWidth))
 
     // VJTAGからデータの読み書きを実現する
     val debugAccessCommon = new InternalAccessCommand.SlaveIO
@@ -71,36 +81,36 @@ class VirtualCartridge(
   /*********************************************************************/
   /* DebugAccessReq: Common(先頭16byte iNES Header, 後半reserved)       */
   withClockAndReset(clock, reset) {
-    val commonRegs      = RegInit(VecInit(Seq.fill(commonWords)(0.U(debugDataWidth.W)))) // 4byteごと
-    val commonRdDataReg = RegInit(Bool(), false.B)
-    val commonRdDeqReg  = RegInit(Bool(), false.B)
-    val commonRdEnqReg  = RegInit(Bool(), false.B)
+    val commonRegs        = RegInit(VecInit(Seq.fill(commonWords)(0.U(debugDataWidth.W)))) // 4byteごと
+    val commonReqDeqReg   = RegInit(Bool(), false.B)
+    val commonRespDataReg = RegInit(Bool(), false.B)
+    val commonRespEnqReg  = RegInit(Bool(), false.B)
     io.debugAccessCommon.req.rdclk  := clock
-    io.debugAccessCommon.req.rdreq  := commonRdDeqReg
+    io.debugAccessCommon.req.rdreq  := commonReqDeqReg
     io.debugAccessCommon.resp.wrclk := clock
-    io.debugAccessCommon.resp.wrreq := commonRdEnqReg
-    io.debugAccessCommon.resp.data  := commonRdDataReg
+    io.debugAccessCommon.resp.wrreq := commonRespEnqReg
+    io.debugAccessCommon.resp.data  := commonRespDataReg
     // 要求を引き抜き
     def commonReqDequeue() = {
-      commonRdDeqReg := true.B
+      commonReqDeqReg := true.B
     }
     // 要求を引き抜かない
     def commonReqNop() = {
-      commonRdDeqReg := false.B
+      commonReqDeqReg := false.B
     }
     // 応答を積む
     def commonRespEnqueue(data: UInt) = {
-      commonRdDataReg := data
-      commonRdEnqReg  := true.B
+      commonRespDataReg := data
+      commonRespEnqReg  := true.B
     }
     // 応答を積まない
     def commonRespNop() = {
-      commonRdDataReg := DontCare
-      commonRdEnqReg  := false.B
+      commonRespDataReg := DontCare
+      commonRespEnqReg  := false.B
     }
 
     // Queue Remainがあれば取り出す。OoOにはしない
-    when(io.debugAccessCommon.req.rdempty && !commonRdDeqReg) {
+    when(io.debugAccessCommon.req.rdempty && !commonReqDeqReg) {
       val offset             = InternalAccessCommand.Request.getOffset(io.debugAccessCommon.req.q)
       val offsetValid        = offset < commonWords.U
       val writeData          = InternalAccessCommand.Request.getData(io.debugAccessCommon.req.q)
@@ -132,21 +142,53 @@ class VirtualCartridge(
   /* DebugAccessReq: Others                                            */
   // DebugAccessPort-DPRAM-Clock Domainの組を定義して、まとめて実装する
   val debugAccessTargets: Seq[VirtualCartDebugAccessDef] = Seq(
-    VirtualCartDebugAccessDef(VirtualInstruction.AccessTarget.cartPrg, io.prgRamDebug, io.debugAccessPrg, clock, reset),
-    VirtualCartDebugAccessDef(VirtualInstruction.AccessTarget.cartSave, io.saveRamDebug, io.debugAccessSave, clock, reset),
-    VirtualCartDebugAccessDef(VirtualInstruction.AccessTarget.cartChr, io.chrRamDebug, io.debugAccessChr, io.ppuClock, io.ppuReset),
+    VirtualCartDebugAccessDef(VirtualInstruction.AccessTarget.cartPrg, io.prgRamDebug, prgRomAddrWidth, io.debugAccessPrg, clock, reset),
+    VirtualCartDebugAccessDef(VirtualInstruction.AccessTarget.cartSave, io.saveRamDebug, saveRamAddrWidth, io.debugAccessSave, clock, reset),
+    VirtualCartDebugAccessDef(VirtualInstruction.AccessTarget.cartChr, io.chrRamDebug, chrRomAddrWidth, io.debugAccessChr, io.ppuClock, io.ppuReset),
   )
+
+  // 使用するレジスタは先に宣言しておく
+  val ramAddrRegs  = RegInit(VecInit(Seq.fill(debugAccessTargets.size)(0.U)))
+  val ramDataRegs  = RegInit(VecInit(Seq.fill(debugAccessTargets.size)(0.U)))
+  val ramRdRegs    = RegInit(VecInit(Seq.fill(debugAccessTargets.size)(false.B)))
+  val ramWrRegs    = RegInit(VecInit(Seq.fill(debugAccessTargets.size)(false.B)))
+  val reqDeqRegs   = RegInit(VecInit(Seq.fill(debugAccessTargets.size)(false.B)))
+  val respDataRegs = RegInit(VecInit(Seq.fill(debugAccessTargets.size)(0.U)))
+  val respEnqRegs  = RegInit(VecInit(Seq.fill(debugAccessTargets.size)(false.B)))
+
+  // 処理本体
+  debugAccessTargets.zipWithIndex.foreach {
+    case (x, index) => {
+      // temp regs
+      val ramAddrReg  = ramAddrRegs(index)
+      val ramDataReg  = ramDataRegs(index)
+      val ramRdReg    = ramRdRegs(index)
+      val ramWrReg    = ramWrRegs(index)
+      val reqDeqReg   = reqDeqRegs(index)
+      val respDataReg = respDataRegs(index)
+      val respEnqReg  = respEnqRegs(index)
+
+      // DebugAccessPort
+      x.dap.req.rdclk  := x.clock
+      x.dap.req.rdreq  := reqDeqReg
+      x.dap.resp.wrclk := x.clock
+      x.dap.resp.wrreq := respEnqReg
+      x.dap.resp.data  := respDataReg
+
+      // DPRAM
+      x.ram.address := ramAddrReg
+      x.ram.clock   := x.clock
+      x.ram.data    := ramDataReg
+      x.ram.rden    := ramRdReg
+      x.ram.wren    := ramWrReg
+
+    }
+  }
 
   /*********************************************************************/
   /* Access From CPU Bus                                               */
   // TODO: CPU/PPU DomainからRAMを見せるときの定義
   // TODO: commonRegsの先頭16byteを見てMapperの実装を切り替えられるようにする
-
-  /*********************************************************************/
-  /* Access From PPU Bus                                               */
-  // TODO: CPU/PPU DomainからRAMを見せるときの定義
-
-  /*********************************************************************/
   // TODO: 実装したら削除
   io.cart.cpu.dataIn      := 0x39.U
   io.cart.cpu.isNotIrq    := true.B
@@ -159,52 +201,20 @@ class VirtualCartridge(
   io.prgRamEmu.rden    := false.B
   io.prgRamEmu.wren    := false.B
 
-  io.chrRamEmu.address := 0.U
-  io.chrRamEmu.clock   := clock
-  io.chrRamEmu.data    := 0.U
-  io.chrRamEmu.rden    := false.B
-  io.chrRamEmu.wren    := false.B
-
   io.saveRamEmu.address := 0.U
   io.saveRamEmu.clock   := clock
   io.saveRamEmu.data    := 0.U
   io.saveRamEmu.rden    := false.B
   io.saveRamEmu.wren    := false.B
 
-  io.prgRamDebug.address := 0.U
-  io.prgRamDebug.clock   := clock
-  io.prgRamDebug.data    := 0.U
-  io.prgRamDebug.rden    := false.B
-  io.prgRamDebug.wren    := false.B
-
-  io.chrRamDebug.address := 0.U
-  io.chrRamDebug.clock   := clock
-  io.chrRamDebug.data    := 0.U
-  io.chrRamDebug.rden    := false.B
-  io.chrRamDebug.wren    := false.B
-
-  io.saveRamDebug.address := 0.U
-  io.saveRamDebug.clock   := clock
-  io.saveRamDebug.data    := 0.U
-  io.saveRamDebug.rden    := false.B
-  io.saveRamDebug.wren    := false.B
-
-  io.debugAccessPrg.req.rdclk  := clock
-  io.debugAccessPrg.req.rdreq  := false.B
-  io.debugAccessPrg.resp.data  := 0.U
-  io.debugAccessPrg.resp.wrclk := clock
-  io.debugAccessPrg.resp.wrreq := false.B
-
-  io.debugAccessSave.req.rdclk  := clock
-  io.debugAccessSave.req.rdreq  := false.B
-  io.debugAccessSave.resp.data  := 0.U
-  io.debugAccessSave.resp.wrclk := clock
-  io.debugAccessSave.resp.wrreq := false.B
-
-  io.debugAccessChr.req.rdclk  := clock
-  io.debugAccessChr.req.rdreq  := false.B
-  io.debugAccessChr.resp.data  := 0.U
-  io.debugAccessChr.resp.wrclk := clock
-  io.debugAccessChr.resp.wrreq := false.B
+  /*********************************************************************/
+  /* Access From PPU Bus                                               */
+  // TODO: CPU/PPU DomainからRAMを見せるときの定義
+  // TODO: 実装したら削除
+  io.chrRamEmu.address := 0.U
+  io.chrRamEmu.clock   := clock
+  io.chrRamEmu.data    := 0.U
+  io.chrRamEmu.rden    := false.B
+  io.chrRamEmu.wren    := false.B
 
 }
