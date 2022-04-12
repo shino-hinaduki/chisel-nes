@@ -111,7 +111,6 @@ object NesFileFormat {
     * Mapperの種類
     */
   def mapper(wordArr: Vec[UInt]) =
-    getByte(wordArr = wordArr, byteIndex = 7)(3, 0) |
-      getByte(wordArr = wordArr, byteIndex = 6)(7, 4)
+    Cat(getByte(wordArr = wordArr, byteIndex = 7)(7, 4), getByte(wordArr = wordArr, byteIndex = 6)(7, 4))
 
 }
