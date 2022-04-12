@@ -236,7 +236,7 @@ class VirtualCartridge(
       // Read応答を積む
       when(ramRdReg) {
         respDataReg := x.ram.q
-        respEnqReg  := false.B
+        respEnqReg  := true.B
       }.otherwise {
         respDataReg := DontCare
         respEnqReg  := false.B
