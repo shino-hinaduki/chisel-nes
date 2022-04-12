@@ -3,9 +3,12 @@ package board.cart
 import chisel3._
 
 import board.cart.types.CartridgeIO
+import board.cart.types.NesFileFormat
 import board.access.types.InternalAccessCommand
 import board.ram.types.RamIO
 import board.jtag.types.VirtualInstruction
+import chisel3.util.MuxLookup
+import board.cart.types.NameTableMirror
 
 /**
   * VirtualCartridgeでRAM AccessをDebugAccess側から行うときの定義
@@ -76,12 +79,16 @@ class VirtualCartridge(
     val debugAccessPrg    = new InternalAccessCommand.SlaveIO
     val debugAccessSave   = new InternalAccessCommand.SlaveIO
     val debugAccessChr    = new InternalAccessCommand.SlaveIO
+
+    // for debug
+    // debugAccessCommonでWriteされたiNES Headerが正しい値ならtrue
+    val isValidHeader = Output(Bool())
   })
 
   /*********************************************************************/
   /* DebugAccessReq: Common(先頭16byte iNES Header, 後半reserved)       */
+  val commonRegsByCpu = withClockAndReset(clock, reset) { RegInit(VecInit(Seq.fill(commonWords)(0.U(debugDataWidth.W)))) } // 4byteごと
   withClockAndReset(clock, reset) {
-    val commonRegs        = RegInit(VecInit(Seq.fill(commonWords)(0.U(debugDataWidth.W)))) // 4byteごと
     val commonReqDeqReg   = RegInit(Bool(), false.B)
     val commonRespDataReg = RegInit(Bool(), false.B)
     val commonRespEnqReg  = RegInit(Bool(), false.B)
@@ -90,6 +97,7 @@ class VirtualCartridge(
     io.debugAccessCommon.resp.wrclk := clock
     io.debugAccessCommon.resp.wrreq := commonRespEnqReg
     io.debugAccessCommon.resp.data  := commonRespDataReg
+    io.isValidHeader                := NesFileFormat.isValidHeader(commonRegsByCpu)
     // 要求を引き抜き
     def commonReqDequeue() = {
       commonReqDeqReg := true.B
@@ -122,12 +130,12 @@ class VirtualCartridge(
         commonRespNop()
       }.elsewhen(reqType === InternalAccessCommand.Type.read) {
         // Read & Dequeue
-        val readData = commonRegs(offset)
+        val readData = commonRegsByCpu(offset)
         commonReqDequeue()
         commonRespEnqueue(readData)
       }.elsewhen(reqType === InternalAccessCommand.Type.write) {
         // Write & Dequeue
-        commonRegs(offset) := writeData
+        commonRegsByCpu(offset) := writeData
         commonReqDequeue()
         commonRespNop()
       }
@@ -136,6 +144,12 @@ class VirtualCartridge(
       commonReqNop()
       commonRespNop()
     }
+  }
+
+  // CPU Clock -> PPU Clock載せ替え
+  val commonRegsByPpu = withClockAndReset(io.ppuClock, io.ppuReset) { RegInit(VecInit(Seq.fill(commonWords)(0.U(debugDataWidth.W)))) } // 4byteごと
+  withClockAndReset(io.ppuClock, io.ppuReset) {
+    commonRegsByPpu := RegNext(commonRegsByCpu)
   }
 
   /*********************************************************************/
@@ -232,34 +246,47 @@ class VirtualCartridge(
 
   /*********************************************************************/
   /* Access From CPU Bus                                               */
-  // TODO: CPU/PPU DomainからRAMを見せるときの定義
-  // TODO: commonRegsの先頭16byteを見てMapperの実装を切り替えられるようにする
-  // TODO: 実装したら削除
-  io.cart.cpu.dataIn      := 0x39.U
-  io.cart.cpu.isNotIrq    := true.B
-  io.cart.ppu.dataIn      := 0x39.U
-  io.cart.ppu.isNotVramCs := true.B
+  // TODO: Mapper切り替え
 
-  io.prgRamEmu.address := 0.U
+  // IRQなし
+  io.cart.cpu.nIrq := true.B
+
+  // PRG ROM固定 /ROMSEL時にデータが出力されるようにする
+  val nOePrg = io.cart.cpu.nRomSel
+  io.cart.cpu.dataIn   := Mux(!nOePrg, io.prgRamEmu.q, DontCare)
+  io.prgRamEmu.address := io.cart.cpu.address
   io.prgRamEmu.clock   := clock
-  io.prgRamEmu.data    := 0.U
-  io.prgRamEmu.rden    := false.B
-  io.prgRamEmu.wren    := false.B
-
-  io.saveRamEmu.address := 0.U
+  io.prgRamEmu.data    := io.cart.cpu.dataOut.getData()
+  io.prgRamEmu.rden    := !nOePrg
+  io.prgRamEmu.wren    := false.B // Writeしない
+  // Save RAMはない
+  io.saveRamEmu.address := DontCare
   io.saveRamEmu.clock   := clock
-  io.saveRamEmu.data    := 0.U
+  io.saveRamEmu.data    := DontCare
   io.saveRamEmu.rden    := false.B
   io.saveRamEmu.wren    := false.B
 
   /*********************************************************************/
   /* Access From PPU Bus                                               */
-  // TODO: CPU/PPU DomainからRAMを見せるときの定義
-  // TODO: 実装したら削除
-  io.chrRamEmu.address := 0.U
+  // TODO: Mapper切り替え
+
+  // /VRAMCS は /PA13直結
+  io.cart.ppu.nVramCs := !io.cart.ppu.address(13)
+  // Nametable MirrorはHeaderから決定
+  io.cart.ppu.vrama10 := Mux(
+    NesFileFormat.nameTableMirror(commonRegsByPpu) === NameTableMirror.Horizontal,
+    io.cart.ppu.address(10),
+    io.cart.ppu.address(11)
+  )
+  // CHR-ROM PA13で/CS, /RDで/OE。 PA10/11でVRAMA10切り替え
+  val nCsChr = io.cart.ppu.address(13)
+  val nOeChr = io.cart.ppu.nRd
+
+  io.cart.ppu.dataIn   := Mux(!nCsChr && !nOeChr, io.chrRamEmu.q, DontCare)
+  io.chrRamEmu.address := io.cart.ppu.address
   io.chrRamEmu.clock   := io.ppuClock
-  io.chrRamEmu.data    := 0.U
-  io.chrRamEmu.rden    := false.B
+  io.chrRamEmu.data    := io.cart.ppu.dataOut.getData()
+  io.chrRamEmu.rden    := !nCsChr && !nOeChr
   io.chrRamEmu.wren    := false.B
 
 }

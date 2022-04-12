@@ -22,24 +22,24 @@ class GpioMapping extends BlackBox with HasBlackBoxInline {
     val GPIO_1 = Analog(gpioWidth.W)
 
     // CPU (CartridgeIO.CpuIO と同じ定義だが、BlackBoxなので名称一致優先)
-    val a      = Input(UInt(15.W))
-    val d_o    = Input(UInt(8.W))
-    val d_i    = Output(UInt(8.W))
-    val d_oe   = Input(Bool())
-    val rw     = Input(Bool())
-    val romsel = Input(Bool())
-    val o2     = Input(Clock())
-    val irq    = Output(Bool())
+    val a       = Input(UInt(15.W))
+    val d_o     = Input(UInt(8.W))
+    val d_i     = Output(UInt(8.W))
+    val d_oe    = Input(Bool())
+    val rNW     = Input(Bool())
+    val nRomSel = Input(Bool())
+    val o2      = Input(Clock())
+    val nIrq    = Output(Bool())
 
     // PPU (CartridgeIO.PpuIO と同じ定義だが、BlackBoxなので名称一致優先)
     val pa      = Input(UInt(14.W))
     val pd_o    = Input(UInt(8.W))
     val pd_i    = Output(UInt(8.W))
     val pd_oe   = Input(Bool())
-    val vrama10 = Input(Bool())
-    val vramcs  = Output(Bool())
-    val rd      = Input(Bool())
-    val we      = Input(Bool())
+    val vrama10 = Output(Bool())
+    val nVramCs = Output(Bool())
+    val nRd     = Input(Bool())
+    val nWe     = Input(Bool())
 
     // Level-Shift Enable
     val cart_oe_in = Input(Bool())
@@ -80,8 +80,8 @@ class GpioMapping extends BlackBox with HasBlackBoxInline {
       |  input  [ 7: 0] d_o,
       |  output [ 7: 0] d_i,
       |  input          d_oe,
-      |  input          rw,
-      |  input          romsel,
+      |  input          rNW,
+      |  input          nRomSel,
       |  input          o2,
       |  output         irq,
       | 
@@ -89,10 +89,10 @@ class GpioMapping extends BlackBox with HasBlackBoxInline {
       |  input  [14: 0] pd_o,
       |  output [14: 0] pd_i,
       |  input          pd_oe,
-      |  input          vrama10,
-      |  output         vramcs,
-      |  input          rd,
-      |  input          we,
+      |  output         vrama10,
+      |  output         nVramCs,
+      |  input          nRd,
+      |  input          nWe,
       | 
       |  input          cart_oe_in,
       | 
@@ -191,8 +191,8 @@ class GpioMapping extends BlackBox with HasBlackBoxInline {
       |assign pd_i[0]    = GPIO_1[22];
       |
       |assign GPIO_1[15] = ~pa[13]; // ~PA13
-      |assign GPIO_1[14] = vrama10;
-      |assign vramcs     = GPIO_1[13];
+      |assign vrama10    = GPIO_1[14];
+      |assign nVramCs    = GPIO_1[13];
       |assign GPIO_1[12] = rd;
       |assign GPIO_0[15] = we;
       |
@@ -229,23 +229,23 @@ class GpioMapping extends BlackBox with HasBlackBoxInline {
     */
   def connectToCart(cart: CartridgeIO) = {
     // CPU
-    io.a              := cart.cpu.address
-    io.d_o            := cart.cpu.dataOut.data
-    io.d_oe           := cart.cpu.dataOut.oe
-    cart.cpu.dataIn   := io.d_i
-    io.rw             := cart.cpu.isRead
-    io.romsel         := cart.cpu.isNotRomSel
-    io.o2             := cart.cpu.o2
-    cart.cpu.isNotIrq := io.irq
+    io.a <> cart.cpu.address
+    io.d_o <> cart.cpu.dataOut.data
+    io.d_oe <> cart.cpu.dataOut.oe
+    cart.cpu.dataIn <> io.d_i
+    io.rNW <> cart.cpu.rNW
+    io.nRomSel <> cart.cpu.nRomSel
+    io.o2 <> cart.cpu.o2
+    cart.cpu.nIrq <> io.nIrq
 
     // PPU
-    io.pa                := cart.ppu.address
-    io.pd_o              := cart.ppu.dataOut.data
-    io.pd_oe             := cart.ppu.dataOut.oe
-    cart.ppu.dataIn      := io.pd_i
-    io.vrama10           := cart.ppu.vrama10
-    cart.ppu.isNotVramCs := io.vramcs
-    io.rd                := cart.ppu.isNotRead
-    io.we                := cart.ppu.isNotWrite
+    io.pa <> cart.ppu.address
+    io.pd_o <> cart.ppu.dataOut.data
+    io.pd_oe <> cart.ppu.dataOut.oe
+    cart.ppu.dataIn <> io.pd_i
+    io.vrama10 <> cart.ppu.vrama10
+    cart.ppu.nVramCs <> io.nVramCs
+    io.nRd <> cart.ppu.nRd
+    io.nWe <> cart.ppu.nWe
   }
 }

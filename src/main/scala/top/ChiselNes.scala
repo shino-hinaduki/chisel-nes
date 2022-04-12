@@ -161,15 +161,14 @@ class ChiselNes extends RawModule {
   cartHub.io.emuToHub.cpu.address      := 0.U
   cartHub.io.emuToHub.cpu.dataOut.data := 0.U
   cartHub.io.emuToHub.cpu.dataOut.oe   := false.B
-  cartHub.io.emuToHub.cpu.isRead       := false.B
-  cartHub.io.emuToHub.cpu.isNotRomSel  := true.B
+  cartHub.io.emuToHub.cpu.rNW          := true.B
+  cartHub.io.emuToHub.cpu.nRomSel      := true.B
   cartHub.io.emuToHub.cpu.o2           := cpuClk // TODO: cpuClkから位相シフトが必要, Mapper次第で調整
   cartHub.io.emuToHub.ppu.address      := 0.U
   cartHub.io.emuToHub.ppu.dataOut.data := 0.U
   cartHub.io.emuToHub.ppu.dataOut.oe   := false.B
-  cartHub.io.emuToHub.ppu.vrama10      := false.B
-  cartHub.io.emuToHub.ppu.isNotRead    := true.B
-  cartHub.io.emuToHub.ppu.isNotWrite   := true.B
+  cartHub.io.emuToHub.ppu.nRd          := true.B
+  cartHub.io.emuToHub.ppu.nWe          := true.B
 
   // 仮想Cartridge本体
   val virtualCart = withClockAndReset(sysClk, reset) { Module(new VirtualCartridge(prgRomAddrWidth = 17, chrRomAddrWidth = 17)) }
@@ -372,8 +371,8 @@ class ChiselNes extends RawModule {
       numReg        := Cat(gpioMapping.io.pd_i, 0.U(8.W), gpioMapping.io.d_i)
       numVisibleReg := true.B
       ledArrayReg := Cat(
-        gpioMapping.io.irq,
-        gpioMapping.io.vramcs,
+        gpioMapping.io.nIrq,
+        gpioMapping.io.nVramCs,
         gpioMapping.io.joy1_rsv,
         gpioMapping.io.joy1_do,
         gpioMapping.io.joy2_micin,

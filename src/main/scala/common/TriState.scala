@@ -12,4 +12,9 @@ object TriState {
 class TriState[T <: Data](source: T) extends Bundle {
   val data = source
   val oe   = Bool()
+
+  /**
+    * oe=trueならdataを、それ以外ならDontcareを返します
+    */
+  def getData(): Data = Mux(oe, data, DontCare)
 }

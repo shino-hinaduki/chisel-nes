@@ -28,12 +28,12 @@ object CartridgeIO {
     /**
       * R/~W
       */
-    val isRead = Input(Bool())
+    val rNW = Input(Bool())
 
     /**
       * /ROMSEL
       */
-    val isNotRomSel = Input(Bool())
+    val nRomSel = Input(Bool())
 
     /**
       * φ2
@@ -43,7 +43,7 @@ object CartridgeIO {
     /**
       * /IRQ
       */
-    val isNotIrq = Output(Bool())
+    val nIrq = Output(Bool())
   }
 
   /**
@@ -69,22 +69,22 @@ object CartridgeIO {
     /**
       * VRAMA10
       */
-    val vrama10 = Input(Bool())
+    val vrama10 = Output(Bool())
 
     /**
-      * /VRAMCS
+      * /nVramCs
       */
-    val isNotVramCs = Output(Bool())
+    val nVramCs = Output(Bool())
 
     /**
       * /RD
       */
-    val isNotRead = Input(Bool())
+    val nRd = Input(Bool())
 
     /**
       * /WE
       */
-    val isNotWrite = Input(Bool())
+    val nWe = Input(Bool())
   }
 }
 
