@@ -110,7 +110,7 @@ class VirtualCartridge(
     }
 
     // Queue Remainがあれば取り出す。OoOにはしない
-    when(io.debugAccessCommon.req.rdempty && !commonReqDeqReg) {
+    when(!io.debugAccessCommon.req.rdempty && !commonReqDeqReg) {
       val offset             = InternalAccessCommand.Request.getOffset(io.debugAccessCommon.req.q)
       val offsetValid        = offset < commonWords.U
       val writeData          = InternalAccessCommand.Request.getData(io.debugAccessCommon.req.q)
@@ -182,6 +182,51 @@ class VirtualCartridge(
       x.ram.rden    := ramRdReg
       x.ram.wren    := ramWrReg
 
+      // Request Dequeue
+      when(!x.dap.req.rdempty && !reqDeqReg) {
+        val offset             = InternalAccessCommand.Request.getOffset(x.dap.req.q)
+        val writeData          = InternalAccessCommand.Request.getData(x.dap.req.q)
+        val (reqType, isValid) = InternalAccessCommand.Request.getRequestType(x.dap.req.q)
+
+        when(!isValid) {
+          // dequeueだけ実施
+          ramAddrReg := DontCare
+          ramDataReg := DontCare
+          ramRdReg   := false.B
+          ramWrReg   := false.B
+          reqDeqReg  := true.B
+        }.elsewhen(reqType === InternalAccessCommand.Type.read) {
+          // DPRAMにReadを投げる
+          ramAddrReg := offset
+          ramDataReg := DontCare
+          ramRdReg   := true.B
+          ramWrReg   := false.B
+          reqDeqReg  := true.B
+        }.elsewhen(reqType === InternalAccessCommand.Type.write) {
+          // DPRAMにWriteを投げる
+          ramAddrReg := offset
+          ramDataReg := writeData
+          ramRdReg   := false.B
+          ramWrReg   := true.B
+          reqDeqReg  := true.B
+        }
+      }.otherwise {
+        // 何もしない。Reqはすべて落とす
+        ramAddrReg := DontCare
+        ramDataReg := DontCare
+        ramRdReg   := false.B
+        ramWrReg   := false.B
+        reqDeqReg  := false.B
+      }
+
+      // Read応答を積む
+      when(ramRdReg) {
+        respDataReg := x.ram.q
+        respEnqReg  := false.B
+      }.otherwise {
+        respDataReg := DontCare
+        respEnqReg  := false.B
+      }
     }
   }
 
@@ -212,7 +257,7 @@ class VirtualCartridge(
   // TODO: CPU/PPU DomainからRAMを見せるときの定義
   // TODO: 実装したら削除
   io.chrRamEmu.address := 0.U
-  io.chrRamEmu.clock   := clock
+  io.chrRamEmu.clock   := io.ppuClock
   io.chrRamEmu.data    := 0.U
   io.chrRamEmu.rden    := false.B
   io.chrRamEmu.wren    := false.B
