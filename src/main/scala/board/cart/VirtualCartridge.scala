@@ -9,6 +9,9 @@ import board.ram.types.RamIO
 import board.jtag.types.VirtualInstruction
 import chisel3.util.MuxLookup
 import board.cart.types.NameTableMirror
+import board.cart.mapper.InvalidMapper
+import board.cart.mapper.MapperImpl
+import board.cart.mapper.Mapper0
 
 /**
   * VirtualCartridgeでRAM AccessをDebugAccess側から行うときの定義
@@ -245,48 +248,77 @@ class VirtualCartridge(
   }
 
   /*********************************************************************/
+  /* Emulatorからのアクセス                                             */
+  // 利用可能なMapperの列挙と初期化
+  val invalidMapper = new InvalidMapper()
+  val mappers: Map[UInt, MapperImpl] = Map(
+    0.U -> new Mapper0,
+    // TODO: 他Mapperの実装
+  )
+  (mappers.values.toSeq :+ invalidMapper)
+    .foreach(x => {
+      withClockAndReset(clock, reset) {
+        x.setupCpu(
+          cart = io.cart,
+          cpuClock = clock,
+          cpuReset = reset,
+          prgRam = io.prgRamEmu,
+          saveRam = io.saveRamEmu,
+          inesHeader = commonRegsByCpu,
+        )
+      }
+      withClockAndReset(io.ppuClock, io.ppuReset) {
+        x.setupPpu(
+          cart = io.cart,
+          ppuClock = clock,
+          ppuReset = reset,
+          chrRam = io.chrRamEmu,
+          inesHeader = commonRegsByPpu,
+        )
+      }
+    })
+
+  // ClockはMuxする必要がない
+  io.prgRamEmu.clock  := clock
+  io.saveRamEmu.clock := clock
+  io.chrRamEmu.clock  := io.ppuClock
+
+  /*********************************************************************/
   /* Access From CPU Bus                                               */
-  // TODO: Mapper切り替え
-
-  // IRQなし
-  io.cart.cpu.nIrq := true.B
-
-  // PRG ROM固定 /ROMSEL時にデータが出力されるようにする
-  val nOePrg = io.cart.cpu.nRomSel
-  io.cart.cpu.dataIn   := Mux(!nOePrg, io.prgRamEmu.q, DontCare)
-  io.prgRamEmu.address := io.cart.cpu.address
-  io.prgRamEmu.clock   := clock
-  io.prgRamEmu.data    := io.cart.cpu.dataOut.getData()
-  io.prgRamEmu.rden    := !nOePrg
-  io.prgRamEmu.wren    := false.B // Writeしない
-  // Save RAMはない
-  io.saveRamEmu.address := DontCare
-  io.saveRamEmu.clock   := clock
-  io.saveRamEmu.data    := DontCare
-  io.saveRamEmu.rden    := false.B
-  io.saveRamEmu.wren    := false.B
+  withClockAndReset(clock, reset) {
+    val isEnableRegCpu = RegNext(io.isEnable) // 変更タイミング不明なので同期しておく
+    val mapperIndex    = NesFileFormat.mapper(commonRegsByCpu)
+    val mapper: MapperImpl =
+      RegNext(isEnableRegCpu).litOption match { // TODO: この記述で生成物が最適化されないか確認しておく
+        case Some(raw) if raw != 0 => mappers.getOrElse(mapperIndex, invalidMapper)
+        case _                     => invalidMapper
+      }
+    mapper.assignCpu(
+      cart = io.cart,
+      cpuClock = clock,
+      cpuReset = reset,
+      prgRam = io.prgRamEmu,
+      saveRam = io.saveRamEmu,
+      inesHeader = commonRegsByCpu,
+    )
+  }
 
   /*********************************************************************/
   /* Access From PPU Bus                                               */
-  // TODO: Mapper切り替え
-
-  // /VRAMCS は /PA13直結
-  io.cart.ppu.nVramCs := !io.cart.ppu.address(13)
-  // Nametable MirrorはHeaderから決定
-  io.cart.ppu.vrama10 := Mux(
-    NesFileFormat.nameTableMirror(commonRegsByPpu) === NameTableMirror.Horizontal,
-    io.cart.ppu.address(10),
-    io.cart.ppu.address(11)
-  )
-  // CHR-ROM PA13で/CS, /RDで/OE。 PA10/11でVRAMA10切り替え
-  val nCsChr = io.cart.ppu.address(13)
-  val nOeChr = io.cart.ppu.nRd
-
-  io.cart.ppu.dataIn   := Mux(!nCsChr && !nOeChr, io.chrRamEmu.q, DontCare)
-  io.chrRamEmu.address := io.cart.ppu.address
-  io.chrRamEmu.clock   := io.ppuClock
-  io.chrRamEmu.data    := io.cart.ppu.dataOut.getData()
-  io.chrRamEmu.rden    := !nCsChr && !nOeChr
-  io.chrRamEmu.wren    := false.B
-
+  withClockAndReset(io.ppuClock, io.ppuReset) {
+    val isEnableRegPpu = RegNext(io.isEnable)                  // 変更タイミング不明なので同期しておく
+    val mapperIndex    = NesFileFormat.mapper(commonRegsByPpu) // ppu clock同期済
+    val mapper: MapperImpl =
+      RegNext(isEnableRegPpu).litOption match {
+        case Some(raw) if raw != 0 => mappers.getOrElse(mapperIndex, invalidMapper)
+        case _                     => invalidMapper
+      }
+    mapper.assignPpu(
+      cart = io.cart,
+      ppuClock = clock,
+      ppuReset = reset,
+      chrRam = io.chrRamEmu,
+      inesHeader = commonRegsByPpu,
+    )
+  }
 }
