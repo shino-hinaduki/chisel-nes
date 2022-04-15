@@ -171,9 +171,11 @@ class ChiselNes extends RawModule {
   cartHub.io.emuToHub.ppu.nWe          := true.B
 
   // 仮想Cartridge本体
-  val virtualCart = withClockAndReset(sysClk, reset) { Module(new VirtualCartridge(prgRomAddrWidth = 17, chrRomAddrWidth = 17)) }
+  val virtualCart = Module(new VirtualCartridge(prgRomAddrWidth = 17, chrRomAddrWidth = 17))
   virtualCart.io.cart <> cartHub.io.hubToVirtual
   virtualCart.io.isEnable := cartHub.io.isEnableVirtual
+  virtualCart.io.cpuClock := cpuClk
+  virtualCart.io.cpuReset := reset
   virtualCart.io.ppuClock := ppuClk
   virtualCart.io.ppuReset := reset
 
