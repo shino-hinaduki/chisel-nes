@@ -251,6 +251,13 @@ class VirtualCartridge(
   io.saveRamEmu.clock := io.cpuClock
   io.chrRamEmu.clock  := io.ppuClock
 
+  // Test
+  val mapper0 = new Mapper0()
+  setupCpu(mapper0)
+  assignCpu(mapper0)
+  setupPpu(mapper0)
+  assignPpu(mapper0)
+
   // 利用可能なMapperの列挙
   val mappers: Map[UInt, MapperImpl] = Map(
     0.U -> new Mapper0,
@@ -296,43 +303,43 @@ class VirtualCartridge(
       inesHeader = commonRegsByPpu,
     )
   }
+  // TODO: うまくいかない
+  // // Invalidだけは先に設定しておく
+  // val invalidMapper = new InvalidMapper()
+  // setupCpu(mapper = invalidMapper)
+  // setupPpu(mapper = invalidMapper)
+  // assignCpu(mapper = invalidMapper) // 後述の列挙でどれも選ばれなかったときのデフォルト値
+  // assignPpu(mapper = invalidMapper) // 後述の列挙でどれも選ばれなかったときのデフォルト値
 
-  // Invalidだけは先に設定しておく
-  val invalidMapper = new InvalidMapper()
-  setupCpu(mapper = invalidMapper)
-  setupPpu(mapper = invalidMapper)
-  assignCpu(mapper = invalidMapper) // 後述の列挙でどれも選ばれなかったときのデフォルト値
-  assignPpu(mapper = invalidMapper) // 後述の列挙でどれも選ばれなかったときのデフォルト値
+  // // 全マッパーの処理を展開する。iNES Headerの値と合致するものは特別扱いする
+  // mappers.foreach {
+  //   case (index, mapper) => {
 
-  // 全マッパーの処理を展開する。iNES Headerの値と合致するものは特別扱いする
-  mappers.foreach {
-    case (index, mapper) => {
+  //     /*********************************************************************/
+  //     /* Access From CPU Bus                                               */
+  //     withClockAndReset(io.cpuClock, io.cpuReset) {
+  //       // Mapper自体の初期化
+  //       setupCpu(mapper = mapper)
+  //       // Mapperが有効化されていたときに割当
+  //       val isEnableRegCpu = RegNext(io.isEnable) // 変更タイミング不明なので同期しておく
+  //       val mapperIndex    = NesFileFormat.mapper(commonRegsByCpu)
+  //       when(isEnableRegCpu && (mapperIndex === index)) {
+  //         assignCpu(mapper = mapper)
+  //       }
+  //     }
 
-      /*********************************************************************/
-      /* Access From CPU Bus                                               */
-      withClockAndReset(io.cpuClock, io.cpuReset) {
-        // Mapper自体の初期化
-        setupCpu(mapper = mapper)
-        // Mapperが有効化されていたときに割当
-        val isEnableRegCpu = RegNext(io.isEnable) // 変更タイミング不明なので同期しておく
-        val mapperIndex    = NesFileFormat.mapper(commonRegsByCpu)
-        when(isEnableRegCpu && (mapperIndex === index)) {
-          assignCpu(mapper = mapper)
-        }
-      }
-
-      /*********************************************************************/
-      /* Access From PPU Bus                                               */
-      withClockAndReset(io.ppuClock, io.ppuReset) {
-        // Mapper自体の初期化
-        setupPpu(mapper = mapper)
-        // Mapperが有効化されていたときに割当
-        val isEnableRegPpu = RegNext(io.isEnable) // 変更タイミング不明なので同期しておく
-        val mapperIndex    = NesFileFormat.mapper(commonRegsByPpu)
-        when(isEnableRegPpu && (mapperIndex === index)) {
-          assignPpu(mapper = mapper)
-        }
-      }
-    }
-  }
+  //     /*********************************************************************/
+  //     /* Access From PPU Bus                                               */
+  //     withClockAndReset(io.ppuClock, io.ppuReset) {
+  //       // Mapper自体の初期化
+  //       setupPpu(mapper = mapper)
+  //       // Mapperが有効化されていたときに割当
+  //       val isEnableRegPpu = RegNext(io.isEnable) // 変更タイミング不明なので同期しておく
+  //       val mapperIndex    = NesFileFormat.mapper(commonRegsByPpu)
+  //       when(isEnableRegPpu && (mapperIndex === index)) {
+  //         assignPpu(mapper = mapper)
+  //       }
+  //     }
+  //   }
+  // }
 }
