@@ -83,7 +83,7 @@ class GpioMapping extends BlackBox with HasBlackBoxInline {
       |  input          rNW,
       |  input          nRomSel,
       |  input          o2,
-      |  output         irq,
+      |  output         nIrq,
       | 
       |  input  [13: 0] pa,
       |  input  [14: 0] pd_o,
@@ -152,10 +152,10 @@ class GpioMapping extends BlackBox with HasBlackBoxInline {
       |assign d_i[1]     = GPIO_1[ 9];
       |assign d_i[0]     = GPIO_1[11];
       |
-      |assign GPIO_0[12] = rw;
-      |assign GPIO_0[13] = romsel;
+      |assign GPIO_0[12] = rNW;
+      |assign GPIO_0[13] = nRomSel;
       |assign GPIO_0[ 1] = o2;
-      |assign irq        = GPIO_0[14];
+      |assign nIrq       = GPIO_0[14];
       |
       |assign GPIO_1[21] = pa[13];
       |assign GPIO_0[23] = pa[12];
@@ -193,8 +193,8 @@ class GpioMapping extends BlackBox with HasBlackBoxInline {
       |assign GPIO_1[15] = ~pa[13]; // ~PA13
       |assign vrama10    = GPIO_1[14];
       |assign nVramCs    = GPIO_1[13];
-      |assign GPIO_1[12] = rd;
-      |assign GPIO_0[15] = we;
+      |assign GPIO_1[12] = nRd;
+      |assign GPIO_0[15] = nWe;
       |
       |assign GPIO_1[35] = cart_oe_in;
       |
