@@ -452,6 +452,45 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             Assert.IsTrue(jtag.Close());
             Assert.IsTrue(Enumerable.SequenceEqual(writeData, readData));
         }
+
+
+        /// <summary>
+        /// VirtualCartridgeの読み書きテスト
+        /// </summary>
+        [TestMethod]
+        [DoNotParallelize]
+        public void TestWriteReadToPrgRom() {
+            var jtag = new JtagMaster();
+            var devices = JtagMaster.GetDevices();
+            var device = devices.First(x => x.Description == DeviceDescription);
+
+            // テスト用関数
+            Action<ChiselNesAccessTarget, uint[]> writeReadTest = (target, writeData) => {
+                Assert.IsTrue(jtag.Open(device));
+
+                WriteToChiselNes(jtag, target, 0x00000000, writeData);
+                var readData = ReadFromChiselNes(jtag, target, 0x00000000, (uint)writeData.Length);
+
+                Assert.IsTrue(jtag.Close());
+                Assert.IsTrue(Enumerable.SequenceEqual(writeData, readData));
+            };
+
+            var commonRegWordSize = 32 / 4; // 32[byte] / 4[byte/entry]
+            var prgRomWordSize = 0x1_0000 / 4;
+            var saveRamWordSize = 0x1000 / 4;
+            var chrRomWordSize = 0x1_0000 / 4;
+
+            var commonRegWriteData = Enumerable.Range(0, commonRegWordSize).Select(x => (uint)x).ToArray();
+            commonRegWriteData[0] = 0x1a53454e; //iNES Header "0x4e, 0x45,0x53, 0x1a"
+            var prgRomWriteData = Enumerable.Range(0, prgRomWordSize).Select(x => (uint)x * 2).ToArray();
+            var saveRamWriteData = Enumerable.Range(0, saveRamWordSize).Select(x => (uint)x * 4).ToArray();
+            var chrRomWriteData = Enumerable.Range(0, chrRomWordSize).Select(x => (uint)x * 8).ToArray();
+
+            writeReadTest(ChiselNesAccessTarget.CartCommon, commonRegWriteData);
+            writeReadTest(ChiselNesAccessTarget.CartPrg, prgRomWriteData);
+            writeReadTest(ChiselNesAccessTarget.CartSave, saveRamWriteData);
+            writeReadTest(ChiselNesAccessTarget.CartChr, chrRomWriteData);
+        }
         #endregion
     }
 }
