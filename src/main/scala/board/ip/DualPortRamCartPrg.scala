@@ -11,8 +11,8 @@ class DualPortRamCartPrg extends BlackBox with DualPortRam {
   override def desiredName: String = "dpram_cart_prg"
 
   val io = IO(new Bundle {
-    val address_a = Input(UInt(17.W))  // input	[16:0]  address_a;
-    val address_b = Input(UInt(15.W))  // input	[14:0]  address_b;
+    val address_a = Input(UInt(16.W))  // input	[15:0]  address_a;
+    val address_b = Input(UInt(14.W))  // input	[13:0]  address_b;
     val clock_a   = Input(Clock())     // input	  clock_a;
     val clock_b   = Input(Clock())     // input	  clock_b;
     val data_a    = Input(UInt(8.W))   // input	[7:0]  data_a;
