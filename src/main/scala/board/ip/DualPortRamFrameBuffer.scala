@@ -15,14 +15,14 @@ class DualPortRamFrameBuffer extends BlackBox with DualPortRam {
     val address_b = Input(UInt(16.W))  // input	[15:0]  address_b;
     val clock_a   = Input(Clock())     // input	  clock_a;
     val clock_b   = Input(Clock())     // input	  clock_b;
-    val data_a    = Input(UInt(24.W))  // input	[23:0]  data_a;
-    val data_b    = Input(UInt(24.W))  // input	[23:0]  data_b;
+    val data_a    = Input(UInt(16.W))  // input	[15:0]  data_a;
+    val data_b    = Input(UInt(16.W))  // input	[15:0]  data_b;
     val rden_a    = Input(Bool())      // input	  rden_a;
     val rden_b    = Input(Bool())      // input	  rden_b;
     val wren_a    = Input(Bool())      // input	  wren_a;
     val wren_b    = Input(Bool())      // input	  wren_b;
-    val q_a       = Output(UInt(24.W)) // output	[23:0]  q_a;
-    val q_b       = Output(UInt(24.W)) // output	[23:0]  q_b;
+    val q_a       = Output(UInt(16.W)) // output	[15:0]  q_a;
+    val q_b       = Output(UInt(16.W)) // output	[15:0]  q_b;
   })
 
   override def connectToA(ram: RamIO): Unit = {

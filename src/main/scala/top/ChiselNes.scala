@@ -256,9 +256,10 @@ class ChiselNes extends RawModule {
   val vgaOut = withClockAndReset(ppuClk, reset) { Module(new VgaOut()) }
 
   // 端子出力
-  VGA_R  := vgaOut.io.videoOut.r(7, 4)
-  VGA_G  := vgaOut.io.videoOut.g(7, 4)
-  VGA_B  := vgaOut.io.videoOut.b(7, 4)
+  val colorBitNum = 4 // R-2R ラダーの分解能
+  VGA_R  := vgaOut.io.videoOut.r(vgaOut.rWidth - 1, vgaOut.rWidth - 1 - colorBitNum)
+  VGA_G  := vgaOut.io.videoOut.g(vgaOut.gWidth - 1, vgaOut.gWidth - 1 - colorBitNum)
+  VGA_B  := vgaOut.io.videoOut.b(vgaOut.bWidth - 1, vgaOut.bWidth - 1 - colorBitNum)
   VGA_HS := vgaOut.io.videoOut.hsync
   VGA_VS := vgaOut.io.videoOut.vsync
 

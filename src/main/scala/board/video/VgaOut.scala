@@ -32,14 +32,14 @@ class VgaOut(
       bgColorB = 255
     ),
 ) extends Module {
+  // R,G,Bそれぞれのデータ幅 RGB565
+  val rWidth = 5
+  val gWidth = 6
+  val bWidth = 5
   // FrameBufferのアクセス範囲 256 * 256 = 65536word => 16bit
   val fbAddrWidth = 16
-  // FrameBufferのWord辺のデータ幅 24bpprgb
-  val fbDataWidth = 24
-  // R,G,Bで3色
-  val channelNum = 3
-  // R,G,Bそれぞれのデータ幅
-  val channelDataWidth = (fbDataWidth / channelNum)
+  // FrameBufferのWord辺のデータ幅 rgb565なので16bit
+  val fbDataWidth = rWidth + gWidth + bWidth
 
   val io = IO(new Bundle {
     // PPUからの映像出力を受け取る
@@ -56,7 +56,7 @@ class VgaOut(
     // FrameBuffer用RAMとの接続
     val frameBuffer = new FrameBufferIO(fbAddrWidth, fbDataWidth)
     // 映像出力
-    val videoOut = new VgaIO(fbDataWidth)
+    val videoOut = new VgaIO(rWidth, gWidth, bWidth)
   })
 
   /*********************************************************************/
@@ -66,9 +66,9 @@ class VgaOut(
   // DPRAMのアドレスからX,Y座標に変換する
   def fbAddrToPos(data: UInt): (UInt, UInt) = (data(7, 0), data(15, 8))
   // RGB値からDPRAMのデータに変換する
-  def rgbToFbData(r: UInt, g: UInt, b: UInt): UInt = Cat(b(7, 0), g(7, 0), r(7, 0))
+  def rgbToFbData(r: UInt, g: UInt, b: UInt): UInt = Cat(r(4, 0), g(5, 0), b(4, 0))
   // DPRAMのデータからRGB値に変換する
-  def fbDataToRgb(data: UInt): (UInt, UInt, UInt) = (data(7, 0), data(15, 8), data(23, 16))
+  def fbDataToRgb(data: UInt): (UInt, UInt, UInt) = (data(15, 11), data(10, 5), data(4, 0))
 
   /*********************************************************************/
   /* PPU VideoOut or DebugAccessReq(AsyncFIFO) -> DualPort RAM         */
@@ -280,9 +280,9 @@ class VgaOut(
     }
 
     // VGA信号生成
-    val rOutReg  = RegInit(UInt(channelDataWidth.W), 0.U)
-    val gOutReg  = RegInit(UInt(channelDataWidth.W), 0.U)
-    val bOutReg  = RegInit(UInt(channelDataWidth.W), 0.U)
+    val rOutReg  = RegInit(UInt(rWidth.W), 0.U)
+    val gOutReg  = RegInit(UInt(gWidth.W), 0.U)
+    val bOutReg  = RegInit(UInt(bWidth.W), 0.U)
     val hsyncReg = RegInit(Bool(), true.B) // active low
     val vsyncReg = RegInit(Bool(), true.B) // active low
     io.videoOut.r     := rOutReg
@@ -319,7 +319,7 @@ class VgaOut(
       when(io.isDebug) {
         // デバッグ用に読み出しアドレスからパターンを作る
         val (x, y) = fbAddrToPos(videoOutAddrReg)
-        setVideoOut(x, y, 0.U, true.B, true.B) // ActiveAreaなのでtrue固定, 使うのは上位4bitなので飛ばしておく
+        setVideoOut(x, y, 0.U, true.B, true.B) // ActiveAreaなのでtrue固定
       }.otherwise {
         // 有効なデータを読みだした後
         val (r, g, b) = fbDataToRgb(io.frameBuffer.vga.q)
@@ -328,9 +328,9 @@ class VgaOut(
     }.otherwise {
       // FrontPorch, BackPorch, Sync。ActiveVideoだがFB範囲外の場合。最後のケースに備えて背景色を見せる
       setVideoOut(
-        ppuConfig.bgColorR.U(channelDataWidth.W),
-        ppuConfig.bgColorG.U(channelDataWidth.W),
-        ppuConfig.bgColorB.U(channelDataWidth.W),
+        (ppuConfig.bgColorR >> (8 - rWidth)).U(rWidth.W),
+        (ppuConfig.bgColorG >> (8 - gWidth)).U(gWidth.W),
+        (ppuConfig.bgColorB >> (8 - bWidth)).U(bWidth.W),
         videoOutHSyncReg,
         videoOutVSyncReg
       )
