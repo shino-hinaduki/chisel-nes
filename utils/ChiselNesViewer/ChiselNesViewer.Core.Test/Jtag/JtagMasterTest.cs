@@ -337,13 +337,16 @@ namespace ChiselNesViewer.Core.Test.Jtag {
 
         public enum ChiselNesAccessTarget : byte {
             AccessTest = 0x00,
+            FrameBuffer,
+            CartCommon,
+            CartPrg,
+            CartSave,
+            CartChr,
+            CpuBusMaster,
+            PpuBusMaster,
             Cpu,
             Ppu,
             Apu,
-            Cart,
-            FrameBuffer,
-            CpuBusMaster,
-            PpuBusMaster,
             Audio,
         }
         public IEnumerable<byte> CreateVir(uint offset, bool isWrite, ChiselNesAccessTarget target)
@@ -415,7 +418,7 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             int FB_HEIGHT = 256;
             var testData = Enumerable.Repeat(0, FB_HEIGHT).SelectMany((_, y) =>
                 Enumerable.Repeat(0, FB_WIDTH).Select((_, x) =>
-                    (uint)((((x * 1) & 0xff) << 16) | (((y * 1) & 0xff) << 8) | (((0) & 0xff) << 0))
+                    (uint)((((x) & 0x1f) << 11) | (((y) & 0x3f) << 5) | (((0) & 0x1f) << 0))
                 )
             ).ToArray();
 
@@ -439,7 +442,7 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             int FB_HEIGHT = 256;
             var writeData = Enumerable.Repeat(0, FB_HEIGHT).SelectMany((_, y) =>
                 Enumerable.Repeat(0, FB_WIDTH).Select((_, x) =>
-                    (uint)((((x * 1) & 0xff) << 16) | (((y * 1) & 0xff) << 8) | (((0x100 - (x + y)) & 0xff) << 0))
+                    (uint)((((x) & 0x1f) << 11) | (((y) & 0x3f) << 5) | ((((x + y)) & 0x1f) << 0))
                 )
             ).ToArray();
 
