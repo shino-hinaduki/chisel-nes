@@ -119,7 +119,7 @@ class VirtualCartridge(
 
         when(isValid && offsetValid) {
           switch(reqType) {
-            is(InternalAccessCommand.Type.read) {
+            is(InternalAccessCommand.Type.read) { // TODO: 最適化デジレスタが消えると、全bit読み出せなくなっている。必要であれば修正
               // Read & Dequeue
               val readData = commonRegsByCpu(offset)
 

@@ -300,7 +300,7 @@ class ChiselNes extends RawModule {
       numReg        := (counter >> 16.U)
       numVisibleReg := true.B
       // 流れる感じにする
-      ledArrayReg := Cat(virtualCart.io.isValidHeader, (1.U(9.W) << counter(23, 20)))
+      ledArrayReg := Cat(virtualCart.io.isValidHeader, (1.U(9.W) << counter(23, 20))(8, 0))
     }
   }.elsewhen(pattern === 1.U) {
     // 7segにVJTAGのVIRの値を出す
@@ -310,16 +310,20 @@ class ChiselNes extends RawModule {
       numVisibleReg := true.B
       // VJTAGのstate
       ledArrayReg := Cat(
+        // other
+        virtualCart.io.isValidHeader,
+        // vjtag
         vjtag.io.virtual_state_cdr,
         vjtag.io.virtual_state_sdr,
         vjtag.io.virtual_state_e1dr,
         vjtag.io.virtual_state_pdr,
-        vjtag.io.virtual_state_e2dr,
+        // vjtag.io.virtual_state_e2dr,
         vjtag.io.virtual_state_udr,
         vjtag.io.virtual_state_cir,
         vjtag.io.virtual_state_uir,
+        // jtag
         vjtag.io.tdi,
-        vjtag.io.tck.asBool
+        vjtag.io.tdo
       )
     }
   }.elsewhen(pattern === 2.U) {
@@ -329,7 +333,7 @@ class ChiselNes extends RawModule {
       numReg        := debugAccessTester.io.debugCounter
       numVisibleReg := true.B
       // 適当に流れるようにする
-      ledArrayReg := Cat(virtualCart.io.isValidHeader, (1.U(9.W) << debugAccessTester.io.debugCounter(3, 0)))
+      ledArrayReg := Cat(virtualCart.io.isValidHeader, (1.U(9.W) << debugAccessTester.io.debugCounter(3, 0))(8, 0))
     }
   }.elsewhen(pattern === 3.U) {
     // 7segにDebugAccessTesterの最後のオフセット値を出す
@@ -338,7 +342,7 @@ class ChiselNes extends RawModule {
       numReg        := debugAccessTester.io.debugLatestOffset
       numVisibleReg := true.B
       // 適当に流れるようにする
-      ledArrayReg := Cat(virtualCart.io.isValidHeader, (1.U(9.W) << debugAccessTester.io.debugLatestOffset(3, 0)))
+      ledArrayReg := Cat(virtualCart.io.isValidHeader, (1.U(9.W) << debugAccessTester.io.debugLatestOffset(3, 0))(8, 0))
     }
   }.elsewhen(pattern === 4.U) {
     // 7segにfb -> vjtagの最後の値を出す
