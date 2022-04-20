@@ -453,6 +453,35 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             Assert.IsTrue(Enumerable.SequenceEqual(writeData, readData));
         }
 
+        /// <summary>
+        /// VirtualCartridgeの読み書きテスト
+        /// </summary>
+        [TestMethod]
+        [DoNotParallelize]
+        public void TestWriteNesHeader() {
+            var jtag = new JtagMaster();
+            var devices = JtagMaster.GetDevices();
+            var device = devices.First(x => x.Description == DeviceDescription);
+
+            // テスト用関数, WriteReadTest
+            Action<ChiselNesAccessTarget, uint[]> writeReadTest = (target, writeData) => {
+                Assert.IsTrue(jtag.Open(device));
+
+                WriteToChiselNes(jtag, target, 0x00000000, writeData);
+                var readData = ReadFromChiselNes(jtag, target, 0x00000000, (uint)writeData.Length);
+
+                Assert.IsTrue(jtag.Close());
+            };
+
+            var commonRegWordSize = 32 / 4;
+            var commonRegWriteData = Enumerable.Range(0, commonRegWordSize).Select(x => (uint)0xffffffff).ToArray();
+            commonRegWriteData[0] = 0x1a53454e; //iNES Header "0x4e,0x45,0x53,0x1a"
+            commonRegWriteData[1] = 0x00000101; // PRG ROM=CHR ROM=1Bank, Mapper0, Mirror Horizontal,
+            commonRegWriteData[2] = 0x00000000;
+            commonRegWriteData[3] = 0x00000000;
+
+            writeReadTest(ChiselNesAccessTarget.CartCommon, commonRegWriteData);
+        }
 
         /// <summary>
         /// VirtualCartridgeの読み書きテスト
