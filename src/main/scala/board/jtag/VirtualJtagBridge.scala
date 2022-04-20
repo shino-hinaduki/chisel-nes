@@ -115,7 +115,7 @@ class VirtualJtagBridge extends RawModule {
     /* Access対象制御関連                                                          */
     // 要求時のOffset/Data/Type
     val debugAccessReqDataReg = RegInit(UInt(InternalAccessCommand.Request.cmdWidth.W), 0.U)
-    // Enqueue/Dequeue Req(Port分だけ生成)
+    // Enqueue/Dequeue Req(Port分だけ事前生成)
     val debugAccessReqWrEnRegs  = RegInit(VecInit(Seq.fill(io.debugAccessQueues.size)(false.B)))
     val debugAccessRespRdEnRegs = RegInit(VecInit(Seq.fill(io.debugAccessQueues.size)(false.B)))
     // 初回のRead要求の場合、直接DataOutRegに設定してもう一度Readを発行する

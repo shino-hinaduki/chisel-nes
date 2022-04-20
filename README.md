@@ -194,10 +194,10 @@ Digikeyで選定した部品を記載。チップコンデンサを始め、サ�
 | 30 |  GND |GND             |  |
 | 31 |  D26 |3V3_RSV0        | 5V側で取り出し可能 |
 | 32 |  D27 |3V3_RSV1        | 5V側で取り出し可能 |
-| 33 |  D28 |USER_GPIO1      | ピンソケッドJ1に引き出し済 |
+| 33 |  D28 |USER_GPIO1      | ピンソケットJ1に引き出し済 |
 | 34 |  D29 |USER_LED        | OnBoard LED |
 | 35 |  D30 |3V3_JOY2_MICIN  | 2Player Controller |
-| 36 |  D31 |USER_GPIO0      | ピンソケッドJ1に引き出し済 |
+| 36 |  D31 |USER_GPIO0      | ピンソケットJ1に引き出し済 |
 | 37 |  D32 |3V3_JOY2_DO     | 2Player Controller |
 | 38 |  D33 |3V3_JOY2_CLK    | 2Player Controller |
 | 39 |  D34 |3V3_JOY2_P/~S  | 2Player Controller |

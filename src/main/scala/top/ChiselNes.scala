@@ -161,27 +161,45 @@ class ChiselNes extends RawModule {
   cartHub.io.emuToHub.cpu.address      := 0.U
   cartHub.io.emuToHub.cpu.dataOut.data := 0.U
   cartHub.io.emuToHub.cpu.dataOut.oe   := false.B
-  cartHub.io.emuToHub.cpu.isRead       := false.B
-  cartHub.io.emuToHub.cpu.isNotRomSel  := true.B
+  cartHub.io.emuToHub.cpu.rNW          := true.B
+  cartHub.io.emuToHub.cpu.nRomSel      := true.B
   cartHub.io.emuToHub.cpu.o2           := cpuClk // TODO: cpuClkから位相シフトが必要, Mapper次第で調整
   cartHub.io.emuToHub.ppu.address      := 0.U
   cartHub.io.emuToHub.ppu.dataOut.data := 0.U
   cartHub.io.emuToHub.ppu.dataOut.oe   := false.B
-  cartHub.io.emuToHub.ppu.vrama10      := false.B
-  cartHub.io.emuToHub.ppu.isNotRead    := true.B
-  cartHub.io.emuToHub.ppu.isNotWrite   := true.B
+  cartHub.io.emuToHub.ppu.nRd          := true.B
+  cartHub.io.emuToHub.ppu.nWe          := true.B
 
   // 仮想Cartridge本体
-  val virtualCart = withClockAndReset(sysClk, reset) { Module(new VirtualCartridge(prgRomAddrWidth = 17, chrRomAddrWidth = 17)) }
+  val virtualCart = Module(new VirtualCartridge(prgRomAddrWidth = 17, chrRomAddrWidth = 17))
   virtualCart.io.cart <> cartHub.io.hubToVirtual
   virtualCart.io.isEnable := cartHub.io.isEnableVirtual
+  virtualCart.io.cpuClock := cpuClk
+  virtualCart.io.cpuReset := reset
+  virtualCart.io.ppuClock := ppuClk
+  virtualCart.io.ppuReset := reset
 
   // VJTAG経由で読み書きできるように
-  val vjtagToVCartQueue = Module(new AsyncFifoVJtagToDap)
-  val vCartToVjtagQueue = Module(new AsyncFifoDapToVJtag)
+  val vjtagToVCartCommonQueue = Module(new AsyncFifoVJtagToDap)
+  val vCartCommonToVjtagQueue = Module(new AsyncFifoDapToVJtag)
   virtualJtagBridge.io
-    .debugAccessQueues(VirtualInstruction.AccessTarget.cart.litValue.toInt)
-    .connect(virtualCart.io.debugAccess, vjtagToVCartQueue, vCartToVjtagQueue)
+    .debugAccessQueues(VirtualInstruction.AccessTarget.cartCommon.litValue.toInt)
+    .connect(virtualCart.io.debugAccessCommon, vjtagToVCartCommonQueue, vCartCommonToVjtagQueue)
+  val vjtagToVCartPrgQueue = Module(new AsyncFifoVJtagToDap)
+  val vCartPrgToVjtagQueue = Module(new AsyncFifoDapToVJtag)
+  virtualJtagBridge.io
+    .debugAccessQueues(VirtualInstruction.AccessTarget.cartPrg.litValue.toInt)
+    .connect(virtualCart.io.debugAccessPrg, vjtagToVCartPrgQueue, vCartPrgToVjtagQueue)
+  val vjtagToVCartSaveQueue = Module(new AsyncFifoVJtagToDap)
+  val vCartSaveToVjtagQueue = Module(new AsyncFifoDapToVJtag)
+  virtualJtagBridge.io
+    .debugAccessQueues(VirtualInstruction.AccessTarget.cartSave.litValue.toInt)
+    .connect(virtualCart.io.debugAccessSave, vjtagToVCartSaveQueue, vCartSaveToVjtagQueue)
+  val vjtagToVCartChrQueue = Module(new AsyncFifoVJtagToDap)
+  val vCartChrToVjtagQueue = Module(new AsyncFifoDapToVJtag)
+  virtualJtagBridge.io
+    .debugAccessQueues(VirtualInstruction.AccessTarget.cartChr.litValue.toInt)
+    .connect(virtualCart.io.debugAccessChr, vjtagToVCartChrQueue, vCartChrToVjtagQueue)
 
   // DPRAMと接続
   val vcartPrgRam = Module(new DualPortRamCartPrg)
@@ -201,7 +219,7 @@ class ChiselNes extends RawModule {
   val gpioMapping = Module(new GpioMapping)
   gpioMapping.io.GPIO_0 <> GPIO_0
   gpioMapping.io.GPIO_1 <> GPIO_1
-  // Cartridge
+  // Cartridge (GPIO-CartHub)
   gpioMapping.connectToCart(cartHub.io.hubToGpio)
   // Cartridge LevelShift Enable
   gpioMapping.io.cart_oe_in := cartHub.io.isEnableGpio // GPIO側が選ばれていたらHi-Z解除
@@ -238,9 +256,10 @@ class ChiselNes extends RawModule {
   val vgaOut = withClockAndReset(ppuClk, reset) { Module(new VgaOut()) }
 
   // 端子出力
-  VGA_R  := vgaOut.io.videoOut.r(7, 4)
-  VGA_G  := vgaOut.io.videoOut.g(7, 4)
-  VGA_B  := vgaOut.io.videoOut.b(7, 4)
+  val colorBitNum = 4 // R-2R ラダーの分解能
+  VGA_R  := vgaOut.io.videoOut.r(vgaOut.rWidth - 1, vgaOut.rWidth - 1 - colorBitNum)
+  VGA_G  := vgaOut.io.videoOut.g(vgaOut.gWidth - 1, vgaOut.gWidth - 1 - colorBitNum)
+  VGA_B  := vgaOut.io.videoOut.b(vgaOut.bWidth - 1, vgaOut.bWidth - 1 - colorBitNum)
   VGA_HS := vgaOut.io.videoOut.hsync
   VGA_VS := vgaOut.io.videoOut.vsync
 
@@ -281,7 +300,7 @@ class ChiselNes extends RawModule {
       numReg        := (counter >> 16.U)
       numVisibleReg := true.B
       // 流れる感じにする
-      ledArrayReg := (1.U(10.W) << counter(23, 20))
+      ledArrayReg := Cat(virtualCart.io.isValidHeader, (1.U(9.W) << counter(23, 20))(8, 0))
     }
   }.elsewhen(pattern === 1.U) {
     // 7segにVJTAGのVIRの値を出す
@@ -291,16 +310,20 @@ class ChiselNes extends RawModule {
       numVisibleReg := true.B
       // VJTAGのstate
       ledArrayReg := Cat(
+        // other
+        virtualCart.io.isValidHeader,
+        // vjtag
         vjtag.io.virtual_state_cdr,
         vjtag.io.virtual_state_sdr,
         vjtag.io.virtual_state_e1dr,
         vjtag.io.virtual_state_pdr,
-        vjtag.io.virtual_state_e2dr,
+        // vjtag.io.virtual_state_e2dr,
         vjtag.io.virtual_state_udr,
         vjtag.io.virtual_state_cir,
         vjtag.io.virtual_state_uir,
+        // jtag
         vjtag.io.tdi,
-        vjtag.io.tck.asBool
+        vjtag.io.tdo
       )
     }
   }.elsewhen(pattern === 2.U) {
@@ -310,7 +333,7 @@ class ChiselNes extends RawModule {
       numReg        := debugAccessTester.io.debugCounter
       numVisibleReg := true.B
       // 適当に流れるようにする
-      ledArrayReg := (1.U(10.W) << debugAccessTester.io.debugCounter(3, 0))
+      ledArrayReg := Cat(virtualCart.io.isValidHeader, (1.U(9.W) << debugAccessTester.io.debugCounter(3, 0))(8, 0))
     }
   }.elsewhen(pattern === 3.U) {
     // 7segにDebugAccessTesterの最後のオフセット値を出す
@@ -319,7 +342,7 @@ class ChiselNes extends RawModule {
       numReg        := debugAccessTester.io.debugLatestOffset
       numVisibleReg := true.B
       // 適当に流れるようにする
-      ledArrayReg := (1.U(10.W) << debugAccessTester.io.debugLatestOffset(3, 0))
+      ledArrayReg := Cat(virtualCart.io.isValidHeader, (1.U(9.W) << debugAccessTester.io.debugLatestOffset(3, 0))(8, 0))
     }
   }.elsewhen(pattern === 4.U) {
     // 7segにfb -> vjtagの最後の値を出す
@@ -355,8 +378,8 @@ class ChiselNes extends RawModule {
       numReg        := Cat(gpioMapping.io.pd_i, 0.U(8.W), gpioMapping.io.d_i)
       numVisibleReg := true.B
       ledArrayReg := Cat(
-        gpioMapping.io.irq,
-        gpioMapping.io.vramcs,
+        gpioMapping.io.nIrq,
+        gpioMapping.io.nVramCs,
         gpioMapping.io.joy1_rsv,
         gpioMapping.io.joy1_do,
         gpioMapping.io.joy2_micin,

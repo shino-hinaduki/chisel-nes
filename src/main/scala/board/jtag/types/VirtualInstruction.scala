@@ -35,14 +35,17 @@ object VirtualInstruction {
   */
   object AccessTarget extends ChiselEnum {
     val accessTest   = Value(0x00.U)
-    val cpu          = Value(0x01.U)
-    val ppu          = Value(0x02.U)
-    val apu          = Value(0x03.U)
-    val cart         = Value(0x04.U)
-    val frameBuffer  = Value(0x05.U)
+    val frameBuffer  = Value(0x01.U)
+    val cartCommon   = Value(0x02.U)
+    val cartPrg      = Value(0x03.U)
+    val cartSave     = Value(0x04.U)
+    val cartChr      = Value(0x05.U)
     val cpuBusMaster = Value(0x06.U)
     val ppuBusMaster = Value(0x07.U)
-    val audio        = Value(0x08.U)
+    val cpu          = Value(0x08.U)
+    val ppu          = Value(0x09.U)
+    val apu          = Value(0x0a.U)
+    val audio        = Value(0x0b.U)
   }
 
   /**

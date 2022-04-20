@@ -1,7 +1,7 @@
 package cpu.addressing
 
 import chisel3._
-import _root_.cpu.types.Addressing
+import cpu.types.Addressing
 import cpu.register.CpuRegister
 
 /**
