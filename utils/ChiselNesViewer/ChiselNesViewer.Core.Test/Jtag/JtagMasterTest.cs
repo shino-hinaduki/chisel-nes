@@ -487,7 +487,7 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             var saveRamWriteData = Enumerable.Range(0, saveRamWordSize).Select(x => (uint)x * 4 + 0x89abcde0).ToArray();
             var chrRomWriteData = Enumerable.Range(0, chrRomWordSize).Select(x => (uint)x * 8 + 0xf02468a0).ToArray();
 
-            //writeReadTest(ChiselNesAccessTarget.CartCommon, commonRegWriteData); // TODO: èCê≥Ç∑ÇÈ
+            writeReadTest(ChiselNesAccessTarget.CartCommon, commonRegWriteData); // TODO: èCê≥Ç∑ÇÈ
             writeReadTest(ChiselNesAccessTarget.CartPrg, prgRomWriteData);
             writeReadTest(ChiselNesAccessTarget.CartSave, saveRamWriteData);
             writeReadTest(ChiselNesAccessTarget.CartChr, chrRomWriteData);
@@ -533,7 +533,7 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             writeTest(ChiselNesAccessTarget.CartPrg, prgRomWriteData);
             writeTest(ChiselNesAccessTarget.CartSave, saveRamWriteData);
             writeTest(ChiselNesAccessTarget.CartChr, chrRomWriteData);
-            //readTest(ChiselNesAccessTarget.CartCommon, commonRegWriteData); // TODO: èCê≥Ç∑ÇÈ
+            readTest(ChiselNesAccessTarget.CartCommon, commonRegWriteData); // TODO: èCê≥Ç∑ÇÈ
             readTest(ChiselNesAccessTarget.CartPrg, prgRomWriteData);
             readTest(ChiselNesAccessTarget.CartSave, saveRamWriteData);
             readTest(ChiselNesAccessTarget.CartChr, chrRomWriteData);
