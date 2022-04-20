@@ -96,6 +96,8 @@ class VirtualCartridge(
   /*********************************************************************/
   /* DebugAccessReq: Common(先頭16byte iNES Header, 後半reserved)       */
   val commonRegsByCpu = withClockAndReset(io.cpuClock, io.cpuReset) { RegInit(VecInit(Seq.fill(commonWords)(0.U(debugDataWidth.W)))) } // 4byteごと
+  dontTouch(commonRegsByCpu) // 最適化抑制
+
   withClockAndReset(io.cpuClock, io.cpuReset) {
     val commonReqDeqReg   = RegInit(Bool(), false.B)
     val commonRespDataReg = RegInit(Bool(), false.B)
@@ -151,6 +153,8 @@ class VirtualCartridge(
 
   // CPU Clock -> PPU Clock載せ替え
   val commonRegsByPpu = withClockAndReset(io.ppuClock, io.ppuReset) { RegInit(VecInit(Seq.fill(commonWords)(0.U(debugDataWidth.W)))) } // 4byteごと
+  dontTouch(commonRegsByPpu) // 最適化抑制
+
   withClockAndReset(io.ppuClock, io.ppuReset) {
     commonRegsByPpu := RegNext(commonRegsByCpu)
   }

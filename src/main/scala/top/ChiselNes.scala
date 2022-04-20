@@ -300,7 +300,7 @@ class ChiselNes extends RawModule {
       numReg        := (counter >> 16.U)
       numVisibleReg := true.B
       // 流れる感じにする
-      ledArrayReg := (1.U(10.W) << counter(23, 20))
+      ledArrayReg := Cat(virtualCart.io.isValidHeader, (1.U(9.W) << counter(23, 20)))
     }
   }.elsewhen(pattern === 1.U) {
     // 7segにVJTAGのVIRの値を出す
@@ -329,7 +329,7 @@ class ChiselNes extends RawModule {
       numReg        := debugAccessTester.io.debugCounter
       numVisibleReg := true.B
       // 適当に流れるようにする
-      ledArrayReg := (1.U(10.W) << debugAccessTester.io.debugCounter(3, 0))
+      ledArrayReg := Cat(virtualCart.io.isValidHeader, (1.U(9.W) << debugAccessTester.io.debugCounter(3, 0)))
     }
   }.elsewhen(pattern === 3.U) {
     // 7segにDebugAccessTesterの最後のオフセット値を出す
@@ -338,7 +338,7 @@ class ChiselNes extends RawModule {
       numReg        := debugAccessTester.io.debugLatestOffset
       numVisibleReg := true.B
       // 適当に流れるようにする
-      ledArrayReg := (1.U(10.W) << debugAccessTester.io.debugLatestOffset(3, 0))
+      ledArrayReg := Cat(virtualCart.io.isValidHeader, (1.U(9.W) << debugAccessTester.io.debugLatestOffset(3, 0)))
     }
   }.elsewhen(pattern === 4.U) {
     // 7segにfb -> vjtagの最後の値を出す
