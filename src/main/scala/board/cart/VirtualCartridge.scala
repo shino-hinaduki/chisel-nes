@@ -1,13 +1,15 @@
 package board.cart
 
 import chisel3._
+import chisel3.util.MuxLookup
+import chisel3.util.switch
+import chisel3.util.is
 
 import board.cart.types.CartridgeIO
 import board.cart.types.NesFileFormat
 import board.access.types.InternalAccessCommand
 import board.ram.types.RamIO
 import board.jtag.types.VirtualInstruction
-import chisel3.util.MuxLookup
 import board.cart.types.NameTableMirror
 import board.cart.mapper.InvalidMapper
 import board.cart.mapper.MapperImpl
@@ -104,24 +106,6 @@ class VirtualCartridge(
     io.debugAccessCommon.resp.wrreq := commonRespEnqReg
     io.debugAccessCommon.resp.data  := commonRespDataReg
     io.isValidHeader                := NesFileFormat.isValidHeader(commonRegsByCpu)
-    // 要求を引き抜き
-    def commonReqDequeue() = {
-      commonReqDeqReg := true.B
-    }
-    // 要求を引き抜かない
-    def commonReqNop() = {
-      commonReqDeqReg := false.B
-    }
-    // 応答を積む
-    def commonRespEnqueue(data: UInt) = {
-      commonRespDataReg := data
-      commonRespEnqReg  := true.B
-    }
-    // 応答を積まない
-    def commonRespNop() = {
-      commonRespDataReg := DontCare
-      commonRespEnqReg  := false.B
-    }
 
     // Queue Remainがあれば取り出す。OoOにはしない
     withClockAndReset(io.cpuClock, io.cpuReset) {
@@ -131,28 +115,40 @@ class VirtualCartridge(
         val writeData          = InternalAccessCommand.Request.getData(io.debugAccessCommon.req.q)
         val (reqType, isValid) = InternalAccessCommand.Request.getRequestType(io.debugAccessCommon.req.q)
 
-        when(!offsetValid || !isValid) {
-          // 未対応、Dequeueだけ実施
-          commonReqDequeue()
-          commonRespNop()
-        }.elsewhen(reqType === InternalAccessCommand.Type.read) {
-          // Read & Dequeue
-          val readData = commonRegsByCpu(offset)
-          commonReqDequeue()
-          commonRespEnqueue(readData)
-        }.elsewhen(reqType === InternalAccessCommand.Type.write) {
-          // Write & Dequeue
-          commonRegsByCpu(offset) := writeData
-          commonReqDequeue()
-          commonRespNop()
+        when(isValid && offsetValid) {
+          switch(reqType) {
+            is(InternalAccessCommand.Type.read) {
+              // Read & Dequeue
+              val readData = commonRegsByCpu(offset)
+
+              commonReqDeqReg   := true.B
+              commonRespEnqReg  := true.B
+              commonRespDataReg := readData
+            }
+            is(InternalAccessCommand.Type.write) {
+              // Write & Dequeue
+              commonRegsByCpu(offset) := writeData
+
+              commonReqDeqReg   := true.B
+              commonRespEnqReg  := false.B
+              commonRespDataReg := DontCare
+            }
+          }
+        }.otherwise {
+          // Invalid Cmd、Dequeueだけ実施
+          commonReqDeqReg   := true.B
+          commonRespEnqReg  := false.B
+          commonRespDataReg := DontCare
         }
       }.otherwise {
         // なにもしない, Enq/Deq中のものは解除
-        commonReqNop()
-        commonRespNop()
+        commonReqDeqReg   := false.B
+        commonRespEnqReg  := false.B
+        commonRespDataReg := DontCare
       }
     }
   }
+
   // CPU Clock -> PPU Clock載せ替え
   val commonRegsByPpu = withClockAndReset(io.ppuClock, io.ppuReset) { RegInit(VecInit(Seq.fill(commonWords)(0.U(debugDataWidth.W)))) } // 4byteごと
   withClockAndReset(io.ppuClock, io.ppuReset) {
