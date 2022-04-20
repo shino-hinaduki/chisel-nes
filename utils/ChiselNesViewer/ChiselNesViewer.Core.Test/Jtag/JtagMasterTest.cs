@@ -487,7 +487,7 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             var saveRamWriteData = Enumerable.Range(0, saveRamWordSize).Select(x => (uint)x * 4 + 0x89abcde0).ToArray();
             var chrRomWriteData = Enumerable.Range(0, chrRomWordSize).Select(x => (uint)x * 8 + 0xf02468a0).ToArray();
 
-            writeReadTest(ChiselNesAccessTarget.CartCommon, commonRegWriteData); // TODO: 修正する
+            //writeReadTest(ChiselNesAccessTarget.CartCommon, commonRegWriteData); // 最適化で未使用要素が消えるので、Verifyしない
             writeReadTest(ChiselNesAccessTarget.CartPrg, prgRomWriteData);
             writeReadTest(ChiselNesAccessTarget.CartSave, saveRamWriteData);
             writeReadTest(ChiselNesAccessTarget.CartChr, chrRomWriteData);
@@ -533,7 +533,7 @@ namespace ChiselNesViewer.Core.Test.Jtag {
             writeTest(ChiselNesAccessTarget.CartPrg, prgRomWriteData);
             writeTest(ChiselNesAccessTarget.CartSave, saveRamWriteData);
             writeTest(ChiselNesAccessTarget.CartChr, chrRomWriteData);
-            readTest(ChiselNesAccessTarget.CartCommon, commonRegWriteData); // TODO: 修正する
+            //readTest(ChiselNesAccessTarget.CartCommon, commonRegWriteData); // 最適化で未使用要素が消えるので、Verifyしない
             readTest(ChiselNesAccessTarget.CartPrg, prgRomWriteData);
             readTest(ChiselNesAccessTarget.CartSave, saveRamWriteData);
             readTest(ChiselNesAccessTarget.CartChr, chrRomWriteData);
