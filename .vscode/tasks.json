@@ -10,6 +10,12 @@
             "problemMatcher": []
         },
         {
+            "label": "generate verilog(all)",
+            "type": "shell",
+            "command": "sbt 'runMain top.DebugGenerateDriver --target-dir dst/all'",
+            "problemMatcher": []
+        },
+        {
             "label": "generate diagram",
             "type": "shell",
             "command": "docker-compose run diagram",
