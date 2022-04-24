@@ -6,7 +6,13 @@
         {
             "label": "generate verilog",
             "type": "shell",
-            "command": "sbt 'run --target-dir dst'",
+            "command": "sbt 'runMain top.ChiselNesDriver --target-dir dst'",
+            "problemMatcher": []
+        },
+        {
+            "label": "generate verilog(all)",
+            "type": "shell",
+            "command": "sbt 'runMain top.DebugGenerateDriver --target-dir dst/all'",
             "problemMatcher": []
         },
         {
