@@ -18,7 +18,7 @@ TODO:
 
 ```shell
 # sbtが使える環境の場合
-$ sbt 'run --target-dir dst'
+$ sbt 'runMain top.ChiselNesDriver --target-dir dst'
 
 # Docker
 $ docker-compose run generate

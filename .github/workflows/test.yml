@@ -20,4 +20,4 @@ jobs:
       - name: SBT Test
         run: sbt test
       - name: Generate Verilog
-        run: sbt 'run --target-dir dst'
+        run: sbt 'runMain top.ChiselNesDriver --target-dir dst'
